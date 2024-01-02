@@ -1,0 +1,16 @@
+# Editor
+.idea/
+.vs/
+.vscode/
+*.swp
+
+# Clangd
+.cache/
+
+# Others
+.DS_Store
+build/
+cmake-build-*/
+out/
+deps/
+docs/doxygen-output/
