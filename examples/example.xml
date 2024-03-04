@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+    <book>
+        <title>Programming in C</title>
+        <author>Kernighan and Ritchie</author>
+        <year>1988</year>
+    </book>
+    <book>
+        <title>Effective C++</title>
+        <author>Scott Meyers</author>
+        <year>1991</year>
+    </book>
+</library>
