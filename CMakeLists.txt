@@ -42,19 +42,16 @@ target_include_directories(cornui PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
 # Link with corn
 find_package(Corn REQUIRED)
-target_link_libraries(cornui Corn::Corn)
-#target_link_libraries(cornui PRIVATE Corn::Corn)
+target_link_libraries(cornui PRIVATE Corn::Corn)
 
 # Link with libxml2
 find_package(LibXml2 REQUIRED)
-target_link_libraries(cornui LibXml2::LibXml2)
-#target_link_libraries(cornui PRIVATE LibXml2::LibXml2)
+target_link_libraries(cornui PRIVATE LibXml2::LibXml2)
 
 # Link with duktape
 find_package(Duktape CONFIG REQUIRED)
 # target_include_directories(cornui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${DUKTAPE_INCLUDE_DIRS})
-target_link_libraries(cornui ${DUKTAPE_LIBRARY})
-#target_link_libraries(cornui PRIVATE ${DUKTAPE_LIBRARY})
+target_link_libraries(cornui PRIVATE ${DUKTAPE_LIBRARY})
 
 # Build examples
 if (BUILD_EXAMPLES)
@@ -70,3 +67,4 @@ endif ()
 add_executable(main examples/main.cpp)
 target_link_libraries(main PRIVATE cornui)
 target_include_directories(main PRIVATE "${CMAKE_SOURCE_DIR}/include")
+target_link_libraries(main PRIVATE Corn::Corn)

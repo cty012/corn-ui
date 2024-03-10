@@ -6,10 +6,11 @@
 
 namespace cornui {
     struct DOMNode {
-        std::u8string tag;
+        std::string tag;
+        std::string name;
         std::u8string text;
-        std::vector<std::u8string> classList;
-        std::unordered_map<std::u8string, std::u8string> attributes;
+        std::vector<std::string> classList;
+        std::unordered_map<std::string, std::string> attributes;
         std::vector<DOMNode*> children;
     };
 
@@ -30,11 +31,11 @@ namespace cornui {
      * @param node The target node.
      * @return The inner XML as a string.
      */
-    std::u8string getInnerXML(const DOMNode& node);
+    std::string getInnerXML(const DOMNode& node);
 
     /**
      * @param node The target node.
      * @return The inner XML as a string.
      */
-    std::u8string getOuterXML(const DOMNode& node);
+    std::string getOuterXML(const DOMNode& node);
 }

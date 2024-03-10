@@ -3,6 +3,8 @@
 extern "C" {
 #include <libxml/parser.h>
 }
+#include <corn/ui.h>
+#include <corn/util.h>
 #include <cornui/dom/dom_tree.h>
 #include "dom_helper.h"
 
@@ -62,5 +64,31 @@ namespace cornui {
 
     const DOMNode& DOMTree::getRoot() const noexcept {
         return this->root_;
+    }
+
+    /// @brief Helper to the function below.
+    void loadWidgetFromDOMNode(corn::UIManager& uiManager, const corn::UIWidget* parent, const DOMNode& domNode) {
+        corn::UIWidget* current = nullptr;
+        // Load to current node
+        if (domNode.tag == "widget") {
+            current = uiManager.createWidget<corn::UIWidget>(domNode.name, parent);
+        } else if (domNode.tag == "label") {  // @todo: find a way to encode richtext in xml
+            const corn::Font* font = corn::FontManager::instance().get("noto-sans-zh");
+            uiManager.createWidget<corn::UILabel>(domNode.name, parent, corn::RichText().addText(
+                    domNode.text, corn::TextStyle(font, 24)));
+        }
+
+        // Invalid DOM node
+        if (!current) return;
+
+        // Load to children
+        for (const DOMNode* child : domNode.children) {
+            loadWidgetFromDOMNode(uiManager, current, *child);
+        }
+    }
+
+    void loadUIFromDOM(corn::UIManager& uiManager, const DOMTree& dom) {
+        uiManager.clear();
+        loadWidgetFromDOMNode(uiManager, nullptr, dom.getRoot());
     }
 }
