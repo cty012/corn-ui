@@ -1,3 +1,4 @@
+#include <cstring>
 #include <sstream>
 extern "C" {
 #include <libxml/parser.h>

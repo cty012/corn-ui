@@ -36,7 +36,10 @@ file(GLOB_RECURSE SOURCES
 )
 
 add_library(cornui SHARED ${HEADERS} ${SOURCES})
-set_target_properties(cornui PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CORNUI_OUTPUT_DIR}")
+set_target_properties(cornui PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CORNUI_OUTPUT_DIR}"
+        DEBUG_POSTFIX -d
+)
 set(CORNUI_OUTPUT_PATH $<TARGET_FILE:cornui>)
 target_include_directories(cornui PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
@@ -62,9 +65,3 @@ endif ()
 if (BUILD_TESTS)
     add_subdirectory("test")
 endif ()
-
-# Temp: build main
-add_executable(main examples/main.cpp)
-target_link_libraries(main PRIVATE cornui)
-target_include_directories(main PRIVATE "${CMAKE_SOURCE_DIR}/include")
-target_link_libraries(main PRIVATE Corn::Corn)
