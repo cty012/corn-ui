@@ -1,4 +1,5 @@
 #include <corn/ui.h>
+#include <cornui/dom.h>
 #include "entities.h"
 #include "event_args.h"
 #include "scenes.h"
@@ -22,24 +23,25 @@ void underlineOnHover(corn::UILabel* label) {
 
 MainMenuScene::MainMenuScene() {
     // UI
-    auto* body = this->getUIManager().createWidget<corn::UIWidget>("body", nullptr);
+    cornui::DOMTree tree("resources/ui/main_menu.xml");
+    cornui::loadUIFromDOM(this->getUIManager(), tree);
+
+    auto* body = this->getUIManager().getWidgetByName("body", nullptr, false);
     body->setX("(100%pw - min(100%pw * 9, 100%ph * 16) / 9) / 2");
     body->setY("(100%ph - min(100%pw * 9, 100%ph * 16) / 16) / 2");
     body->setW("min(100%pw * 9, 100%ph * 16) / 9");
     body->setH("min(100%pw * 9, 100%ph * 16) / 16");
     body->setBackground(corn::Color::rgb(60, 179, 113));
 
-    auto* contents = this->getUIManager().createWidget<corn::UIWidget>("contents", body);
+    auto* contents = this->getUIManager().getWidgetByName("contents", body, false);
     contents->setX("200px");
     contents->setY("120px");
 
     // Title
-    auto* title = this->getUIManager().createWidget<corn::UILabel>(
-            "title", contents, TextManager::instance().getRichText("main-menu-title"));
+    auto* title = (corn::UILabel*)this->getUIManager().getWidgetByName("title", contents, false);
 
     // Start button
-    auto* start = this->getUIManager().createWidget<corn::UILabel>(
-            "start", contents, TextManager::instance().getRichText("main-menu-start"));
+    auto* start = (corn::UILabel*)this->getUIManager().getWidgetByName("start", contents, false);
     start->setY("110px");
     underlineOnHover(start);
     start->getEventManager().addListener(
@@ -52,8 +54,7 @@ MainMenuScene::MainMenuScene() {
             });
 
     // Settings button
-    auto* settings = this->getUIManager().createWidget<corn::UILabel>(
-            "settings", contents, TextManager::instance().getRichText("main-menu-settings"));
+    auto* settings = (corn::UILabel*)this->getUIManager().getWidgetByName("settings", contents, false);
     settings->setY("155px");
     underlineOnHover(settings);
     settings->getEventManager().addListener(
@@ -66,8 +67,7 @@ MainMenuScene::MainMenuScene() {
             });
 
     // Tutorial button
-    auto* tutorial = this->getUIManager().createWidget<corn::UILabel>(
-            "tutorial", contents, TextManager::instance().getRichText("main-menu-tutorial"));
+    auto* tutorial = (corn::UILabel*)this->getUIManager().getWidgetByName("tutorial", contents, false);
     tutorial->setY("200px");
     underlineOnHover(tutorial);
     tutorial->getEventManager().addListener(
@@ -80,8 +80,7 @@ MainMenuScene::MainMenuScene() {
             });
 
     // Exit button
-    auto* exit = this->getUIManager().createWidget<corn::UILabel>(
-            "exit", contents, TextManager::instance().getRichText("main-menu-exit"));
+    auto* exit = (corn::UILabel*)this->getUIManager().getWidgetByName("exit", contents, false);
     exit->setY("245px");
     underlineOnHover(exit);
     exit->getEventManager().addListener(

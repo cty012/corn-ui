@@ -76,6 +76,8 @@ namespace cornui {
             const corn::Font* font = corn::FontManager::instance().get("noto-sans-zh");
             uiManager.createWidget<corn::UILabel>(domNode.name, parent, corn::RichText().addText(
                     domNode.text, corn::TextStyle(font, 24)));
+        } else if (domNode.tag == "image") {
+            // @todo implement this
         }
 
         // Invalid DOM node

@@ -1,0 +1,32 @@
+#body {
+    x: (100%pw - min(100%pw * 9, 100%ph * 16) / 9) / 2;
+    y: (100%ph - min(100%pw * 9, 100%ph * 16) / 16) / 2;
+    w: min(100%pw * 9, 100%ph * 16) / 9;
+    h: min(100%pw * 9, 100%ph * 16) / 16;
+    background-color: #3cb372;
+}
+
+#contents {
+    x: 200px;
+    y: 120px;
+}
+
+#start {
+    y: 110px;
+}
+
+#settings {
+    y: 155px;
+}
+
+#tutorial {
+    y: 200px;
+}
+
+#exit {
+    y: 245px;
+}
+
+.button:hover {
+    text-variant: underline;
+}

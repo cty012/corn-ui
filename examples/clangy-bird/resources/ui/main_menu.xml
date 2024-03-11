@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget name="body">
+    <widget name="contents">
+        <label name="title">Main Menu Title</label>
+        <label name="start" class="button">Start</label>
+        <label name="settings" class="button">Settings</label>
+        <label name="tutorial" class="button">Tutorial</label>
+        <label name="exit" class="button">Exit</label>
+    </widget>
+</widget>
