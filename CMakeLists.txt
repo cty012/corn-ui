@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(corn-ui)
+project(corn-ui VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(DEPS_PATH "${CMAKE_SOURCE_DIR}/deps")
@@ -8,6 +8,12 @@ list(APPEND CMAKE_PREFIX_PATH "${DEPS_PATH}")
 option(BUILD_EXAMPLES "Build the example programs in the `examples/` folder." ON)
 option(BUILD_TESTS "Build the test cases in the `test/` folder." OFF)
 
+# Output directories
+set(CORNUI_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib")
+set(EXAMPLES_OUTPUT_DIR "${CMAKE_BINARY_DIR}/examples")
+set(TEST_OUTPUT_DIR "${CMAKE_BINARY_DIR}/tests")
+
+# Compiler flags
 if (MSVC)
     add_compile_options(/utf-8 /W4 /WX)
     add_compile_options("$<$<CONFIG:Release>:/O2>")
@@ -20,12 +26,10 @@ else ()
     add_compile_options("$<$<CONFIG:Debug>:-g>")
 endif ()
 
-set(CORNUI_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib")
-set(EXAMPLES_OUTPUT_DIR "${CMAKE_BINARY_DIR}/examples")
-set(TEST_OUTPUT_DIR "${CMAKE_BINARY_DIR}/tests")
-
+# For static analysis and linting
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Corn UI target
 file(GLOB_RECURSE HEADERS
         "${CMAKE_SOURCE_DIR}/include/*.h"
         "${CMAKE_SOURCE_DIR}/include/*.cpp"
