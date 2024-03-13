@@ -3,7 +3,7 @@
 extern "C" {
 #include <libxml/parser.h>
 }
-#include <cornui/dom/dom_node.h>
+#include <cornui/xml/dom_node.h>
 
 namespace cornui {
     /**

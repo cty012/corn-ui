@@ -4,7 +4,7 @@ extern "C" {
 #include <libxml/parser.h>
 }
 #include <corn/util/string_utils.h>
-#include <cornui/dom/dom_node.h>
+#include <cornui/xml/dom_node.h>
 #include "dom_helper.h"
 
 namespace cornui {

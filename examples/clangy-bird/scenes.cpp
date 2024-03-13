@@ -1,5 +1,5 @@
 #include <corn/ui.h>
-#include <cornui/dom.h>
+#include <cornui/xml.h>
 #include "entities.h"
 #include "event_args.h"
 #include "scenes.h"
@@ -23,8 +23,8 @@ void underlineOnHover(corn::UILabel* label) {
 
 MainMenuScene::MainMenuScene() {
     // UI
-    cornui::DOMTree tree("resources/ui/main_menu.xml");
-    cornui::loadUIFromDOM(this->getUIManager(), tree);
+    cornui::DOM dom("resources/ui/main_menu.xml");
+    cornui::loadUIFromDOM(this->getUIManager(), dom);
 
     auto* body = this->getUIManager().getWidgetByName("body", nullptr, false);
     body->setX("(100%pw - min(100%pw * 9, 100%ph * 16) / 9) / 2");
@@ -99,6 +99,7 @@ MainMenuScene::MainMenuScene() {
                 tutorial->setText(TextManager::instance().getRichText("main-menu-tutorial"));
                 exit->setText(TextManager::instance().getRichText("main-menu-exit"));
             });
+    // corn::EventManager::instance().emit(EventArgsLanguageChange());
 }
 
 MainMenuScene::~MainMenuScene() {

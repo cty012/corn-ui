@@ -1,6 +1,5 @@
 #pragma once
 
 namespace cornui {
-    class StyleSheet {
-    };
+    struct CSSOMNode {};
 }

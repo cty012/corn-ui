@@ -4,12 +4,12 @@ extern "C" {
 #include <libxml/parser.h>
 }
 #include <corn/ui.h>
-#include <corn/util.h>
-#include <cornui/dom/dom_tree.h>
+#include <corn/util/rich_text.h>
+#include <cornui/xml/dom.h>
 #include "dom_helper.h"
 
 namespace cornui {
-    DOMTree::DOMTree(std::string file) : file_(std::move(file)) {
+    DOM::DOM(std::string file) : file_(std::move(file)) {
         xmlInitParser();
         xmlDocPtr doc = xmlReadFile(this->file_.c_str(), nullptr, 0);
         (void)doc;
@@ -20,18 +20,18 @@ namespace cornui {
         xmlFreeDoc(doc);
     }
 
-    DOMTree::~DOMTree() {
+    DOM::~DOM() {
         clearNode(&this->root_);
     }
 
-    DOMTree::DOMTree(const DOMTree& other) {
+    DOM::DOM(const DOM& other) {
         this->file_ = other.file_;
         auto* dup = dupNode(&other.root_);
         this->root_ = *dup;
         delete dup;
     }
 
-    DOMTree& DOMTree::operator=(const DOMTree& other) {
+    DOM& DOM::operator=(const DOM& other) {
         if (this == &other) return *this;
         clearNode(&this->root_);
         this->file_ = other.file_;
@@ -41,14 +41,14 @@ namespace cornui {
         return *this;
     }
 
-    DOMTree::DOMTree(DOMTree&& other) noexcept {
+    DOM::DOM(DOM&& other) noexcept {
         this->file_ = std::move(other.file_);
         this->root_ = other.root_;
         other.root_.children.clear();
         clearNode(&other.root_);
     }
 
-    DOMTree& DOMTree::operator=(DOMTree&& other) noexcept {
+    DOM& DOM::operator=(DOM&& other) noexcept {
         if (this == &other) return *this;
         clearNode(&this->root_);
         this->file_ = std::move(other.file_);
@@ -58,11 +58,11 @@ namespace cornui {
         return *this;
     }
 
-    DOMNode& DOMTree::getRoot() noexcept {
+    DOMNode& DOM::getRoot() noexcept {
         return this->root_;
     }
 
-    const DOMNode& DOMTree::getRoot() const noexcept {
+    const DOMNode& DOM::getRoot() const noexcept {
         return this->root_;
     }
 
@@ -89,7 +89,7 @@ namespace cornui {
         }
     }
 
-    void loadUIFromDOM(corn::UIManager& uiManager, const DOMTree& dom) {
+    void loadUIFromDOM(corn::UIManager& uiManager, const DOM& dom) {
         uiManager.clear();
         loadWidgetFromDOMNode(uiManager, nullptr, dom.getRoot());
     }

@@ -1,5 +1,14 @@
 #pragma once
 
+#include <istream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 namespace cornui {
-    class CSSParser {};
+    struct CSSRule;
+
+    std::unordered_map<std::string, std::string> parseDeclFromString(const std::string& contents);
+
+    std::vector<CSSRule> parseCSSFromStream(std::istream& contents);
 }
