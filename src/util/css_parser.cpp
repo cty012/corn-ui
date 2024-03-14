@@ -1,9 +1,16 @@
+#include <regex>
 #include <sstream>
 #include <corn/util/string_utils.h>
 #include <cornui/css/cssom.h>
 #include <cornui/util/css_parser.h>
+#include <cornui/util/exception.h>
 
 namespace cornui {
+    bool isValidIdentifier(const std::string& token) noexcept {
+        static const std::regex pattern("^[a-zA-Z_-][a-zA-Z0-9_-]*$");
+        return std::regex_match(token, pattern);
+    }
+
     /**
      * @brief Helper function. Get string from stream until reaching the delimiter.
      * @param stream The input stream to read from.
@@ -55,22 +62,29 @@ namespace cornui {
         std::unordered_map<std::string, std::string> declarations;
         while (true) {
             // Get the key
-            if (!getStringUntilDelim(stream, token, ':')) {
-                token = corn::trim(token);
-                if (token.empty()) {
+            bool hasColon = getStringUntilDelim(stream, token, ':');
+            std::string untrimmed = token + ":";
+            std::string key = corn::trim(token);
+            if (!hasColon) {
+                if (key.empty()) {
                     return declarations;
                 } else {
-                    // @todo Throw exception saying invalid rule syntax.
+                    throw CSSDeclSyntaxError(key, "Delimiter \":\" is expected.");
+                }
+            } else {
+                if (!isValidIdentifier(key)) {
+                    throw CSSDeclSyntaxError(
+                            key, "Identifier must contain only letters, digits, underscore, or hyphen, and cannot start with a digit.");
                 }
             }
-            std::string key = corn::trim(token);
 
             // Get the value
-            // @todo Parse selector.
-            if (!getStringUntilDelim(stream, token, ';')) {
-                // @todo Throw exception saying that expected ';' at the end of a declaration.
-            }
+            bool hasSemicolon = getStringUntilDelim(stream, token, ';');
+            untrimmed += token;
             std::string value = corn::trim(token);
+            if (!hasSemicolon) {
+                throw CSSDeclSyntaxError(corn::trim(untrimmed), "Expect token \";\" at the end of declaration.");
+            }
 
             // Add to the results
             declarations[key] = value;
@@ -84,25 +98,29 @@ namespace cornui {
 
         while (true) {
             // Get the selector
-            if (!getStringUntilDelim(contents, token, '{')) {
-                token = corn::trim(token);
-                if (token.empty()) {
+            bool hasLeftBracket = getStringUntilDelim(contents, token, '{');
+            std::string untrimmed = token + "{";
+            std::string selector = corn::trim(token);
+            if (!hasLeftBracket) {
+                if (selector.empty()) {
                     return result;
                 } else {
-                    // @todo Throw exception saying invalid rule syntax.
+                    throw CSSRuleSyntaxError(selector, "Expect token \"{\" after the selector.");
                 }
             }
-            std::string selector = corn::trim(token);
+
+            // @todo Parse selector.
 
             // Get the declarations
-            // @todo Parse selector.
-            if (!getStringUntilDelim(contents, token, '}')) {
-                // @todo Throw exception saying that expected '}' at the end of a rule.
+            bool hasRightBracket = getStringUntilDelim(contents, token, '}');
+            untrimmed += token;
+            std::string declString = corn::trim(token);
+            if (!hasRightBracket) {
+                throw CSSRuleSyntaxError(corn::trim(untrimmed), "Expect token \"}\" at the end of rule.");
             }
             if (token.find('{') != std::string::npos) {
-                // @todo Throw exception saying that nested brackets are not allowed.
+                throw CSSRuleSyntaxError(corn::trim(untrimmed) + "}", "Nested brackets are not allowed.");
             }
-            std::string declString = corn::trim(token);
 
             // Add to the results
             result.push_back({ selector, parseDeclFromString(declString) });

@@ -14,9 +14,7 @@ target_include_directories(test PRIVATE
 target_link_libraries(test ${GTEST_BOTH_LIBRARIES} cornui)
 
 if (NOT ${CORNUI_OUTPUT_DIR} STREQUAL ${TEST_OUTPUT_DIR})
-    add_custom_command(
-            TARGET test
-            POST_BUILD
+    add_custom_target(test_cornui ALL
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${CORNUI_OUTPUT_PATH}"
                 "${TEST_OUTPUT_DIR}"
@@ -26,4 +24,5 @@ if (NOT ${CORNUI_OUTPUT_DIR} STREQUAL ${TEST_OUTPUT_DIR})
                 "${TEST_OUTPUT_DIR}"
             COMMENT "Copied corn DLL to test output directory"
     )
+    add_dependencies(test test_cornui)
 endif ()
