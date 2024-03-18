@@ -33,7 +33,7 @@ function (build_example EXAMPLE_NAME)
     add_dependencies(${EXAMPLE_NAME} examples)
 
     # Copy cornui & corn DLL
-    add_custom_target(${EXAMPLE_NAME}_cornui ALL
+    add_custom_target(${EXAMPLE_NAME}_dll ALL
             COMMAND ${CMAKE_COMMAND} -E echo "Copying DLL..."
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${CORNUI_OUTPUT_PATH}"
@@ -42,7 +42,7 @@ function (build_example EXAMPLE_NAME)
                 "${Corn_RUNTIME_DIR}"
                 "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}"
     )
-    add_dependencies(${EXAMPLE_NAME} ${EXAMPLE_NAME}_cornui)
+    add_dependencies(${EXAMPLE_NAME} ${EXAMPLE_NAME}_dll)
 
     # Copy resources folder
     file(GLOB_RECURSE RESOURCES "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}/resources/*")
