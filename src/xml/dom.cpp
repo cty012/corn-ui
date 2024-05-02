@@ -7,6 +7,7 @@ extern "C" {
 #include <corn/ui.h>
 #include <corn/util/rich_text.h>
 #include <corn/util/string_utils.h>
+#include <cornui/css/cssom.h>
 #include <cornui/util/css_parser.h>
 #include <cornui/xml/dom.h>
 
@@ -53,8 +54,23 @@ namespace cornui {
         }
 
         // Load head
-        // todo: load <style> and <script> (and possibly <def>)
-        (void)head;
+        // todo: load <script> (and possibly <def>)
+        for (xmlNodePtr xmlChild = head->children; xmlChild; xmlChild = xmlChild->next) {
+            if (xmlChild->type == XML_ELEMENT_NODE) {
+                const char* tag = reinterpret_cast<const char*>(xmlChild->name);
+                if (!strcmp(tag, "style")) {
+                    for (xmlAttr* attr = xmlChild->properties; attr; attr = attr->next) {
+                        const char* name = reinterpret_cast<const char*>(attr->name);
+                        xmlChar* xmlValue = xmlNodeGetContent(attr->children);
+                        const char* value = reinterpret_cast<const char*>(xmlValue);
+                        if (strcmp(name, "src") == 0) {
+                            CSSOM::instance().loadFromFile(this->file_.parent_path() / value);
+                        }
+                        xmlFree(xmlValue);
+                    }
+                }
+            }
+        }
 
         // Load body
         // helper function

@@ -24,7 +24,6 @@ void underlineOnHover(corn::UILabel& label) {
 
 MainMenuScene::MainMenuScene() {
     // UI
-    cornui::CSSOM::instance().loadFromFile("resources/ui/main_menu.ccss");
     cornui::DOM dom("resources/ui/main_menu.xml");
     dom.bind(this->getUIManager());
 

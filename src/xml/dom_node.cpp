@@ -180,10 +180,12 @@ namespace cornui {
                         fontVariant = corn::FontVariant::UNDERLINE;
                     }
 
-                    ((corn::UILabel*)widget)->setText(corn::RichText().addText(
-                            this->text_, corn::TextStyle(font, fontSize, fontColor, fontVariant)));
+                    if (font) {
+                        ((corn::UILabel*) widget)->setText(corn::RichText().addText(
+                                this->text_, corn::TextStyle(font, fontSize, fontColor, fontVariant)));
+                    }
                 } else if (this->tag_ == "image") {
-                    auto* image = new corn::Image(this->dom_->getFile() / this->attributes_["src"]);
+                    auto* image = new corn::Image(this->dom_->getFile().parent_path() / this->attributes_["src"]);
                     ((corn::UIImage*)widget)->setImage(image);
                 }
             }
