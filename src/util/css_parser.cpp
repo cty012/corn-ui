@@ -100,11 +100,11 @@ namespace cornui {
                     }
                     nextCombinator = (comb == CSSSelectorCombinator::DESCENDANT) ? nextCombinator : comb;
                 } else {  // If token is basic selector
-                    // @todo: parse basic selector
+                    // @todo: break basic selector into parts
                     if (!selectorGroup.basicSelectors.empty()) {
                         selectorGroup.combinators.push_back(nextCombinator);
                     }
-                    selectorGroup.basicSelectors.push_back(token);
+                    selectorGroup.basicSelectors.emplace_back(std::vector<std::string>{ token });
                     nextCombinator = CSSSelectorCombinator::DESCENDANT;
                 }
             }

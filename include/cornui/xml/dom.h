@@ -23,6 +23,9 @@ namespace cornui {
          */
         explicit DOM(std::filesystem::path file);
 
+        DOM(const DOM& dom) = delete;
+        DOM& operator=(const DOM& dom) = delete;
+
         /**
          * @brief Bind the data in the DOM tree with the UI manager. Changes in the DOM will sync in the UI.
          * @param uiManager The UI manager for generating the UI.
@@ -35,9 +38,12 @@ namespace cornui {
         [[nodiscard]] const std::filesystem::path& getFile() const noexcept;
         [[nodiscard]] DOMNode& getRoot() noexcept;
         [[nodiscard]] const DOMNode& getRoot() const noexcept;
+        [[nodiscard]] corn::UIManager* getUIManager() noexcept;
+        [[nodiscard]] const corn::UIManager* getUIManager() const noexcept;
 
     private:
         std::filesystem::path file_;
         DOMNode root_;
+        corn::UIManager* uiManager_;
     };
 }

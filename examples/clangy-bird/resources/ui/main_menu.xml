@@ -5,7 +5,7 @@
 </head>
 <body>
     <widget name="contents">
-        <label name="title">Main Menu Title</label>
+        <label name="title">Clangy Bird</label>
         <label name="start" class="button">Start</label>
         <label name="settings" class="button">Settings</label>
         <label name="tutorial" class="button">Tutorial</label>

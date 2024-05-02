@@ -23,6 +23,10 @@ namespace cornui {
         // todo
     }
 
+    const std::vector<std::string>& DOMNode::getClassList() const noexcept {
+        return this->classList_;
+    }
+
     const std::unordered_map<std::string, std::string>& DOMNode::getStyles() const noexcept {
         return this->styles_;
     }
@@ -45,6 +49,14 @@ namespace cornui {
         if (name == "class" || name == "style") return;
         this->attributes_[name] = value;
         // todo
+    }
+
+    DOM* DOMNode::getDOM() const noexcept {
+        return this->dom_;
+    }
+
+    DOMNode* DOMNode::getParent() const noexcept {
+        return this->parent_;
     }
 
     const std::vector<DOMNode*>& DOMNode::getChildren() const noexcept {

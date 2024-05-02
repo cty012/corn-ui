@@ -3,7 +3,9 @@
     y: (100%ph - min(100%pw * 9, 100%ph * 16) / 16) / 2;
     w: min(100%pw * 9, 100%ph * 16) / 9;
     h: min(100%pw * 9, 100%ph * 16) / 16;
-    background-color: #3cb372;
+    background: #3cb372;
+
+    font-family: noto-sans-zh;
 }
 
 #contents {
@@ -11,20 +13,29 @@
     y: 120px;
 }
 
+#title {
+    font-size: 48px;
+    font-color: #ff0000;
+}
+
 #start {
     y: 110px;
+    font-size: 24px;
 }
 
 #settings {
     y: 155px;
+    font-size: 24px;
 }
 
 #tutorial {
     y: 200px;
+    font-size: 24px;
 }
 
 #exit {
     y: 245px;
+    font-size: 24px;
 }
 
 .button:hover {

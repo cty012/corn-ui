@@ -4,6 +4,7 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
                 throw std::invalid_argument("xmlNode must have type XML_ELEMENT_NODE");
             }
             node.clear();
+            node.dom_ = this;
             node.widgetID_ = 0;
 
             // Copy tag
@@ -52,6 +53,7 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
                 if (xmlChild->type == XML_ELEMENT_NODE) {
                     auto* child = new DOMNode();
                     loadXMLBodyToNode(xmlChild, *child);
+                    child->parent_ = &node;
                     node.children_.push_back(child);
                 }
             }

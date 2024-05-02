@@ -52,7 +52,8 @@ namespace cornui {
             throw std::invalid_argument("File '" + this->file_.string() + "' has no <body>.");
         }
 
-        // Load head TODO
+        // Load head
+        // todo: load <style> and <script> (and possibly <def>)
         (void)head;
 
         // Load body
@@ -64,6 +65,10 @@ namespace cornui {
     }
 
     void DOM::bind(corn::UIManager& uiManager) {
+        // First, store the UI manager to be referenced later
+        this->uiManager_ = &uiManager;
+        uiManager.clear();
+
         std::function<void(corn::UIManager&, const corn::UIWidget*, DOMNode&, const std::filesystem::path&)> loadWidgetFromDOMNode =
                 [&](corn::UIManager& uiManager, const corn::UIWidget* parent, DOMNode& domNode, const std::filesystem::path& file) {
                     corn::UIWidget* current = nullptr;
@@ -72,10 +77,11 @@ namespace cornui {
                         current = &uiManager.createWidget<corn::UIWidget>(domNode.name_, parent);
                     } else if (domNode.tag_ == "label") {  // @todo: find a way to encode richtext in xml
                         const corn::Font* font = corn::FontManager::instance().get("noto-sans-zh");
-                        uiManager.createWidget<corn::UILabel>(domNode.name_, parent, corn::RichText().addText(
-                                domNode.text_, corn::TextStyle(font, 24)));
+                        current = &uiManager.createWidget<corn::UILabel>(domNode.name_, parent, corn::RichText().addText(
+                                domNode.text_, corn::TextStyle(font, 16)));
                     } else if (domNode.tag_ == "image") {
-                        uiManager.createWidget<corn::UIImage>(domNode.name_, parent, new corn::Image(file));
+                        current = &uiManager.createWidget<corn::UIImage>(
+                                domNode.name_, parent, new corn::Image(file));
                     }
 
                     // Invalid DOM node
@@ -88,16 +94,18 @@ namespace cornui {
                     }
                 };
 
-        uiManager.clear();
-
         // Create the body widget as root
         auto& body = uiManager.createWidget<corn::UIWidget>("body", nullptr);
+        this->root_.name_ = "body";
         this->root_.widgetID_ = body.getID();
 
         // Load all children
         for (DOMNode* child : this->root_.children_) {
             loadWidgetFromDOMNode(uiManager, &body, *child, this->file_);
         }
+
+        // Finally compute and apply the styles
+        this->root_.computeStyle();
     }
 
     const std::filesystem::path& DOM::getFile() const noexcept {
@@ -111,4 +119,13 @@ namespace cornui {
     const DOMNode& DOM::getRoot() const noexcept {
         return this->root_;
     }
+
+    corn::UIManager* DOM::getUIManager() noexcept {
+        return this->uiManager_;
+    }
+
+    const corn::UIManager* DOM::getUIManager() const noexcept {
+        return this->uiManager_;
+    }
+
 }

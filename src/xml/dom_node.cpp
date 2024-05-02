@@ -3,11 +3,15 @@
 extern "C" {
 #include <libxml/parser.h>
 }
+#include <corn/media/image.h>
+#include <corn/util/rich_text.h>
 #include <corn/util/string_utils.h>
+#include <cornui/css/cssom.h>
+#include <cornui/xml/dom.h>
 #include <cornui/xml/dom_node.h>
 
 namespace cornui {
-    DOMNode::DOMNode() noexcept : widgetID_(0) {}
+    DOMNode::DOMNode() noexcept : dom_(nullptr), parent_(nullptr), widgetID_(0) {}
 
     DOMNode::~DOMNode() {
         this->clear();
@@ -30,14 +34,13 @@ namespace cornui {
         this->widgetID_ = 0;
     }
 
-    DOMNode::DOMNode(const DOMNode& other) noexcept {
+    DOMNode::DOMNode(const DOMNode& other) noexcept : DOMNode() {
         this->tag_ = other.tag_;
         this->name_ = other.name_;
         this->text_ = other.text_;
         this->classList_ = other.classList_;
         this->styles_ = other.styles_;
         this->attributes_ = other.attributes_;
-        this->widgetID_ = 0;
         for (const DOMNode* child : this->children_) {
             this->children_.push_back(new DOMNode(*child));
         }
@@ -53,6 +56,8 @@ namespace cornui {
         this->styles_ = other.styles_;
         this->attributes_ = other.attributes_;
         this->widgetID_ = 0;
+        this->dom_ = nullptr;
+        this->parent_ = nullptr;
         for (const DOMNode* child : this->children_) {
             this->children_.push_back(new DOMNode(*child));
         }
@@ -70,10 +75,10 @@ namespace cornui {
 
     std::string DOMNode::getOuterXML() const noexcept {
         std::stringstream ss;
-        // Opening tag
-        ss << "<" << this->tag_;
-        // Name
-        ss << " name=\"" << this->name_ << "\"";
+
+        // Opening tag & name
+        ss << "<" << this->tag_ << " name=\"" << this->name_ << "\"";
+
         // Class list
         if (!this->classList_.empty()) {
             ss << " class=\"";
@@ -92,16 +97,96 @@ namespace cornui {
         return ss.str();
     }
 
+    bool DOMNode::addClass(const std::string& className) noexcept {
+        // Return false if already exist
+        if (std::find(this->classList_.begin(), this->classList_.end(), className) != this->classList_.end()) {
+            return false;
+        }
+        this->classList_.push_back(className);
+        this->computeStyle();
+        return true;
+    }
+
+    bool DOMNode::removeClass(const std::string& className) noexcept {
+        bool success = std::erase(this->classList_, className);
+        if (success) this->computeStyle();
+        return success;
+    }
+
     void DOMNode::computeStyle() {
+        // Reset computedStyles to default
+        this->computedStyles_ = {
+                { "active", "true" },
+                { "x", "0px" }, { "y", "0px" }, { "w", "100%nw" }, { "h", "100%nh" },
+                { "overflow", "display" },
+                { "background", "#ffffff00" },
+                { "opacity", "255" },
+                { "font-family", "noto-sans" },
+                { "font-size", "16" },
+                { "font-color", "#000000" },
+                { "font-variant", "regular" }
+        };
+
         // Inherit
-        this->computedStyles_ = this->inheritedStyles_;
+        for (const auto& [name, value] : this->inheritedStyles_) {
+            this->computedStyles_[name] = value;
+        }
 
         // Styles from stylesheet
-        // todo
+        for (const CSSRule& style : CSSOM::instance().getRules()) {
+            // Apply the styles if the selector matches the current node
+            if (match(style.selector, *this)) {
+                for (const auto& [name, value] : style.declarations) {
+                    this->computedStyles_[name] = value;
+                }
+            }
+        }
 
         // Inline styles
         for (const auto& [name, value] : this->styles_) {
             this->computedStyles_[name] = value;
+        }
+
+        // Apply styles to the UIWidgets
+        if (this->widgetID_ > 0) {
+            corn::UIWidget* widget = this->dom_->getUIManager()->getWidgetByID(this->widgetID_);
+            if (widget != nullptr) {
+                // Apply general styles
+                widget->setName(this->name_);
+                widget->setActive(this->computedStyles_["active"] == "true");
+                widget->setX(this->computedStyles_["x"]);
+                widget->setY(this->computedStyles_["y"]);
+                widget->setW(this->computedStyles_["w"]);
+                widget->setH(this->computedStyles_["h"]);
+                if (this->computedStyles_["overflow"] == "display") {
+                    widget->setOverflow(corn::UIOverflow::DISPLAY);
+                } else if (this->computedStyles_["overflow"] == "hidden") {
+                    widget->setOverflow(corn::UIOverflow::HIDDEN);
+                }
+                widget->setBackground(corn::Color::parse(this->computedStyles_["background"]));
+                widget->setOpacity((unsigned char)std::stoi(this->computedStyles_["opacity"]));
+
+                // Apply widget type-specific styles
+                if (this->tag_ == "label") {
+                    const corn::Font* font = corn::FontManager::instance().get(this->computedStyles_["font-family"]);
+                    size_t fontSize = std::stoi(this->computedStyles_["font-size"]);
+                    corn::Color fontColor = corn::Color::parse(this->computedStyles_["font-color"]);
+                    corn::FontVariant fontVariant = corn::FontVariant::REGULAR;
+                    if (this->computedStyles_["font-variant"] == "bold") {
+                        fontVariant = corn::FontVariant::BOLD;
+                    } else if (this->computedStyles_["font-variant"] == "italic") {
+                        fontVariant = corn::FontVariant::ITALIC;
+                    } else if (this->computedStyles_["font-variant"] == "underline") {
+                        fontVariant = corn::FontVariant::UNDERLINE;
+                    }
+
+                    ((corn::UILabel*)widget)->setText(corn::RichText().addText(
+                            this->text_, corn::TextStyle(font, fontSize, fontColor, fontVariant)));
+                } else if (this->tag_ == "image") {
+                    auto* image = new corn::Image(this->dom_->getFile() / this->attributes_["src"]);
+                    ((corn::UIImage*)widget)->setImage(image);
+                }
+            }
         }
 
         // Compute styles of child nodes

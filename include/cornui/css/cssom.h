@@ -9,12 +9,16 @@ namespace cornui {
         DESCENDANT, CHILD, ADJACENT_SIBLING, GENERAL_SIBLING, GROUP, NONE
     };
 
+    struct CSSBasicSelector {
+        std::vector<std::string> parts;
+    };
+
     /**
      * @class CSSSelectorGroup
      * @brief A group within a CSS selector, separated by commas.
      */
     struct CSSSelectorGroup {
-        std::vector<std::string> basicSelectors;
+        std::vector<CSSBasicSelector> basicSelectors;
         std::vector<CSSSelectorCombinator> combinators;
     };
 
@@ -61,6 +65,8 @@ namespace cornui {
          */
         void loadFromFile(const std::filesystem::path& file);
 
+        [[nodiscard]] const std::vector<CSSRule>& getRules() const noexcept;
+
     private:
         /// @brief Constructor.
         CSSOM() noexcept;
@@ -79,4 +85,7 @@ namespace cornui {
 
         std::vector<CSSRule> rules_;
     };
+
+    class DOMNode;
+    bool match(const CSSSelector& selector, const DOMNode& node);
 }

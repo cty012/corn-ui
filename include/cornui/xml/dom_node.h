@@ -35,17 +35,36 @@ namespace cornui {
          */
         [[nodiscard]] std::string getOuterXML() const noexcept;
 
+        /**
+         * @brief Add a class to the node.
+         * @param className The class to add.
+         * @return Whether the class is successfully added. Only true if class does not already exist and has correct
+         * style.
+         */
+        bool addClass(const std::string& className) noexcept;
+
+        /**
+         * @brief Remove a class from the node.
+         * @param className The class to remove
+         * @return Whether the class is successfully removed. Only true if the node previously has this class.
+         */
+        bool removeClass(const std::string& className) noexcept;
+
         // Getters & Setters
         [[nodiscard]] const std::string& getTag() const noexcept;
         [[nodiscard]] const std::string& getName() const noexcept;
         void setName(const std::string& name) noexcept;
         [[nodiscard]] const std::u8string& getText() const noexcept;
         void setText(const std::u8string& text) noexcept;
+        [[nodiscard]] const std::vector<std::string>& getClassList() const noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getStyles() const noexcept;
         void setStyle(const std::string& name, const std::string& value) noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getComputedStyles() const noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getAttributes() const noexcept;
         void setAttributes(const std::string& name, const std::string& value) noexcept;
+
+        [[nodiscard]] DOM* getDOM() const noexcept;
+        [[nodiscard]] DOMNode* getParent() const noexcept;
         [[nodiscard]] const std::vector<DOMNode*>& getChildren() const noexcept;
 
     private:
@@ -60,6 +79,9 @@ namespace cornui {
         std::unordered_map<std::string, std::string> inheritedStyles_;
         std::unordered_map<std::string, std::string> computedStyles_;
         std::unordered_map<std::string, std::string> attributes_;
+
+        DOM* dom_;
+        DOMNode* parent_;
         std::vector<DOMNode*> children_;
         corn::UIWidget::WidgetID widgetID_;
     };
