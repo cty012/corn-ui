@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<widget name="body">
+<cornui>
+<head>
+    <style src="main_menu.ccss"/>
+</head>
+<body>
     <widget name="contents">
         <label name="title">Main Menu Title</label>
         <label name="start" class="button">Start</label>
@@ -7,4 +11,5 @@
         <label name="tutorial" class="button">Tutorial</label>
         <label name="exit" class="button">Exit</label>
     </widget>
-</widget>
+</body>
+</cornui>

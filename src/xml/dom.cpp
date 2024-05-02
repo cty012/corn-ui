@@ -3,59 +3,105 @@
 extern "C" {
 #include <libxml/parser.h>
 }
+#include <corn/media.h>
 #include <corn/ui.h>
 #include <corn/util/rich_text.h>
+#include <corn/util/string_utils.h>
+#include <cornui/util/css_parser.h>
 #include <cornui/xml/dom.h>
-#include "dom_helper.h"
 
 namespace cornui {
-    DOM::DOM(std::string file) : file_(std::move(file)) {
+    DOM::DOM(std::filesystem::path file) : file_(std::move(file)) {
         xmlInitParser();
-        xmlDocPtr doc = xmlReadFile(this->file_.c_str(), nullptr, 0);
-        (void)doc;
+        xmlDocPtr doc = xmlReadFile(this->file_.string().c_str(), nullptr, 0);
         if (doc == nullptr) {
-            throw std::invalid_argument("Cannot load file!\n");
+            throw std::invalid_argument("Cannot load file '" + this->file_.string() + "'!\n");
         }
-        loadXMLToNode(xmlDocGetRootElement(doc), this->root_);
+
+        // Root node must be <cornui>
+        xmlNodePtr root = xmlDocGetRootElement(doc);
+        const char* rootTag = reinterpret_cast<const char*>(root->name);
+        if (strcmp(rootTag, "cornui") != 0) {
+            throw std::invalid_argument("File '" + this->file_.string() + "' has root element with tag '<"
+                                        + rootTag + ">', '<cornui>' expected!\n");
+        }
+
+        // Find <head> and <body>
+        xmlNodePtr head = nullptr, body = nullptr;
+        for (xmlNodePtr xmlChild = root->children; xmlChild; xmlChild = xmlChild->next) {
+            if (xmlChild->type == XML_ELEMENT_NODE) {
+                const char* tag = reinterpret_cast<const char*>(xmlChild->name);
+                if (!strcmp(tag, "head")) {
+                    // Avoid multiple heads
+                    if (head) throw std::invalid_argument("File '" + this->file_.string() + "' has multiple <head>s.");
+                    head = xmlChild;
+                } else if (!strcmp(tag, "body")) {
+                    // Avoid multiple heads
+                    if (body) throw std::invalid_argument("File '" + this->file_.string() + "' has multiple <body>s.");
+                    body = xmlChild;
+                }
+            }
+        }
+
+        // If either not found
+        if (!head && !body) {
+            throw std::invalid_argument("File '" + this->file_.string() + "' has no <head> and <body>.");
+        } else if (!head) {
+            throw std::invalid_argument("File '" + this->file_.string() + "' has no <head>.");
+        } else if (!body) {
+            throw std::invalid_argument("File '" + this->file_.string() + "' has no <body>.");
+        }
+
+        // Load head TODO
+        (void)head;
+
+        // Load body
+        // helper function
+#include "dom_helper.h"
+
+        loadXMLBodyToNode(body, this->root_);
         xmlFreeDoc(doc);
     }
 
-    DOM::~DOM() {
-        clearNode(&this->root_);
+    void DOM::bind(corn::UIManager& uiManager) {
+        std::function<void(corn::UIManager&, const corn::UIWidget*, DOMNode&, const std::filesystem::path&)> loadWidgetFromDOMNode =
+                [&](corn::UIManager& uiManager, const corn::UIWidget* parent, DOMNode& domNode, const std::filesystem::path& file) {
+                    corn::UIWidget* current = nullptr;
+                    // Load to current node
+                    if (domNode.tag_ == "widget") {
+                        current = &uiManager.createWidget<corn::UIWidget>(domNode.name_, parent);
+                    } else if (domNode.tag_ == "label") {  // @todo: find a way to encode richtext in xml
+                        const corn::Font* font = corn::FontManager::instance().get("noto-sans-zh");
+                        uiManager.createWidget<corn::UILabel>(domNode.name_, parent, corn::RichText().addText(
+                                domNode.text_, corn::TextStyle(font, 24)));
+                    } else if (domNode.tag_ == "image") {
+                        uiManager.createWidget<corn::UIImage>(domNode.name_, parent, new corn::Image(file));
+                    }
+
+                    // Invalid DOM node
+                    if (!current) return;
+                    domNode.widgetID_ = current->getID();
+
+                    // Load to children
+                    for (DOMNode* child : domNode.children_) {
+                        loadWidgetFromDOMNode(uiManager, current, *child, file);
+                    }
+                };
+
+        uiManager.clear();
+
+        // Create the body widget as root
+        auto& body = uiManager.createWidget<corn::UIWidget>("body", nullptr);
+        this->root_.widgetID_ = body.getID();
+
+        // Load all children
+        for (DOMNode* child : this->root_.children_) {
+            loadWidgetFromDOMNode(uiManager, &body, *child, this->file_);
+        }
     }
 
-    DOM::DOM(const DOM& other) {
-        this->file_ = other.file_;
-        auto* dup = dupNode(&other.root_);
-        this->root_ = *dup;
-        delete dup;
-    }
-
-    DOM& DOM::operator=(const DOM& other) {
-        if (this == &other) return *this;
-        clearNode(&this->root_);
-        this->file_ = other.file_;
-        auto* dup = dupNode(&other.root_);
-        this->root_ = *dup;
-        delete dup;
-        return *this;
-    }
-
-    DOM::DOM(DOM&& other) noexcept {
-        this->file_ = std::move(other.file_);
-        this->root_ = other.root_;
-        other.root_.children.clear();
-        clearNode(&other.root_);
-    }
-
-    DOM& DOM::operator=(DOM&& other) noexcept {
-        if (this == &other) return *this;
-        clearNode(&this->root_);
-        this->file_ = std::move(other.file_);
-        this->root_ = other.root_;
-        other.root_.children.clear();
-        clearNode(&other.root_);
-        return *this;
+    const std::filesystem::path& DOM::getFile() const noexcept {
+        return this->file_;
     }
 
     DOMNode& DOM::getRoot() noexcept {
@@ -64,33 +110,5 @@ namespace cornui {
 
     const DOMNode& DOM::getRoot() const noexcept {
         return this->root_;
-    }
-
-    /// @brief Helper to the function below.
-    void loadWidgetFromDOMNode(corn::UIManager& uiManager, const corn::UIWidget* parent, const DOMNode& domNode) {
-        corn::UIWidget* current = nullptr;
-        // Load to current node
-        if (domNode.tag == "widget") {
-            current = uiManager.createWidget<corn::UIWidget>(domNode.name, parent);
-        } else if (domNode.tag == "label") {  // @todo: find a way to encode richtext in xml
-            const corn::Font* font = corn::FontManager::instance().get("noto-sans-zh");
-            uiManager.createWidget<corn::UILabel>(domNode.name, parent, corn::RichText().addText(
-                    domNode.text, corn::TextStyle(font, 24)));
-        } else if (domNode.tag == "image") {
-            // @todo implement this
-        }
-
-        // Invalid DOM node
-        if (!current) return;
-
-        // Load to children
-        for (const DOMNode* child : domNode.children) {
-            loadWidgetFromDOMNode(uiManager, current, *child);
-        }
-    }
-
-    void loadUIFromDOM(corn::UIManager& uiManager, const DOM& dom) {
-        uiManager.clear();
-        loadWidgetFromDOMNode(uiManager, nullptr, dom.getRoot());
     }
 }

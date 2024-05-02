@@ -6,17 +6,33 @@
 #include <cornui/util/css_parser.h>
 
 namespace cornui {
-    CSSOM::CSSOM() noexcept {}
+    CSSOM::CSSOM() noexcept = default;
 
-    CSSOM::~CSSOM() {}
+    CSSOM::~CSSOM() = default;
 
-    void CSSOM::loadFromString(const std::string& contents) {
-        std::istringstream stream(contents);
-        std::vector<CSSRule> rules = parseCSSFromStream(stream);
+    CSSOM& CSSOM::instance() noexcept {
+        static CSSOM singleton;
+        return singleton;
     }
 
-    void CSSOM::loadFromFile(const std::string& file) {
-        std::ifstream stream(file);
-        std::vector<CSSRule> rules = parseCSSFromStream(stream);
+    void CSSOM::loadFromStream(std::istream& input) {
+        for (const CSSRule& rule : parseCSSFromStream(input)) {
+            this->addRule(rule);
+        }
+    }
+
+    void CSSOM::loadFromString(const std::string& contents) {
+        std::istringstream input(contents);
+        this->loadFromStream(input);
+    }
+
+    void CSSOM::loadFromFile(const std::filesystem::path& file) {
+        std::ifstream input(file);
+        this->loadFromStream(input);
+    }
+
+    void CSSOM::addRule(const CSSRule& rule) {
+        // Currently no reduction is applied
+        this->rules_.push_back(rule);
     }
 }

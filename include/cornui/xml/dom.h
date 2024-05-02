@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <string>
 #include <cornui/xml/dom_node.h>
 
@@ -20,28 +21,23 @@ namespace cornui {
          * @param file The path to the XML file.
          * @throw std::invalid_argument If file cannot be opened, or the contents of the file cannot be parsed.
          */
-        explicit DOM(std::string file);
+        explicit DOM(std::filesystem::path file);
 
-        /// @brief Destructor.
-        ~DOM();
+        /**
+         * @brief Bind the data in the DOM tree with the UI manager. Changes in the DOM will sync in the UI.
+         * @param uiManager The UI manager for generating the UI.
+         * @param dom The DOM tree containing the layout.
+         *
+         * DO NOT alter the UI manager after binding!!
+         */
+        void bind(corn::UIManager& uiManager);
 
-        DOM(const DOM& other);
-        DOM& operator=(const DOM& other);
-        DOM(DOM&& other) noexcept;
-        DOM& operator=(DOM&& other) noexcept;
-
+        [[nodiscard]] const std::filesystem::path& getFile() const noexcept;
         [[nodiscard]] DOMNode& getRoot() noexcept;
         [[nodiscard]] const DOMNode& getRoot() const noexcept;
 
     private:
-        std::string file_;
+        std::filesystem::path file_;
         DOMNode root_;
     };
-
-    /**
-     * @brief Parse the information in the DOM tree and generates the UI.
-     * @param uiManager The UI manager for generating the UI.
-     * @param dom The DOM tree containing the layout.
-     */
-    void loadUIFromDOM(corn::UIManager& uiManager, const DOM& dom);
 }

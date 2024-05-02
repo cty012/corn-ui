@@ -6,11 +6,6 @@
 #include <cornui/util/exception.h>
 
 namespace cornui {
-    bool isValidIdentifier(const std::string& token) noexcept {
-        static const std::regex pattern("^[a-zA-Z_-][a-zA-Z0-9_-]*$");
-        return std::regex_match(token, pattern);
-    }
-
     /**
      * @brief Helper function. Get string from stream until reaching the delimiter.
      * @param stream The input stream to read from.
@@ -54,6 +49,67 @@ namespace cornui {
         }
 
         return false;
+    }
+
+    bool isValidIdentifier(const std::string& token) noexcept {
+        static const std::regex pattern("^[a-zA-Z_-][a-zA-Z0-9_-]*$");
+        return std::regex_match(token, pattern);
+    }
+
+    CSSSelectorCombinator parseCombinatorFromChar(char ch) noexcept {
+        if (corn::isWhitespace(ch)) return CSSSelectorCombinator::DESCENDANT;
+        switch (ch) {
+            case '>':
+                return CSSSelectorCombinator::CHILD;
+            case '+':
+                return CSSSelectorCombinator::ADJACENT_SIBLING;
+            case '~':
+                return CSSSelectorCombinator::GENERAL_SIBLING;
+            case ',':
+                return CSSSelectorCombinator::GROUP;
+            default:
+                return CSSSelectorCombinator::NONE;
+        }
+    }
+
+    CSSSelector parseSelectorFromString(const std::string& contents) {
+        CSSSelector selector;
+        std::vector<std::string> groups = corn::split(contents, ",");
+        for (std::string group : groups) {
+            group = corn::trim(group);
+
+            // Skip delimiters
+            if (group == "," || group.empty()) continue;
+
+            // Split again
+            std::vector<std::string> tokens = corn::split(group, corn::WHITESPACE + ">+~");
+
+            // Add new selector group
+            selector.groups.emplace_back();
+            CSSSelectorGroup& selectorGroup = selector.groups.back();
+
+            // Parse result
+            CSSSelectorCombinator nextCombinator = CSSSelectorCombinator::DESCENDANT;
+            for (const std::string& token : tokens) {
+                CSSSelectorCombinator comb = parseCombinatorFromChar(token[0]);
+                if (comb != CSSSelectorCombinator::NONE) {  // If token is combinator
+                    bool noBasicSelectors = selectorGroup.basicSelectors.empty();
+                    bool multipleCombs = (nextCombinator != CSSSelectorCombinator::DESCENDANT) && (comb != CSSSelectorCombinator::DESCENDANT);
+                    if (noBasicSelectors || multipleCombs) {
+                        // @todo: throw exception saying there is a syntax error
+                    }
+                    nextCombinator = (comb == CSSSelectorCombinator::DESCENDANT) ? nextCombinator : comb;
+                } else {  // If token is basic selector
+                    // @todo: parse basic selector
+                    if (!selectorGroup.basicSelectors.empty()) {
+                        selectorGroup.combinators.push_back(nextCombinator);
+                    }
+                    selectorGroup.basicSelectors.push_back(token);
+                    nextCombinator = CSSSelectorCombinator::DESCENDANT;
+                }
+            }
+        }
+        return selector;
     }
 
     std::unordered_map<std::string, std::string> parseDeclFromString(const std::string& contents) {
@@ -100,16 +156,17 @@ namespace cornui {
             // Get the selector
             bool hasLeftBracket = getStringUntilDelim(contents, token, '{');
             std::string untrimmed = token + "{";
-            std::string selector = corn::trim(token);
+            std::string selectorStr = corn::trim(token);
             if (!hasLeftBracket) {
-                if (selector.empty()) {
+                if (selectorStr.empty()) {
                     return result;
                 } else {
-                    throw CSSRuleSyntaxError(selector, "Expect token \"{\" after the selector.");
+                    throw CSSRuleSyntaxError(selectorStr, "Expect token \"{\" after the selector.");
                 }
             }
 
-            // @todo Parse selector.
+            // Parse selector.
+            CSSSelector selector = parseSelectorFromString(selectorStr);
 
             // Get the declarations
             bool hasRightBracket = getStringUntilDelim(contents, token, '}');

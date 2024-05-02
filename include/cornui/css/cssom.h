@@ -1,15 +1,29 @@
 #pragma once
 
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 
 namespace cornui {
+    enum class CSSSelectorCombinator {
+        DESCENDANT, CHILD, ADJACENT_SIBLING, GENERAL_SIBLING, GROUP, NONE
+    };
+
+    /**
+     * @class CSSSelectorGroup
+     * @brief A group within a CSS selector, separated by commas.
+     */
+    struct CSSSelectorGroup {
+        std::vector<std::string> basicSelectors;
+        std::vector<CSSSelectorCombinator> combinators;
+    };
+
     /**
      * @class CSSSelector
      * @brief CSS selector as defined by W3C.
      */
     struct CSSSelector {
-        std::string str;
+        std::vector<CSSSelectorGroup> groups;
     };
 
     /**
@@ -27,11 +41,13 @@ namespace cornui {
      */
     class CSSOM {
     public:
-        /// @brief Constructor.
-        CSSOM() noexcept;
+        static CSSOM& instance() noexcept;
 
-        /// @brief Destructor.
-        ~CSSOM();
+        /**
+         * @brief Parse CSS from a given string.
+         * @param contents The string to parse.
+         */
+        void loadFromStream(std::istream& input);
 
         /**
          * @brief Parse CSS from a given string.
@@ -43,6 +59,24 @@ namespace cornui {
          * @brief Load CSS from a file.
          * @param file The path to the CSS file.
          */
-        void loadFromFile(const std::string& file);
+        void loadFromFile(const std::filesystem::path& file);
+
+    private:
+        /// @brief Constructor.
+        CSSOM() noexcept;
+
+        /// @brief Destructor.
+        ~CSSOM();
+
+        CSSOM(const CSSOM& other) = delete;
+        CSSOM& operator=(const CSSOM& other) = delete;
+
+        /**
+         * @brief Add a new rule to the CSSOM.
+         * @param rule The rule to add. Will be checked against existing rules when merging.
+         */
+        void addRule(const CSSRule& rule);
+
+        std::vector<CSSRule> rules_;
     };
 }
