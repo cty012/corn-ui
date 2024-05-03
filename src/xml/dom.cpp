@@ -110,14 +110,9 @@ namespace cornui {
                     }
                 };
 
-        // Create the body widget as root
-        auto& body = uiManager.createWidget<corn::UIWidget>("body", nullptr);
-        this->root_.name_ = "body";
-        this->root_.widgetID_ = body.getID();
-
         // Load all children
         for (DOMNode* child : this->root_.children_) {
-            loadWidgetFromDOMNode(uiManager, &body, *child, this->file_);
+            loadWidgetFromDOMNode(uiManager, nullptr, *child, this->file_);
         }
 
         // Finally compute and apply the styles
