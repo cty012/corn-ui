@@ -38,12 +38,15 @@ namespace cornui {
         [[nodiscard]] const std::filesystem::path& getFile() const noexcept;
         [[nodiscard]] DOMNode& getRoot() noexcept;
         [[nodiscard]] const DOMNode& getRoot() const noexcept;
+        [[nodiscard]] CSSOM& getCSSOM() noexcept;
+        [[nodiscard]] const CSSOM& getCSSOM() const noexcept;
         [[nodiscard]] corn::UIManager* getUIManager() noexcept;
         [[nodiscard]] const corn::UIManager* getUIManager() const noexcept;
 
     private:
         std::filesystem::path file_;
         DOMNode root_;
+        CSSOM cssom_;
         corn::UIManager* uiManager_;
     };
 }

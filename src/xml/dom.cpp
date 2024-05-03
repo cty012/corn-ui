@@ -64,7 +64,7 @@ namespace cornui {
                         xmlChar* xmlValue = xmlNodeGetContent(attr->children);
                         const char* value = reinterpret_cast<const char*>(xmlValue);
                         if (strcmp(name, "src") == 0) {
-                            CSSOM::instance().loadFromFile(this->file_.parent_path() / value);
+                            this->cssom_.loadFromFile(this->file_.parent_path() / value);
                         }
                         xmlFree(xmlValue);
                     }
@@ -136,6 +136,14 @@ namespace cornui {
         return this->root_;
     }
 
+    CSSOM& DOM::getCSSOM() noexcept {
+        return this->cssom_;
+    }
+
+    const CSSOM& DOM::getCSSOM() const noexcept {
+        return this->cssom_;
+    }
+
     corn::UIManager* DOM::getUIManager() noexcept {
         return this->uiManager_;
     }
@@ -143,5 +151,4 @@ namespace cornui {
     const corn::UIManager* DOM::getUIManager() const noexcept {
         return this->uiManager_;
     }
-
 }

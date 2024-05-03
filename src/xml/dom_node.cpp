@@ -133,7 +133,7 @@ namespace cornui {
         }
 
         // Styles from stylesheet
-        for (const CSSRule& style : CSSOM::instance().getRules()) {
+        for (const CSSRule& style : this->getDOM()->getCSSOM().getRules()) {
             // Apply the styles if the selector matches the current node
             if (match(style.selector, *this)) {
                 for (const auto& [name, value] : style.declarations) {

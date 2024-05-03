@@ -45,7 +45,14 @@ namespace cornui {
      */
     class CSSOM {
     public:
-        static CSSOM& instance() noexcept;
+        /// @brief Constructor.
+        CSSOM() noexcept;
+
+        /// @brief Destructor.
+        ~CSSOM();
+
+        CSSOM(const CSSOM& other) = delete;
+        CSSOM& operator=(const CSSOM& other) = delete;
 
         /**
          * @brief Parse CSS from a given string.
@@ -67,24 +74,17 @@ namespace cornui {
 
         [[nodiscard]] const std::vector<CSSRule>& getRules() const noexcept;
 
-    private:
-        /// @brief Constructor.
-        CSSOM() noexcept;
-
-        /// @brief Destructor.
-        ~CSSOM();
-
-        CSSOM(const CSSOM& other) = delete;
-        CSSOM& operator=(const CSSOM& other) = delete;
-
         /**
          * @brief Add a new rule to the CSSOM.
          * @param rule The rule to add. Will be checked against existing rules when merging.
          */
         void addRule(const CSSRule& rule);
 
+    private:
         std::vector<CSSRule> rules_;
     };
+
+    bool precede(const CSSSelectorGroup& selector1, const CSSSelectorGroup& selector2);
 
     class DOMNode;
     bool match(const CSSSelector& selector, const DOMNode& node);

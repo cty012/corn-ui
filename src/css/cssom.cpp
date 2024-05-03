@@ -13,11 +13,6 @@ namespace cornui {
 
     CSSOM::~CSSOM() = default;
 
-    CSSOM& CSSOM::instance() noexcept {
-        static CSSOM singleton;
-        return singleton;
-    }
-
     void CSSOM::loadFromStream(std::istream& input) {
         for (const CSSRule& rule : parseCSSFromStream(input)) {
             this->addRule(rule);
@@ -39,8 +34,42 @@ namespace cornui {
     }
 
     void CSSOM::addRule(const CSSRule& rule) {
-        // Currently no reduction is applied
-        this->rules_.push_back(rule);
+        // Groups are stored separately due to precedence rules
+        for (const CSSSelectorGroup& group : rule.selector.groups) {
+            this->rules_.emplace_back(
+                    CSSSelector{ std::vector<CSSSelectorGroup>{ group } },
+                    rule.declarations);
+        }
+
+        // Sort by precedence
+        std::ranges::stable_sort(this->rules_, [](const CSSRule& first, const CSSRule& second) {
+            return precede(first.selector.groups[0], second.selector.groups[0]);
+        });
+    }
+
+    std::tuple<size_t, size_t, size_t> countSelectorLevel(const CSSSelectorGroup& selector) {
+        size_t lvl1 = 0, lvl2 = 0, lvl3 = 0;
+        for (const CSSBasicSelector& basicSelector : selector.basicSelectors) {
+            for (const std::string& part : basicSelector.parts) {
+                if (part.empty()) continue;
+                else if (part[0] == '#') lvl1++;
+                else if (part[1] == '.') lvl2++;
+                else lvl3++;
+            }
+        }
+        return { lvl1, lvl2, lvl3 };
+    }
+
+    bool precede(const CSSSelectorGroup& selector1, const CSSSelectorGroup& selector2) {
+        // Level 1: Name selector
+        // Level 2: Class selector
+        // Level 3: Tag selector
+        auto [s1Lvl1, s1Lvl2, s1Lvl3] = countSelectorLevel(selector1);
+        auto [s2Lvl1, s2Lvl2, s2Lvl3] = countSelectorLevel(selector2);
+        if (s1Lvl1 != s2Lvl1) return s1Lvl1 > s2Lvl1;
+        if (s1Lvl2 != s2Lvl2) return s1Lvl2 > s2Lvl2;
+        if (s1Lvl3 != s2Lvl3) return s1Lvl3 > s2Lvl3;
+        return false;
     }
 
     // Helper
