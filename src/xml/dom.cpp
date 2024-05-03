@@ -98,7 +98,8 @@ namespace cornui {
                                 domNode.text_, corn::TextStyle(font, 16)));
                     } else if (domNode.tag_ == "image") {
                         current = &uiManager.createWidget<corn::UIImage>(
-                                domNode.name_, parent, new corn::Image(file));
+                                domNode.name_, parent,
+                                new corn::Image(50, 50, corn::Color::rgb(255, 255, 255, 0)));
                     }
 
                     // Invalid DOM node
@@ -120,7 +121,7 @@ namespace cornui {
         this->root_.computeStyle();
     }
 
-    DOMNode* DOM::getNodeBySelecter(const CSSSelector& selector) const {
+    DOMNode* DOM::getNodeBySelector(const CSSSelector& selector) const {
         std::queue<DOMNode*> toCheck;
         toCheck.push(const_cast<DOMNode*>(&this->root_));
 
@@ -143,7 +144,7 @@ namespace cornui {
         return nullptr;
     }
 
-    std::vector<DOMNode*> DOM::getNodesBySelecter(const CSSSelector& selector) const {
+    std::vector<DOMNode*> DOM::getNodesBySelector(const CSSSelector& selector) const {
         std::queue<DOMNode*> toCheck;
         std::vector<DOMNode*> result;
         toCheck.push(const_cast<DOMNode*>(&this->root_));
@@ -165,6 +166,14 @@ namespace cornui {
         }
 
         return result;
+    }
+
+    DOMNode* DOM::getNodeBySelector(const std::string& selector) const {
+        return this->getNodeBySelector(parseSelectorFromString(selector));
+    }
+
+    std::vector<DOMNode*> DOM::getNodesBySelector(const std::string& selector) const {
+        return this->getNodesBySelector(parseSelectorFromString(selector));
     }
 
     const std::filesystem::path& DOM::getFile() const noexcept {

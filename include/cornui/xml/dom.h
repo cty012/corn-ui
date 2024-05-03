@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <string>
+#include <cornui/css/cssom.h>
 #include <cornui/xml/dom_node.h>
 
 namespace corn {
@@ -40,14 +41,28 @@ namespace cornui {
          * @param selector The CSS selector to match.
          * @return A node that matches the selector.
          */
-        [[nodiscard]] DOMNode* getNodeBySelecter(const CSSSelector& selector) const;
+        [[nodiscard]] DOMNode* getNodeBySelector(const CSSSelector& selector) const;
 
         /**
          * @brief Get all nodes that match the given CSS selector.
          * @param selector The CSS selector to match.
          * @return All nodes that match the selector.
          */
-        [[nodiscard]] std::vector<DOMNode*> getNodesBySelecter(const CSSSelector& selector) const;
+        [[nodiscard]] std::vector<DOMNode*> getNodesBySelector(const CSSSelector& selector) const;
+
+        /**
+         * @brief Get any node that matches the given CSS selector.
+         * @param selector The CSS selector to match.
+         * @return A node that matches the selector.
+         */
+        [[nodiscard]] DOMNode* getNodeBySelector(const std::string& selector) const;
+
+        /**
+         * @brief Get all nodes that match the given CSS selector.
+         * @param selector The CSS selector to match.
+         * @return All nodes that match the selector.
+         */
+        [[nodiscard]] std::vector<DOMNode*> getNodesBySelector(const std::string& selector) const;
 
         [[nodiscard]] const std::filesystem::path& getFile() const noexcept;
         [[nodiscard]] DOMNode& getRoot() noexcept;
