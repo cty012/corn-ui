@@ -1,3 +1,4 @@
+#include <queue>
 #include <stdexcept>
 #include <utility>
 extern "C" {
@@ -117,6 +118,53 @@ namespace cornui {
 
         // Finally compute and apply the styles
         this->root_.computeStyle();
+    }
+
+    DOMNode* DOM::getNodeBySelecter(const CSSSelector& selector) const {
+        std::queue<DOMNode*> toCheck;
+        toCheck.push(const_cast<DOMNode*>(&this->root_));
+
+        while (!toCheck.empty()) {
+            DOMNode* current = toCheck.front();
+            toCheck.pop();
+            if (!current) continue;
+
+            // If current node is a match, return the current node
+            if (match(selector, *current)) {
+                return current;
+            }
+
+            // Otherwise check the child nodes
+            for (DOMNode* child : current->children_) {
+                toCheck.push(child);
+            }
+        }
+
+        return nullptr;
+    }
+
+    std::vector<DOMNode*> DOM::getNodesBySelecter(const CSSSelector& selector) const {
+        std::queue<DOMNode*> toCheck;
+        std::vector<DOMNode*> result;
+        toCheck.push(const_cast<DOMNode*>(&this->root_));
+
+        while (!toCheck.empty()) {
+            DOMNode* current = toCheck.front();
+            toCheck.pop();
+            if (!current) continue;
+
+            // If current node is a match, add the current node to the list of results
+            if (match(selector, *current)) {
+                result.push_back(current);
+            }
+
+            // Check the child nodes
+            for (DOMNode* child : current->children_) {
+                toCheck.push(child);
+            }
+        }
+
+        return result;
     }
 
     const std::filesystem::path& DOM::getFile() const noexcept {

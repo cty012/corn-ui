@@ -21,6 +21,31 @@ set(CORNUI_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib")
 set(EXAMPLES_OUTPUT_DIR "${CMAKE_BINARY_DIR}/examples")
 set(TEST_OUTPUT_DIR "${CMAKE_BINARY_DIR}/tests")
 
+# Platform
+if(WIN32)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(PLATFORM "win64")
+    else()
+        set(PLATFORM "win32")
+    endif()
+elseif(APPLE)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+        set(PLATFORM "macos-arm64")
+    elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+        set(PLATFORM "macos-x64")
+    else()
+        set(PLATFORM "macos")
+    endif()
+elseif(UNIX)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
+        set(PLATFORM "linux-x64")
+    else()
+        set(PLATFORM "linux")
+    endif()
+else()
+    set(PLATFORM "unknown")
+endif()
+
 # Compiler flags
 if (MSVC)
     add_compile_options(/utf-8 /W4 /WX)
@@ -77,3 +102,15 @@ endif ()
 if (BUILD_TESTS)
     add_subdirectory("test")
 endif ()
+
+# Install
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/dist/cornui-${PROJECT_VERSION}-${PLATFORM}")
+install(TARGETS cornui
+        RUNTIME DESTINATION "bin"
+        LIBRARY DESTINATION "bin"
+        ARCHIVE DESTINATION "lib"
+)
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/cornui" DESTINATION "include")
+
+configure_file(cornui-config.cmake.in cornui-config.cmake @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cornui-config.cmake" DESTINATION "cmake")

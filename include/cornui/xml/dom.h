@@ -35,6 +35,20 @@ namespace cornui {
          */
         void bind(corn::UIManager& uiManager);
 
+        /**
+         * @brief Get any node that matches the given CSS selector.
+         * @param selector The CSS selector to match.
+         * @return A node that matches the selector.
+         */
+        [[nodiscard]] DOMNode* getNodeBySelecter(const CSSSelector& selector) const;
+
+        /**
+         * @brief Get all nodes that match the given CSS selector.
+         * @param selector The CSS selector to match.
+         * @return All nodes that match the selector.
+         */
+        [[nodiscard]] std::vector<DOMNode*> getNodesBySelecter(const CSSSelector& selector) const;
+
         [[nodiscard]] const std::filesystem::path& getFile() const noexcept;
         [[nodiscard]] DOMNode& getRoot() noexcept;
         [[nodiscard]] const DOMNode& getRoot() const noexcept;
