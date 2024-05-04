@@ -118,6 +118,7 @@ namespace cornui {
         this->computedStyles_ = {
                 { "active", "true" },
                 { "x", "0px" }, { "y", "0px" }, { "w", "100%nw" }, { "h", "100%nh" },
+                { "z-order", "0" },
                 { "overflow", "display" },
                 { "background", "#ffffff00" },
                 { "opacity", "255" },
@@ -158,6 +159,7 @@ namespace cornui {
                 widget->setY(this->computedStyles_["y"]);
                 widget->setW(this->computedStyles_["w"]);
                 widget->setH(this->computedStyles_["h"]);
+                widget->setZOrder(std::stoi(this->computedStyles_["z-order"]));
                 if (this->computedStyles_["overflow"] == "display") {
                     widget->setOverflow(corn::UIOverflow::DISPLAY);
                 } else if (this->computedStyles_["overflow"] == "hidden") {

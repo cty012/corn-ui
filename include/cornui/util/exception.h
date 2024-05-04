@@ -36,6 +36,22 @@ namespace cornui {
     };
 
     /**
+     * @class CSSSelectorSyntaxError
+     * @brief Syntax error when parsing a CSS selector.
+     */
+    class CSSSelectorSyntaxError : public std::exception {
+    public:
+        CSSSelectorSyntaxError(const std::string& input, const std::string& msg) noexcept;
+        [[nodiscard]] const char* what() const noexcept override;
+
+    protected:
+        CSSSelectorSyntaxError() noexcept;
+
+    private:
+        std::string msg_;
+    };
+
+    /**
      * @class CSSDeclSyntaxError
      * @brief Syntax error when parsing a CSS declaration.
      */

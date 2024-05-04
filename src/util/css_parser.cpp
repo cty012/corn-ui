@@ -39,7 +39,7 @@ namespace cornui {
                     inMultiLineComment = true;
                     stream.get();  // Skip the '*' character
                 } else if (currentChar == delim) {
-                    // Found the target character outside of a comment
+                    // Found the target character outside a comment
                     return true;
                 } else {
                     // Non-target character outside of comment
@@ -72,6 +72,26 @@ namespace cornui {
         }
     }
 
+    // Helper
+    std::vector<std::string> parseBasicSelector(const std::string& basicSelector) {
+        static const std::regex pattern(R"--([#.]?[a-zA-Z_-][a-zA-Z0-9_-]*)--");
+
+        std::vector<std::string> result;
+        std::string toParse = basicSelector;
+        std::smatch match;
+
+        while (!toParse.empty()) {
+            if (std::regex_search(toParse, match, pattern)) {
+                result.push_back(match[0]);
+                toParse = toParse.substr(match[0].length());
+            } else {
+                throw CSSSelectorSyntaxError(basicSelector, "Invalid basic selector");
+            }
+        }
+
+        return result;
+    }
+
     CSSSelector parseSelectorFromString(const std::string& contents) {
         CSSSelector selector;
         std::vector<std::string> groups = corn::split(contents, ",");
@@ -95,16 +115,17 @@ namespace cornui {
                 if (comb != CSSSelectorCombinator::NONE) {  // If token is combinator
                     bool noBasicSelectors = selectorGroup.basicSelectors.empty();
                     bool multipleCombs = (nextCombinator != CSSSelectorCombinator::DESCENDANT) && (comb != CSSSelectorCombinator::DESCENDANT);
-                    if (noBasicSelectors || multipleCombs) {
-                        // @todo: throw exception saying there is a syntax error
+                    if (noBasicSelectors) {
+                        throw CSSSelectorSyntaxError(contents, "CSS selector cannot start with combinator '" + token + "'");
+                    } else if (multipleCombs) {
+                        throw CSSSelectorSyntaxError(contents, "CSS selector cannot have multiple adjacent combinators");
                     }
                     nextCombinator = (comb == CSSSelectorCombinator::DESCENDANT) ? nextCombinator : comb;
                 } else {  // If token is basic selector
-                    // @todo: break basic selector into parts
                     if (!selectorGroup.basicSelectors.empty()) {
                         selectorGroup.combinators.push_back(nextCombinator);
                     }
-                    selectorGroup.basicSelectors.emplace_back(std::vector<std::string>{ token });
+                    selectorGroup.basicSelectors.emplace_back(parseBasicSelector(token));
                     nextCombinator = CSSSelectorCombinator::DESCENDANT;
                 }
             }
