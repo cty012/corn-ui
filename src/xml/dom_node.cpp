@@ -119,6 +119,7 @@ namespace cornui {
                 { "active", "true" },
                 { "x", "0px" }, { "y", "0px" }, { "w", "100%nw" }, { "h", "100%nh" },
                 { "z-order", "0" },
+                { "clickable", "false" },
                 { "overflow", "display" },
                 { "background", "#ffffff00" },
                 { "opacity", "255" },
@@ -154,12 +155,21 @@ namespace cornui {
             if (widget != nullptr) {
                 // Apply general styles
                 widget->setName(this->name_);
-                widget->setActive(this->computedStyles_["active"] == "true");
+                if (this->computedStyles_["active"] == "true") {
+                    widget->setActive(true);
+                } else if (this->computedStyles_["active"] == "false") {
+                    widget->setActive(false);
+                }
                 widget->setX(this->computedStyles_["x"]);
                 widget->setY(this->computedStyles_["y"]);
                 widget->setW(this->computedStyles_["w"]);
                 widget->setH(this->computedStyles_["h"]);
                 widget->setZOrder(std::stoi(this->computedStyles_["z-order"]));
+                if (this->computedStyles_["clickable"] == "true") {
+                    widget->setClickable(true);
+                } else if (this->computedStyles_["clickable"] == "false") {
+                    widget->setClickable(false);
+                }
                 if (this->computedStyles_["overflow"] == "display") {
                     widget->setOverflow(corn::UIOverflow::DISPLAY);
                 } else if (this->computedStyles_["overflow"] == "hidden") {

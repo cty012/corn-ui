@@ -66,6 +66,8 @@ namespace cornui {
         [[nodiscard]] DOM* getDOM() const noexcept;
         [[nodiscard]] DOMNode* getParent() const noexcept;
         [[nodiscard]] const std::vector<DOMNode*>& getChildren() const noexcept;
+        [[nodiscard]] corn::UIWidget::WidgetID getWidgetID() const noexcept;
+        [[nodiscard]] corn::UIWidget* getWidget() const noexcept;
 
     private:
         void computeStyle();

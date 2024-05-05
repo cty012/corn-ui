@@ -43,7 +43,7 @@ namespace cornui {
 
         // Sort by precedence
         std::ranges::stable_sort(this->rules_, [](const CSSRule& first, const CSSRule& second) {
-            return precede(first.selector.groups[0], second.selector.groups[0]);
+            return !precede(first.selector.groups[0], second.selector.groups[0]);
         });
     }
 

@@ -108,6 +108,7 @@ SettingsScene::SettingsScene() {
     auto& lang = this->getUIManager().createWidget<corn::UILabel>(
             "lang", &langLabel, TextManager::instance().getRichText("settings-lang-" + language));
     lang.setX("100%pw + 10px");
+    lang.setClickable(true);
     underlineOnHover(lang);
     lang.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
@@ -125,6 +126,7 @@ SettingsScene::SettingsScene() {
             "save", &body, TextManager::instance().getRichText("settings-save"));
     save.setX("100%pw - 100%nw - 200px");
     save.setY("100%ph - 100%nh - 120px");
+    save.setClickable(true);
     underlineOnHover(save);
     save.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
@@ -185,6 +187,7 @@ TutorialScene::TutorialScene() {
             "back", &body, TextManager::instance().getRichText("tutorial-back"));
     back.setX("100%pw - 100%nw - 200px");
     back.setY("100%ph - 100%nh - 120px");
+    back.setClickable(true);
     underlineOnHover(back);
     back.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
@@ -245,6 +248,7 @@ GameScene::GameScene() : paused(false), addedSystems_() {
     auto& cont = this->getUIManager().createWidget<corn::UILabel>(
             "continue", &menu, TextManager::instance().getRichText("game-pause-continue"));
     cont.setY("100px");
+    cont.setClickable(true);
     underlineOnHover(cont);
     cont.getEventManager().addListener(
             "corn::ui::onclick", [this](const corn::EventArgs& args) {
@@ -257,6 +261,7 @@ GameScene::GameScene() : paused(false), addedSystems_() {
     auto& exitToMainMenu = this->getUIManager().createWidget<corn::UILabel>(
             "exit-to-main-menu", &menu, TextManager::instance().getRichText("game-pause-exit-to-main-menu"));
     exitToMainMenu.setY("150px");
+    exitToMainMenu.setClickable(true);
     underlineOnHover(exitToMainMenu);
     exitToMainMenu.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
