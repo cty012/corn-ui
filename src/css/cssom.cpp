@@ -36,9 +36,10 @@ namespace cornui {
     void CSSOM::addRule(const CSSRule& rule) {
         // Groups are stored separately due to precedence rules
         for (const CSSSelectorGroup& group : rule.selector.groups) {
-            this->rules_.emplace_back(
-                    CSSSelector{ std::vector<CSSSelectorGroup>{ group } },
-                    rule.declarations);
+            this->rules_.push_back(CSSRule{
+                CSSSelector{ std::vector<CSSSelectorGroup>{ group } },
+                rule.declarations
+            });
         }
 
         // Sort by precedence

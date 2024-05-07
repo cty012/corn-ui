@@ -125,7 +125,9 @@ namespace cornui {
                     if (!selectorGroup.basicSelectors.empty()) {
                         selectorGroup.combinators.push_back(nextCombinator);
                     }
-                    selectorGroup.basicSelectors.emplace_back(parseBasicSelector(token));
+                    selectorGroup.basicSelectors.push_back(CSSBasicSelector{
+                        parseBasicSelector(token)
+                    });
                     nextCombinator = CSSSelectorCombinator::DESCENDANT;
                 }
             }

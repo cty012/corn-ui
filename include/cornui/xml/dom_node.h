@@ -6,6 +6,8 @@
 #include <corn/ui.h>
 
 namespace cornui {
+    class DOM;
+
     class DOMNode {
     public:
         friend class DOM;
