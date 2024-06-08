@@ -3,6 +3,7 @@
 #include <corn/core.h>
 #include <corn/ecs.h>
 #include <corn/event.h>
+#include <cornui/ui.h>
 #include "constants.h"
 
 /// The menu scene
@@ -12,7 +13,8 @@ public:
     ~MainMenuScene() override;
 
 private:
-    corn::EventManager::ListenerID langChangeEventID;
+    cornui::UI ui_;
+    corn::EventManager::ListenerID langChangeEventID_;
 };
 
 /// The settings scene
@@ -22,7 +24,7 @@ public:
     ~SettingsScene() override;
 
 private:
-    corn::EventManager::ListenerID langChangeEventID;
+    corn::EventManager::ListenerID langChangeEventID_;
 };
 
 /// The tutorial scene
@@ -32,7 +34,7 @@ public:
     ~TutorialScene() override;
 
 private:
-    corn::EventManager::ListenerID langChangeEventID;
+    corn::EventManager::ListenerID langChangeEventID_;
 };
 
 /// The main game scene
@@ -45,14 +47,14 @@ public:
     void togglePause();
 
 private:
-    bool paused;
-    corn::UIWidget* pauseMenu;
-    corn::Entity* bird;
-    corn::CMovement2D* birdMovement;
+    bool paused_;
+    corn::UIWidget* pauseMenu_;
+    corn::Entity* bird_;
+    corn::CMovement2D* birdMovement_;
     std::vector<corn::System*> addedSystems_;
-    corn::EventManager::ListenerID keyboardEventID;
-    corn::EventManager::ListenerID mouseEventID;
-    corn::EventManager::ListenerID langChangeEventID;
+    corn::EventManager::ListenerID keyboardEventID_;
+    corn::EventManager::ListenerID mouseEventID_;
+    corn::EventManager::ListenerID langChangeEventID_;
 
     void onKeyboardEvent(const corn::EventArgsKeyboard& args);
     void onMouseEvent(const corn::EventArgsMouseButton& args);

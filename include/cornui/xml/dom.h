@@ -10,6 +10,8 @@ namespace corn {
 }
 
 namespace cornui {
+    class UI;
+
     /**
      * @class DOM
      * @brief A tree structure that represent the DOM of the front end. Note this class is only intended to store data.
@@ -17,15 +19,7 @@ namespace cornui {
      */
     class DOM {
     public:
-        /**
-         * @brief Constructor. The DOM tree MUST be loaded from a XML file.
-         * @param file The path to the XML file.
-         * @throw std::invalid_argument If file cannot be opened, or the contents of the file cannot be parsed.
-         */
-        explicit DOM(std::filesystem::path file);
-
-        DOM(const DOM& dom) = delete;
-        DOM& operator=(const DOM& dom) = delete;
+        friend class UI;
 
         /**
          * @brief Bind the data in the DOM tree with the UI manager. Changes in the DOM will sync in the UI.
@@ -73,6 +67,19 @@ namespace cornui {
         [[nodiscard]] const corn::UIManager* getUIManager() const noexcept;
 
     private:
+        /// @brief Empty constructor.
+        DOM();
+        DOM(const DOM& dom) = delete;
+        DOM& operator=(const DOM& dom) = delete;
+
+        /**
+         * @brief Constructor. The DOM tree MUST be loaded from a XML file.
+         * @param file The path to the XML file.
+         * @param toLoad JavaScript files to load.
+         * @throw std::invalid_argument If file cannot be opened, or the contents of the file cannot be parsed.
+         */
+        void init(const std::filesystem::path& file, std::vector<std::filesystem::path>& toLoad);
+
         std::filesystem::path file_;
         DOMNode root_;
         CSSOM cssom_;

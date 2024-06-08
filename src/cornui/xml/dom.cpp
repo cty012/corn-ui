@@ -1,6 +1,5 @@
 #include <queue>
 #include <stdexcept>
-#include <utility>
 extern "C" {
 #include <libxml/parser.h>
 }
@@ -13,81 +12,15 @@ extern "C" {
 #include <cornui/xml/dom.h>
 
 namespace cornui {
-    DOM::DOM(std::filesystem::path file) : file_(std::move(file)) {
-        xmlInitParser();
-        xmlDocPtr doc = xmlReadFile(this->file_.string().c_str(), nullptr, 0);
-        if (doc == nullptr) {
-            throw std::invalid_argument("Cannot load file '" + this->file_.string() + "'!\n");
-        }
-
-        // Root node must be <cornui>
-        xmlNodePtr root = xmlDocGetRootElement(doc);
-        const char* rootTag = reinterpret_cast<const char*>(root->name);
-        if (strcmp(rootTag, "cornui") != 0) {
-            throw std::invalid_argument("File '" + this->file_.string() + "' has root element with tag '<"
-                                        + rootTag + ">', '<cornui>' expected!\n");
-        }
-
-        // Find <head> and <body>
-        xmlNodePtr head = nullptr, body = nullptr;
-        for (xmlNodePtr xmlChild = root->children; xmlChild; xmlChild = xmlChild->next) {
-            if (xmlChild->type == XML_ELEMENT_NODE) {
-                const char* tag = reinterpret_cast<const char*>(xmlChild->name);
-                if (!strcmp(tag, "head")) {
-                    // Avoid multiple heads
-                    if (head) throw std::invalid_argument("File '" + this->file_.string() + "' has multiple <head>s.");
-                    head = xmlChild;
-                } else if (!strcmp(tag, "body")) {
-                    // Avoid multiple heads
-                    if (body) throw std::invalid_argument("File '" + this->file_.string() + "' has multiple <body>s.");
-                    body = xmlChild;
-                }
-            }
-        }
-
-        // If either not found
-        if (!head && !body) {
-            throw std::invalid_argument("File '" + this->file_.string() + "' has no <head> and <body>.");
-        } else if (!head) {
-            throw std::invalid_argument("File '" + this->file_.string() + "' has no <head>.");
-        } else if (!body) {
-            throw std::invalid_argument("File '" + this->file_.string() + "' has no <body>.");
-        }
-
-        // Load head
-        // todo: load <script> (and possibly <def>)
-        for (xmlNodePtr xmlChild = head->children; xmlChild; xmlChild = xmlChild->next) {
-            if (xmlChild->type == XML_ELEMENT_NODE) {
-                const char* tag = reinterpret_cast<const char*>(xmlChild->name);
-                if (!strcmp(tag, "style")) {
-                    for (xmlAttr* attr = xmlChild->properties; attr; attr = attr->next) {
-                        const char* name = reinterpret_cast<const char*>(attr->name);
-                        xmlChar* xmlValue = xmlNodeGetContent(attr->children);
-                        const char* value = reinterpret_cast<const char*>(xmlValue);
-                        if (strcmp(name, "src") == 0) {
-                            this->cssom_.loadFromFile(this->file_.parent_path() / value);
-                        }
-                        xmlFree(xmlValue);
-                    }
-                }
-            }
-        }
-
-        // Load body
-        // helper function
-#include "dom_helper.h"
-
-        loadXMLBodyToNode(body, this->root_);
-        xmlFreeDoc(doc);
-    }
+    DOM::DOM() : uiManager_(nullptr) {}
 
     void DOM::bind(corn::UIManager& uiManager) {
         // First, store the UI manager to be referenced later
         this->uiManager_ = &uiManager;
         uiManager.clear();
 
-        std::function<void(corn::UIManager&, const corn::UIWidget*, DOMNode&, const std::filesystem::path&)> loadWidgetFromDOMNode =
-                [&](corn::UIManager& uiManager, const corn::UIWidget* parent, DOMNode& domNode, const std::filesystem::path& file) {
+        std::function<void(corn::UIManager&, const corn::UIWidget*, DOMNode&)> loadWidgetFromDOMNode =
+                [&](corn::UIManager& uiManager, const corn::UIWidget* parent, DOMNode& domNode) {
                     corn::UIWidget* current = nullptr;
                     // Load to current node
                     if (domNode.tag_ == "widget") {
@@ -108,13 +41,13 @@ namespace cornui {
 
                     // Load to children
                     for (DOMNode* child : domNode.children_) {
-                        loadWidgetFromDOMNode(uiManager, current, *child, file);
+                        loadWidgetFromDOMNode(uiManager, current, *child);
                     }
                 };
 
         // Load all children
         for (DOMNode* child : this->root_.children_) {
-            loadWidgetFromDOMNode(uiManager, nullptr, *child, this->file_);
+            loadWidgetFromDOMNode(uiManager, nullptr, *child);
         }
 
         // Finally compute and apply the styles
@@ -202,5 +135,85 @@ namespace cornui {
 
     const corn::UIManager* DOM::getUIManager() const noexcept {
         return this->uiManager_;
+    }
+
+    void DOM::init(const std::filesystem::path& file, std::vector<std::filesystem::path>& toLoad) {
+        this->file_ = file;
+
+        xmlInitParser();
+        xmlDocPtr doc = xmlReadFile(file.string().c_str(), nullptr, 0);
+        if (doc == nullptr) {
+            throw std::invalid_argument("Cannot load file '" + file.string() + "'!\n");
+        }
+
+        // Root node must be <cornui>
+        xmlNodePtr root = xmlDocGetRootElement(doc);
+        const char* rootTag = reinterpret_cast<const char*>(root->name);
+        if (strcmp(rootTag, "cornui") != 0) {
+            throw std::invalid_argument("File '" + file.string() + "' has root element with tag '<"
+                                        + rootTag + ">', '<cornui>' expected!\n");
+        }
+
+        // Find <head> and <body>
+        xmlNodePtr head = nullptr, body = nullptr;
+        for (xmlNodePtr xmlChild = root->children; xmlChild; xmlChild = xmlChild->next) {
+            if (xmlChild->type == XML_ELEMENT_NODE) {
+                const char* tag = reinterpret_cast<const char*>(xmlChild->name);
+                if (!strcmp(tag, "head")) {
+                    // Avoid multiple heads
+                    if (head) throw std::invalid_argument("File '" + file.string() + "' has multiple <head>s.");
+                    head = xmlChild;
+                } else if (!strcmp(tag, "body")) {
+                    // Avoid multiple heads
+                    if (body) throw std::invalid_argument("File '" + file.string() + "' has multiple <body>s.");
+                    body = xmlChild;
+                }
+            }
+        }
+
+        // If either not found
+        if (!head && !body) {
+            throw std::invalid_argument("File '" + file.string() + "' has no <head> and <body>.");
+        } else if (!head) {
+            throw std::invalid_argument("File '" + file.string() + "' has no <head>.");
+        } else if (!body) {
+            throw std::invalid_argument("File '" + file.string() + "' has no <body>.");
+        }
+
+        // Load head
+        // todo: possibly load <def> when feature is added
+        for (xmlNodePtr xmlChild = head->children; xmlChild; xmlChild = xmlChild->next) {
+            if (xmlChild->type == XML_ELEMENT_NODE) {
+                const char* tag = reinterpret_cast<const char*>(xmlChild->name);
+                if (!strcmp(tag, "style")) {
+                    for (xmlAttr* attr = xmlChild->properties; attr; attr = attr->next) {
+                        const char* name = reinterpret_cast<const char*>(attr->name);
+                        xmlChar* xmlValue = xmlNodeGetContent(attr->children);
+                        const char* value = reinterpret_cast<const char*>(xmlValue);
+                        if (strcmp(name, "src") == 0) {
+                            this->cssom_.loadFromFile(file.parent_path() / value);
+                        }
+                        xmlFree(xmlValue);
+                    }
+                } else if (!strcmp(tag, "script")) {
+                    for (xmlAttr* attr = xmlChild->properties; attr; attr = attr->next) {
+                        const char* name = reinterpret_cast<const char*>(attr->name);
+                        xmlChar* xmlValue = xmlNodeGetContent(attr->children);
+                        const char* value = reinterpret_cast<const char*>(xmlValue);
+                        if (strcmp(name, "src") == 0) {
+                            toLoad.push_back(file.parent_path() / value);
+                        }
+                        xmlFree(xmlValue);
+                    }
+                }
+            }
+        }
+
+        // Load body
+        // helper function
+#include "dom_helper.h"
+
+        loadXMLBodyToNode(body, this->root_);
+        xmlFreeDoc(doc);
     }
 }

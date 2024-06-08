@@ -1,6 +1,4 @@
 #include <corn/ui.h>
-#include <cornui/css.h>
-#include <cornui/xml.h>
 #include "entities.h"
 #include "event_args.h"
 #include "scenes.h"
@@ -22,11 +20,8 @@ void underlineOnHover(corn::UILabel& label) {
             });
 }
 
-MainMenuScene::MainMenuScene() {
+MainMenuScene::MainMenuScene() : ui_("resources/ui/main_menu.xml", this->getUIManager()) {
     // UI
-    cornui::DOM dom("resources/ui/main_menu.xml");
-    dom.bind(this->getUIManager());
-
     auto& title = *(corn::UILabel*)this->getUIManager().getWidgetByName("title");
     auto& start = *(corn::UILabel*)this->getUIManager().getWidgetByName("start");
     auto& settings = *(corn::UILabel*)this->getUIManager().getWidgetByName("settings");
@@ -69,7 +64,7 @@ MainMenuScene::MainMenuScene() {
                 corn::EventManager::instance().emit(corn::EventArgsExit());
             });
 
-    this->langChangeEventID = corn::EventManager::instance().addListener(
+    this->langChangeEventID_ = corn::EventManager::instance().addListener(
             "clangy-bird::langchange", [&title, &start, &settings, &tutorial, &exit](const corn::EventArgs&) {
                 title.setText(TextManager::instance().getRichText("main-menu-title"));
                 start.setText(TextManager::instance().getRichText("main-menu-start"));
@@ -80,7 +75,7 @@ MainMenuScene::MainMenuScene() {
 }
 
 MainMenuScene::~MainMenuScene() {
-    corn::EventManager::instance().removeListener(this->langChangeEventID);
+    corn::EventManager::instance().removeListener(this->langChangeEventID_);
 }
 
 SettingsScene::SettingsScene() {
@@ -137,7 +132,7 @@ SettingsScene::SettingsScene() {
                         corn::EventArgsScene(corn::SceneOperation::POP, nullptr));
             });
 
-    this->langChangeEventID = corn::EventManager::instance().addListener(
+    this->langChangeEventID_ = corn::EventManager::instance().addListener(
             "clangy-bird::langchange", [&title, &langLabel, &lang, &save](const corn::EventArgs&) {
                 title.setText(TextManager::instance().getRichText("settings-title"));
                 langLabel.setText(TextManager::instance().getRichText("settings-lang"));
@@ -148,7 +143,7 @@ SettingsScene::SettingsScene() {
 }
 
 SettingsScene::~SettingsScene() {
-    corn::EventManager::instance().removeListener(this->langChangeEventID);
+    corn::EventManager::instance().removeListener(this->langChangeEventID_);
 }
 
 TutorialScene::TutorialScene() {
@@ -198,7 +193,7 @@ TutorialScene::TutorialScene() {
                         corn::EventArgsScene(corn::SceneOperation::POP, nullptr));
             });
 
-    this->langChangeEventID = corn::EventManager::instance().addListener(
+    this->langChangeEventID_ = corn::EventManager::instance().addListener(
             "clangy-bird::langchange", [&title, &text, &back](const corn::EventArgs&) {
                 title.setText(TextManager::instance().getRichText("tutorial-title"));
                 text.setText(TextManager::instance().getRichText("tutorial-text"));
@@ -207,16 +202,16 @@ TutorialScene::TutorialScene() {
 }
 
 TutorialScene::~TutorialScene() {
-    corn::EventManager::instance().removeListener(this->langChangeEventID);
+    corn::EventManager::instance().removeListener(this->langChangeEventID_);
 }
 
-GameScene::GameScene() : paused(false), addedSystems_() {
+GameScene::GameScene() : paused_(false), addedSystems_() {
     // Camera
     createCamera(this->getEntityManager());
 
     // Entities
-    this->bird = createBird(this->getEntityManager());
-    this->birdMovement = this->bird->getComponent<corn::CMovement2D>();
+    this->bird_ = createBird(this->getEntityManager());
+    this->birdMovement_ = this->bird_->getComponent<corn::CMovement2D>();
     createCeilAndFloor(this->getEntityManager());
 
     // Systems
@@ -233,13 +228,13 @@ GameScene::GameScene() : paused(false), addedSystems_() {
     body.setW("min(100%pw * 9, 100%ph * 16) / 9");
     body.setH("min(100%pw * 9, 100%ph * 16) / 16");
 
-    this->pauseMenu = &this->getUIManager().createWidget<corn::UIWidget>("pause", &body);
-    this->pauseMenu->setActive(false);
-    this->pauseMenu->setW("100%pw");
-    this->pauseMenu->setH("100%ph");
-    this->pauseMenu->setBackground(corn::Color::rgb(0, 0, 0, 100));
+    this->pauseMenu_ = &this->getUIManager().createWidget<corn::UIWidget>("pause", &body);
+    this->pauseMenu_->setActive(false);
+    this->pauseMenu_->setW("100%pw");
+    this->pauseMenu_->setH("100%ph");
+    this->pauseMenu_->setBackground(corn::Color::rgb(0, 0, 0, 100));
 
-    auto& menu = this->getUIManager().createWidget<corn::UIWidget>("menu", this->pauseMenu);
+    auto& menu = this->getUIManager().createWidget<corn::UIWidget>("menu", this->pauseMenu_);
     menu.setX("50%pw - 50%nw");
     menu.setY("50%ph - 50%nh - 50px");
 
@@ -273,16 +268,16 @@ GameScene::GameScene() : paused(false), addedSystems_() {
             });
 
     // Event listeners
-    this->keyboardEventID = this->getEventManager().addListener(
+    this->keyboardEventID_ = this->getEventManager().addListener(
             "corn::input::keyboard", [this](const corn::EventArgs &args) {
                 this->onKeyboardEvent(dynamic_cast<const corn::EventArgsKeyboard&>(args));
             });
-    this->mouseEventID = this->getEventManager().addListener(
+    this->mouseEventID_ = this->getEventManager().addListener(
             "corn::input::mousebtn", [this](const corn::EventArgs &args) {
                 this->onMouseEvent(dynamic_cast<const corn::EventArgsMouseButton&>(args));
             });
 
-    this->langChangeEventID = corn::EventManager::instance().addListener(
+    this->langChangeEventID_ = corn::EventManager::instance().addListener(
             "clangy-bird::langchange", [&title, &cont, &exitToMainMenu](const corn::EventArgs&) {
                 title.setText(TextManager::instance().getRichText("game-pause-title"));
                 cont.setText(TextManager::instance().getRichText("game-pause-continue"));
@@ -291,20 +286,20 @@ GameScene::GameScene() : paused(false), addedSystems_() {
 }
 
 GameScene::~GameScene() {
-    this->getEventManager().removeListener(this->keyboardEventID);
-    this->getEventManager().removeListener(this->mouseEventID);
-    this->getEventManager().removeListener(this->langChangeEventID);
+    this->getEventManager().removeListener(this->keyboardEventID_);
+    this->getEventManager().removeListener(this->mouseEventID_);
+    this->getEventManager().removeListener(this->langChangeEventID_);
 }
 
 bool GameScene::isPaused() const {
-    return this->paused;
+    return this->paused_;
 }
 
 void GameScene::togglePause() {
-    this->paused = !this->paused;
-    this->pauseMenu->setActive(this->paused);
+    this->paused_ = !this->paused_;
+    this->pauseMenu_->setActive(this->paused_);
     for (corn::System* system : this->addedSystems_) {
-        system->setActive(!this->paused);
+        system->setActive(!this->paused_);
     }
 }
 
@@ -314,8 +309,8 @@ void GameScene::onKeyboardEvent(const corn::EventArgsKeyboard& args) {
         case corn::Key::W:
         case corn::Key::UP:
         case corn::Key::SPACE:
-            if (!this->paused) {
-                this->birdMovement->velocity.y = -700;
+            if (!this->paused_) {
+                this->birdMovement_->velocity.y = -700;
             }
             break;
         case corn::Key::ESC:
@@ -326,7 +321,7 @@ void GameScene::onKeyboardEvent(const corn::EventArgsKeyboard& args) {
 }
 
 void GameScene::onMouseEvent(const corn::EventArgsMouseButton& args) {
-    if (!this->paused && args.mouse == corn::Mouse::LEFT && args.status == corn::ButtonEvent::DOWN) {
-        this->birdMovement->velocity.y = -700;
+    if (!this->paused_ && args.mouse == corn::Mouse::LEFT && args.status == corn::ButtonEvent::DOWN) {
+        this->birdMovement_->velocity.y = -700;
     }
 }
