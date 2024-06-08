@@ -1,9 +1,15 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+#include <vector>
 #include <duktape.h>
 
 namespace cornui {
     void push_prototype(duk_context* ctx, const char* name);
+
+    void push_vec_of_string(duk_context* ctx, const std::vector<std::string>& target);
+    void push_umap_of_string_string(duk_context* ctx, const std::unordered_map<std::string, std::string>& target);
 
     template<typename T>
     T* getPtr(duk_context* ctx) {

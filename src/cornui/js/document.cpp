@@ -20,11 +20,11 @@ namespace cornui {
 
         // Add function "getNodeBySelector" to "document"
         duk_push_c_function(ctx, document_getNodeBySelector, 1);
-        duk_put_prop_string(ctx, -2, "getNodeBySelector");
+        duk_put_prop_string(ctx, documentIdx, "getNodeBySelector");
 
         // Add function "getNodesBySelector" to "document"
         duk_push_c_function(ctx, document_getNodesBySelector, 1);
-        duk_put_prop_string(ctx, -2, "getNodesBySelector");
+        duk_put_prop_string(ctx, documentIdx, "getNodesBySelector");
 
         // Add "document" to the global object
         duk_put_global_string(ctx, "document");

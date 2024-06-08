@@ -2,6 +2,7 @@
 <cornui>
 <head>
     <style src="main_menu.ccss"/>
+    <script src="main_menu.js"/>
 </head>
 <body>
     <widget name="body">
