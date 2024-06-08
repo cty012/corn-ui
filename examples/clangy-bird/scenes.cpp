@@ -20,8 +20,10 @@ void underlineOnHover(corn::UILabel& label) {
             });
 }
 
-MainMenuScene::MainMenuScene() : ui_("resources/ui/main_menu.xml", this->getUIManager()) {
+MainMenuScene::MainMenuScene() {
     // UI
+    this->ui_.init("resources/ui/main_menu.xml", this->getUIManager());
+
     auto& title = *(corn::UILabel*)this->getUIManager().getWidgetByName("title");
     auto& start = *(corn::UILabel*)this->getUIManager().getWidgetByName("start");
     auto& settings = *(corn::UILabel*)this->getUIManager().getWidgetByName("settings");
