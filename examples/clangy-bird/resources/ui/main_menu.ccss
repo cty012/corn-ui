@@ -42,6 +42,10 @@
     clickable: true;
 }
 
+.red {
+    font-color: #ff0000;
+}
+
 .button:hover {
     text-variant: underline;
 }

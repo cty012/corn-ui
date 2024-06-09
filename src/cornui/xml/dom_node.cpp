@@ -26,9 +26,9 @@ namespace cornui {
         this->name_ = "";
         this->text_ = u8"";
         this->classList_.clear();
-        this->styles_.clear();
-        this->inheritedStyles_.clear();
-        this->computedStyles_.clear();
+        this->style_.clear();
+        this->inheritedStyle_.clear();
+        this->computedStyle_.clear();
         this->attributes_.clear();
         this->children_.clear();
         this->widgetID_ = 0;
@@ -39,7 +39,7 @@ namespace cornui {
         this->name_ = other.name_;
         this->text_ = other.text_;
         this->classList_ = other.classList_;
-        this->styles_ = other.styles_;
+        this->style_ = other.style_;
         this->attributes_ = other.attributes_;
         for (const DOMNode* child : this->children_) {
             this->children_.push_back(new DOMNode(*child));
@@ -53,7 +53,7 @@ namespace cornui {
         this->name_ = other.name_;
         this->text_ = other.text_;
         this->classList_ = other.classList_;
-        this->styles_ = other.styles_;
+        this->style_ = other.style_;
         this->attributes_ = other.attributes_;
         this->widgetID_ = 0;
         this->dom_ = nullptr;
@@ -97,6 +97,10 @@ namespace cornui {
         return ss.str();
     }
 
+    bool DOMNode::hasClass(const std::string& className) const noexcept {
+        return std::find(this->classList_.begin(), this->classList_.end(), className) == this->classList_.end();
+    }
+
     bool DOMNode::addClass(const std::string& className) noexcept {
         // Return false if already exist
         if (std::find(this->classList_.begin(), this->classList_.end(), className) != this->classList_.end()) {
@@ -115,7 +119,7 @@ namespace cornui {
 
     void DOMNode::computeStyle() {
         // Reset computedStyles to default
-        this->computedStyles_ = {
+        this->computedStyle_ = {
                 { "active", "true" },
                 { "x", "0px" }, { "y", "0px" }, { "w", "100%nw" }, { "h", "100%nh" },
                 { "z-order", "0" },
@@ -130,8 +134,8 @@ namespace cornui {
         };
 
         // Inherit
-        for (const auto& [name, value] : this->inheritedStyles_) {
-            this->computedStyles_[name] = value;
+        for (const auto& [name, value] : this->inheritedStyle_) {
+            this->computedStyle_[name] = value;
         }
 
         // Styles from stylesheet
@@ -139,14 +143,14 @@ namespace cornui {
             // Apply the styles if the selector matches the current node
             if (match(style.selector, *this)) {
                 for (const auto& [name, value] : style.declarations) {
-                    this->computedStyles_[name] = value;
+                    this->computedStyle_[name] = value;
                 }
             }
         }
 
         // Inline styles
-        for (const auto& [name, value] : this->styles_) {
-            this->computedStyles_[name] = value;
+        for (const auto& [name, value] : this->style_) {
+            this->computedStyle_[name] = value;
         }
 
         // Apply styles to the UIWidgets
@@ -155,40 +159,40 @@ namespace cornui {
             if (widget != nullptr) {
                 // Apply general styles
                 widget->setName(this->name_);
-                if (this->computedStyles_["active"] == "true") {
+                if (this->computedStyle_["active"] == "true") {
                     widget->setActive(true);
-                } else if (this->computedStyles_["active"] == "false") {
+                } else if (this->computedStyle_["active"] == "false") {
                     widget->setActive(false);
                 }
-                widget->setX(this->computedStyles_["x"]);
-                widget->setY(this->computedStyles_["y"]);
-                widget->setW(this->computedStyles_["w"]);
-                widget->setH(this->computedStyles_["h"]);
-                widget->setZOrder(std::stoi(this->computedStyles_["z-order"]));
-                if (this->computedStyles_["clickable"] == "true") {
+                widget->setX(this->computedStyle_["x"]);
+                widget->setY(this->computedStyle_["y"]);
+                widget->setW(this->computedStyle_["w"]);
+                widget->setH(this->computedStyle_["h"]);
+                widget->setZOrder(std::stoi(this->computedStyle_["z-order"]));
+                if (this->computedStyle_["clickable"] == "true") {
                     widget->setClickable(true);
-                } else if (this->computedStyles_["clickable"] == "false") {
+                } else if (this->computedStyle_["clickable"] == "false") {
                     widget->setClickable(false);
                 }
-                if (this->computedStyles_["overflow"] == "display") {
+                if (this->computedStyle_["overflow"] == "display") {
                     widget->setOverflow(corn::UIOverflow::DISPLAY);
-                } else if (this->computedStyles_["overflow"] == "hidden") {
+                } else if (this->computedStyle_["overflow"] == "hidden") {
                     widget->setOverflow(corn::UIOverflow::HIDDEN);
                 }
-                widget->setBackground(corn::Color::parse(this->computedStyles_["background"]));
-                widget->setOpacity((unsigned char)std::stoi(this->computedStyles_["opacity"]));
+                widget->setBackground(corn::Color::parse(this->computedStyle_["background"]));
+                widget->setOpacity((unsigned char)std::stoi(this->computedStyle_["opacity"]));
 
                 // Apply widget type-specific styles
                 if (this->tag_ == "label") {
-                    const corn::Font* font = corn::FontManager::instance().get(this->computedStyles_["font-family"]);
-                    size_t fontSize = std::stoi(this->computedStyles_["font-size"]);
-                    corn::Color fontColor = corn::Color::parse(this->computedStyles_["font-color"]);
+                    const corn::Font* font = corn::FontManager::instance().get(this->computedStyle_["font-family"]);
+                    size_t fontSize = std::stoi(this->computedStyle_["font-size"]);
+                    corn::Color fontColor = corn::Color::parse(this->computedStyle_["font-color"]);
                     corn::FontVariant fontVariant = corn::FontVariant::REGULAR;
-                    if (this->computedStyles_["font-variant"] == "bold") {
+                    if (this->computedStyle_["font-variant"] == "bold") {
                         fontVariant = corn::FontVariant::BOLD;
-                    } else if (this->computedStyles_["font-variant"] == "italic") {
+                    } else if (this->computedStyle_["font-variant"] == "italic") {
                         fontVariant = corn::FontVariant::ITALIC;
-                    } else if (this->computedStyles_["font-variant"] == "underline") {
+                    } else if (this->computedStyle_["font-variant"] == "underline") {
                         fontVariant = corn::FontVariant::UNDERLINE;
                     }
 
@@ -205,14 +209,14 @@ namespace cornui {
 
         // Compute styles of child nodes
         for (DOMNode* child : this->children_) {
-            child->computeStyle(this->computedStyles_);
+            child->computeStyle(this->computedStyle_);
         }
     }
 
     void DOMNode::computeStyle(const std::unordered_map<std::string, std::string>& inheritedStyles) {
         for (const std::string& styleName : { "font-family", "font-size", "font-color", "font-variant" }) {
             if (inheritedStyles.contains(styleName)) {
-                this->inheritedStyles_[styleName] = inheritedStyles.at(styleName);
+                this->inheritedStyle_[styleName] = inheritedStyles.at(styleName);
             }
         }
         this->computeStyle();

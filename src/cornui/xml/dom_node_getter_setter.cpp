@@ -29,15 +29,15 @@ namespace cornui {
         if (!widget || widget->getType() != corn::UIType::LABEL) return;
 
         // Set the text
-        const corn::Font* font = corn::FontManager::instance().get(this->computedStyles_["font-family"]);
-        size_t fontSize = std::stoi(this->computedStyles_["font-size"]);
-        corn::Color fontColor = corn::Color::parse(this->computedStyles_["font-color"]);
+        const corn::Font* font = corn::FontManager::instance().get(this->computedStyle_["font-family"]);
+        size_t fontSize = std::stoi(this->computedStyle_["font-size"]);
+        corn::Color fontColor = corn::Color::parse(this->computedStyle_["font-color"]);
         corn::FontVariant fontVariant = corn::FontVariant::REGULAR;
-        if (this->computedStyles_["font-variant"] == "bold") {
+        if (this->computedStyle_["font-variant"] == "bold") {
             fontVariant = corn::FontVariant::BOLD;
-        } else if (this->computedStyles_["font-variant"] == "italic") {
+        } else if (this->computedStyle_["font-variant"] == "italic") {
             fontVariant = corn::FontVariant::ITALIC;
-        } else if (this->computedStyles_["font-variant"] == "underline") {
+        } else if (this->computedStyle_["font-variant"] == "underline") {
             fontVariant = corn::FontVariant::UNDERLINE;
         }
         if (font) {
@@ -50,17 +50,17 @@ namespace cornui {
         return this->classList_;
     }
 
-    const std::unordered_map<std::string, std::string>& DOMNode::getStyles() const noexcept {
-        return this->styles_;
+    const std::unordered_map<std::string, std::string>& DOMNode::getStyle() const noexcept {
+        return this->style_;
     }
 
     void DOMNode::setStyle(const std::string& name, const std::string& value) noexcept {
-        this->styles_[name] = value;
+        this->style_[name] = value;
         this->computeStyle();
     }
 
-    const std::unordered_map<std::string, std::string>& DOMNode::getComputedStyles() const noexcept {
-        return this->computedStyles_;
+    const std::unordered_map<std::string, std::string>& DOMNode::getComputedStyle() const noexcept {
+        return this->computedStyle_;
     }
 
     const std::unordered_map<std::string, std::string>& DOMNode::getAttributes() const noexcept {

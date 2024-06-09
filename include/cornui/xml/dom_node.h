@@ -38,6 +38,12 @@ namespace cornui {
         [[nodiscard]] std::string getOuterXML() const noexcept;
 
         /**
+         * @param className The class to check.
+         * @return Whether the DOM node has the class.
+         */
+        [[nodiscard]] bool hasClass(const std::string& className) const noexcept;
+
+        /**
          * @brief Add a class to the node.
          * @param className The class to add.
          * @return Whether the class is successfully added. Only true if class does not already exist and has correct
@@ -59,9 +65,9 @@ namespace cornui {
         [[nodiscard]] const std::u8string& getText() const noexcept;
         void setText(const std::u8string& text) noexcept;
         [[nodiscard]] const std::vector<std::string>& getClassList() const noexcept;
-        [[nodiscard]] const std::unordered_map<std::string, std::string>& getStyles() const noexcept;
+        [[nodiscard]] const std::unordered_map<std::string, std::string>& getStyle() const noexcept;
         void setStyle(const std::string& name, const std::string& value) noexcept;
-        [[nodiscard]] const std::unordered_map<std::string, std::string>& getComputedStyles() const noexcept;
+        [[nodiscard]] const std::unordered_map<std::string, std::string>& getComputedStyle() const noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getAttributes() const noexcept;
         void setAttributes(const std::string& name, const std::string& value) noexcept;
 
@@ -79,9 +85,9 @@ namespace cornui {
         std::string name_;
         std::u8string text_;
         std::vector<std::string> classList_;
-        std::unordered_map<std::string, std::string> styles_;
-        std::unordered_map<std::string, std::string> inheritedStyles_;
-        std::unordered_map<std::string, std::string> computedStyles_;
+        std::unordered_map<std::string, std::string> style_;
+        std::unordered_map<std::string, std::string> inheritedStyle_;
+        std::unordered_map<std::string, std::string> computedStyle_;
         std::unordered_map<std::string, std::string> attributes_;
 
         DOM* dom_;

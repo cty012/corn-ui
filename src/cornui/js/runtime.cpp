@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <cornui/js/runtime.h>
+#include "class_list.h"
 #include "console.h"
 #include "document.h"
 #include "dom_node.h"
@@ -12,6 +13,9 @@ namespace cornui {
 
         // Initialize the "console" object
         create_console(this->ctx_);
+
+        // Initialize the classList prototype
+        create_classList_prototype(this->ctx_);
 
         // Initialize the DOMNode prototype
         create_domNode_prototype(this->ctx_);
@@ -35,10 +39,15 @@ namespace cornui {
     }
 
     void JSRuntime::addFile(const std::filesystem::path& file) {
+        if (!this->impl_) return;
+
         // Read the file
         std::ifstream filestr(file);
-        std::stringstream code;
-        code << filestr.rdbuf();
-        duk_peval_string(this->impl_->ctx_, code.str().c_str());
+        std::stringstream codeStream;
+        codeStream << filestr.rdbuf();
+        std::string code = codeStream.str();
+
+        // Execute the file content
+        duk_peval_string_noresult(this->impl_->ctx_, code.c_str());
     }
 }

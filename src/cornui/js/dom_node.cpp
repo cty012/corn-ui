@@ -1,4 +1,5 @@
 #include <cornui/xml/dom_node.h>
+#include "class_list.h"
 #include "common.h"
 #include "dom_node.h"
 
@@ -22,14 +23,6 @@ namespace cornui {
         duk_push_c_function(ctx, domNode_outerXML_get, 0);
         duk_put_prop_string(ctx, nodeIdx, "toString");
 
-        // Attach "addClass" function to the prototype
-        duk_push_c_function(ctx, domNode_addClass, 1);
-        duk_put_prop_string(ctx, nodeIdx, "addClass");
-
-        // Attach "removeClass" function to the prototype
-        duk_push_c_function(ctx, domNode_removeClass, 1);
-        duk_put_prop_string(ctx, nodeIdx, "removeClass");
-
         // Attach "tag" property to the prototype
         duk_push_string(ctx, "tag");
         duk_push_c_function(ctx, domNode_tag_get, 0);
@@ -52,9 +45,18 @@ namespace cornui {
         duk_push_c_function(ctx, domNode_classList_get, 0);
         duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
+        // Attach "style" property to the prototype
+        duk_push_string(ctx, "style");
+        duk_push_c_function(ctx, domNode_style_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
+
         // Attach "getComputedStyle" function to the prototype
         duk_push_c_function(ctx, domNode_getComputedStyle, 0);
         duk_put_prop_string(ctx, nodeIdx, "getComputedStyle");
+
+        // Attach "setStyle" property to the prototype
+        duk_push_c_function(ctx, domNode_setStyle, 2);
+        duk_put_prop_string(ctx, nodeIdx, "setStyle");
 
         // Store the prototype in the stash
         duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("DOMNode_prototype"));
@@ -89,7 +91,7 @@ namespace cornui {
     duk_ret_t domNode_innerXML_get(duk_context* ctx) {
         auto* node = getPtr<DOMNode>(ctx);
 
-        // Push the tag to the stack
+        // Push the inner XML to the stack
         if (node) {
             duk_push_string(ctx, node->getInnerXML().c_str());
         } else {
@@ -102,37 +104,9 @@ namespace cornui {
     duk_ret_t domNode_outerXML_get(duk_context* ctx) {
         auto* node = getPtr<DOMNode>(ctx);
 
-        // Push the tag to the stack
+        // Push the outer XML to the stack
         if (node) {
             duk_push_string(ctx, node->getOuterXML().c_str());
-        } else {
-            duk_push_undefined(ctx);
-        }
-
-        return 1;
-    }
-
-    duk_ret_t domNode_addClass(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
-
-        // Push the tag to the stack
-        if (node) {
-            std::string className = duk_get_string(ctx, 0);
-            duk_push_boolean(ctx, node->addClass(className));
-        } else {
-            duk_push_undefined(ctx);
-        }
-
-        return 1;
-    }
-
-    duk_ret_t domNode_removeClass(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
-
-        // Push the tag to the stack
-        if (node) {
-            std::string className = duk_get_string(ctx, 0);
-            duk_push_boolean(ctx, node->removeClass(className));
         } else {
             duk_push_undefined(ctx);
         }
@@ -171,8 +145,10 @@ namespace cornui {
 
         // Update the name
         if (node) {
-            std::string name = duk_get_string(ctx, 0);
-            node->setName(name);
+            const char* name = duk_get_string(ctx, 0);
+            if (name) {
+                node->setName(name);
+            }
         }
 
         return 0;
@@ -181,7 +157,7 @@ namespace cornui {
     duk_ret_t domNode_text_get(duk_context* ctx) {
         auto* node = getPtr<DOMNode>(ctx);
 
-        // Push the name to the stack
+        // Push the text to the stack
         if (node) {
             duk_push_string(ctx, (const char*)node->getText().c_str());
         } else {
@@ -194,10 +170,12 @@ namespace cornui {
     duk_ret_t domNode_text_set(duk_context* ctx) {
         auto* node = getPtr<DOMNode>(ctx);
 
-        // Update the name
+        // Update the text
         if (node) {
-            std::u8string text = (const char8_t*)duk_get_string(ctx, 0);
-            node->setText(text);
+            const auto* text = (const char8_t*)duk_get_string(ctx, 0);
+            if (text) {
+                node->setText(text);
+            }
         }
 
         return 0;
@@ -206,9 +184,22 @@ namespace cornui {
     duk_ret_t domNode_classList_get(duk_context* ctx) {
         auto* node = getPtr<DOMNode>(ctx);
 
+        // Push the classList to the stack
+        if (node) {
+            push_classList(ctx, node);
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_style_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
         // Push the name to the stack
         if (node) {
-            push_vec_of_string(ctx, node->getClassList());
+            push_umap_of_string_string(ctx, node->getStyle());
         } else {
             duk_push_undefined(ctx);
         }
@@ -221,11 +212,26 @@ namespace cornui {
 
         // Push the name to the stack
         if (node) {
-            push_umap_of_string_string(ctx, node->getComputedStyles());
+            push_umap_of_string_string(ctx, node->getComputedStyle());
         } else {
             duk_push_undefined(ctx);
         }
 
         return 1;
+    }
+
+    duk_ret_t domNode_setStyle(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Update the style
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            const char* value = duk_get_string(ctx, 1);
+            if (name && value) {
+                node->setStyle(name, value);
+            }
+        }
+
+        return 0;
     }
 }

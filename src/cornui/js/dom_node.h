@@ -11,8 +11,6 @@ namespace cornui {
 
     duk_ret_t domNode_innerXML_get(duk_context* ctx);
     duk_ret_t domNode_outerXML_get(duk_context* ctx);
-    duk_ret_t domNode_addClass(duk_context* ctx);
-    duk_ret_t domNode_removeClass(duk_context* ctx);
 
     duk_ret_t domNode_tag_get(duk_context* ctx);
     duk_ret_t domNode_name_get(duk_context* ctx);
@@ -20,7 +18,8 @@ namespace cornui {
     duk_ret_t domNode_text_get(duk_context* ctx);
     duk_ret_t domNode_text_set(duk_context* ctx);
     duk_ret_t domNode_classList_get(duk_context* ctx);
-    // TODO: style
+    duk_ret_t domNode_style_get(duk_context* ctx);
     duk_ret_t domNode_getComputedStyle(duk_context* ctx);
+    duk_ret_t domNode_setStyle(duk_context* ctx);
     // TODO: attributes
 }

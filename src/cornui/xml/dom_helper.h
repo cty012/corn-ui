@@ -40,7 +40,7 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
                     }
                 } else if (strcmp(name, "style") == 0) {
                     // Parse the styles
-                    node.styles_ = parseDeclFromString(value);
+                    node.style_ = parseDeclFromString(value);
                 } else {
                     // Insert the attribute
                     node.attributes_[name] = value;
