@@ -17,6 +17,9 @@ namespace cornui {
          */
         void addFile(const std::filesystem::path& file);
 
+        [[nodiscard]] JSRuntimeImpl* getImpl() noexcept;
+        [[nodiscard]] const JSRuntimeImpl* getImpl() const noexcept;
+
     private:
         JSRuntime();
         ~JSRuntime();

@@ -7,7 +7,7 @@
 <body>
     <widget name="body">
         <widget name="contents">
-            <label name="title">Clangy Bird</label>
+            <label name="title" onclick="console.log('Title clicked')">Clangy Bird</label>
             <label name="start" class="button">Start</label>
             <label name="settings" class="button">Settings</label>
             <label name="tutorial" class="button">Tutorial</label>

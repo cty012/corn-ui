@@ -58,6 +58,8 @@ namespace cornui {
          */
         [[nodiscard]] std::vector<DOMNode*> getNodesBySelector(const std::string& selector) const;
 
+        [[nodiscard]] const UI& getUI() const noexcept;
+        [[nodiscard]] UI& getUI() noexcept;
         [[nodiscard]] const std::filesystem::path& getFile() const noexcept;
         [[nodiscard]] DOMNode& getRoot() noexcept;
         [[nodiscard]] const DOMNode& getRoot() const noexcept;
@@ -68,7 +70,7 @@ namespace cornui {
 
     private:
         /// @brief Empty constructor.
-        DOM();
+        explicit DOM(UI* ui);
         DOM(const DOM& dom) = delete;
         DOM& operator=(const DOM& dom) = delete;
 
@@ -80,6 +82,7 @@ namespace cornui {
          */
         void init(const std::filesystem::path& file, std::vector<std::filesystem::path>& toLoad);
 
+        UI* ui_;
         std::filesystem::path file_;
         DOMNode root_;
         CSSOM cssom_;

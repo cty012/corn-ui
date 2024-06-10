@@ -1,5 +1,6 @@
 #include <corn/media/image.h>
 #include <corn/util/rich_text.h>
+#include <corn/util/string_utils.h>
 #include <cornui/xml/dom.h>
 #include <cornui/xml/dom_node.h>
 
@@ -69,13 +70,19 @@ namespace cornui {
 
     void DOMNode::setAttributes(const std::string& name, const std::string& value) noexcept {
         if (name == "class" || name == "style") return;
-        this->attributes_[name] = value;
+        this->attributes_[name] = name == "onclick" ? corn::trim(value) : value;
         corn::UIWidget* widget = this->getWidget();
         if (!widget) return;
 
+        // src
         if (widget->getType() == corn::UIType::IMAGE && name == "src") {
             auto* image = new corn::Image(this->dom_->getFile().parent_path() / value);
             ((corn::UIImage*)widget)->setImage(image);
+        }
+
+        // onclick
+        if (name == "onclick") {
+            widget->setClickable(!this->attributes_[name].empty());
         }
     }
 

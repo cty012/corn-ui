@@ -3,6 +3,7 @@
 extern "C" {
 #include <libxml/parser.h>
 }
+#include <corn/event/event_args.h>
 #include <corn/media.h>
 #include <corn/ui.h>
 #include <corn/util/rich_text.h>
@@ -12,7 +13,7 @@ extern "C" {
 #include <cornui/xml/dom.h>
 
 namespace cornui {
-    DOM::DOM() : uiManager_(nullptr) {}
+    DOM::DOM(UI* ui) : ui_(ui), uiManager_(nullptr) {}
 
     void DOM::bind(corn::UIManager& uiManager) {
         // First, store the UI manager to be referenced later
@@ -38,6 +39,18 @@ namespace cornui {
                     // Invalid DOM node
                     if (!current) return;
                     domNode.widgetID_ = current->getID();
+
+                    // onclick
+                    if (domNode.attributes_.contains("onclick") && !domNode.attributes_.at("onclick").empty()) {
+                        current->setClickable(true);
+                    }
+                    current->getEventManager().addListener(
+                            "corn::ui::onclick", [&domNode, current](const corn::EventArgs& args) {
+                                const auto& args_ = dynamic_cast<const corn::EventArgsUIOnClick&>(args);
+                                if (args_.target == current && args_.mousebtnEvent.status == corn::ButtonEvent::UP) {
+                                    domNode.onClick();
+                                }
+                            });
 
                     // Load to children
                     for (DOMNode* child : domNode.children_) {
@@ -107,6 +120,14 @@ namespace cornui {
 
     std::vector<DOMNode*> DOM::getNodesBySelector(const std::string& selector) const {
         return this->getNodesBySelector(parseSelectorFromString(selector));
+    }
+
+    const UI& DOM::getUI() const noexcept {
+        return *this->ui_;
+    }
+
+    UI& DOM::getUI() noexcept {
+        return *this->ui_;
     }
 
     const std::filesystem::path& DOM::getFile() const noexcept {

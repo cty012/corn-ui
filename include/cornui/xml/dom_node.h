@@ -81,6 +81,14 @@ namespace cornui {
         void computeStyle();
         void computeStyle(const std::unordered_map<std::string, std::string>& inheritedStyles);
 
+        /**
+         * @brief Executes the JavaScript string specified with the "onclick" attribute.
+         *
+         * This function is automatically triggered when the UI widget is clicked. Note that if the "onclick" attribute
+         * is non-empty, the UI widget will be set to be clickable.
+         */
+        void onClick();
+
         std::string tag_;
         std::string name_;
         std::u8string text_;

@@ -50,4 +50,12 @@ namespace cornui {
         // Execute the file content
         duk_peval_string_noresult(this->impl_->ctx_, code.c_str());
     }
+
+    JSRuntimeImpl* JSRuntime::getImpl() noexcept {
+        return this->impl_;
+    }
+
+    const JSRuntimeImpl* JSRuntime::getImpl() const noexcept {
+        return this->impl_;
+    }
 }

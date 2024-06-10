@@ -13,7 +13,7 @@ namespace cornui {
         this->file_ = std::move(file);
         delete this->jsRuntime_;
         delete this->dom_;
-        this->dom_ = new DOM();
+        this->dom_ = new DOM(this);
         this->jsRuntime_ = new JSRuntime();
 
         // Load DOM from file

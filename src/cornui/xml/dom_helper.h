@@ -39,8 +39,11 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
                         node.classList_.push_back(token);
                     }
                 } else if (strcmp(name, "style") == 0) {
-                    // Parse the styles
+                    // Parse the style
                     node.style_ = parseDeclFromString(value);
+                } else if (strcmp(name, "onclick") == 0) {
+                    // Insert the "onclick" attribute
+                    node.attributes_[name] = corn::trim(value);
                 } else {
                     // Insert the attribute
                     node.attributes_[name] = value;
