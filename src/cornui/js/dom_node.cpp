@@ -58,6 +58,27 @@ namespace cornui {
         duk_push_c_function(ctx, domNode_setStyle, 2);
         duk_put_prop_string(ctx, nodeIdx, "setStyle");
 
+        // Attach "attributes" property to the prototype
+        duk_push_string(ctx, "attributes");
+        duk_push_c_function(ctx, domNode_attributes_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
+
+        // Attach "hasAttribute" property to the prototype
+        duk_push_c_function(ctx, domNode_hasAttribute, 1);
+        duk_put_prop_string(ctx, nodeIdx, "hasAttribute");
+
+        // Attach "getAttribute" property to the prototype
+        duk_push_c_function(ctx, domNode_getAttribute, 1);
+        duk_put_prop_string(ctx, nodeIdx, "getAttribute");
+
+        // Attach "setAttribute" property to the prototype
+        duk_push_c_function(ctx, domNode_setAttribute, 2);
+        duk_put_prop_string(ctx, nodeIdx, "setAttribute");
+
+        // Attach "removeAttribute" property to the prototype
+        duk_push_c_function(ctx, domNode_removeAttribute, 1);
+        duk_put_prop_string(ctx, nodeIdx, "removeAttribute");
+
         // Store the prototype in the stash
         duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("DOMNode_prototype"));
 
@@ -229,6 +250,87 @@ namespace cornui {
             const char* value = duk_get_string(ctx, 1);
             if (name && value) {
                 node->setStyle(name, value);
+            }
+        }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_attributes_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            push_umap_of_string_string(ctx, node->getAttributes());
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_hasAttribute(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            const std::unordered_map<std::string, std::string>& attrs = node->getAttributes();
+            const char* name = duk_get_string(ctx, 0);
+            if (name) {
+                duk_push_boolean(ctx, attrs.contains(name));
+            } else {
+                duk_push_undefined(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_getAttribute(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            const std::unordered_map<std::string, std::string>& attrs = node->getAttributes();
+            const char* name = duk_get_string(ctx, 0);
+            if (name && attrs.contains(name)) {
+                duk_push_string(ctx, attrs.at(name).c_str());
+            } else {
+                duk_push_undefined(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_setAttribute(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            const char* value = duk_get_string(ctx, 1);
+            if (name && value) {
+                node->setAttribute(name, value);
+            }
+        }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_removeAttribute(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            const char* value = duk_get_string(ctx, 1);
+            if (name && value) {
+                node->removeAttribute(name);
             }
         }
 

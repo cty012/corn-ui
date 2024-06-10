@@ -42,8 +42,8 @@
     clickable: true;
 }
 
-.red {
-    font-color: #ff0000;
+.underline {
+    font-variant: underline;
 }
 
 .button:hover {

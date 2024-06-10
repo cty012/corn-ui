@@ -1,16 +1,12 @@
-function getGameTitle() {
-    return document.getNodeBySelector("#title");
+function enterButton(button) {
+    button.classList.add("underline");
 }
 
-function getGameStartButton() {
-    return document.getNodeBySelector("#start");
+function exitButton(button) {
+    button.classList.remove("underline");
 }
 
-console.log("Hello world!");
-console.log("0.1 + 0.2 = " + (0.1 + 0.2));
-
-const gameStartButton = getGameStartButton();
-
-gameStartButton.classList.add("red");
-
-console.log(gameStartButton.classList);
+document.getNodesBySelector(".button").forEach(function (button) {
+    button.setAttribute("onmouseenter", "enterButton(this)");
+    button.setAttribute("onmouseexit", "exitButton(this)");
+});

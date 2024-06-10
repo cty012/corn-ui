@@ -24,6 +24,14 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
             corn::trim(temp);
             node.text_ = reinterpret_cast<const char8_t*>(corn::trim(ssText.str()).c_str());
 
+            // Helper
+            auto strIsIn = [](const char* target, std::vector<const char*> list) {
+                for (const char* candidate : list) {
+                    if (strcmp(target, candidate) == 0) return true;
+                }
+                return false;
+            };
+
             // Copy name, class list, and attributes
             for (xmlAttr* attr = xmlNode->properties; attr; attr = attr->next) {
                 const char* name = reinterpret_cast<const char*>(attr->name);
@@ -41,7 +49,7 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
                 } else if (strcmp(name, "style") == 0) {
                     // Parse the style
                     node.style_ = parseDeclFromString(value);
-                } else if (strcmp(name, "onclick") == 0) {
+                } else if (strIsIn(name, { "onclick", "onhover", "onmouseenter", "onmouseexit" })) {
                     // Insert the "onclick" attribute
                     node.attributes_[name] = corn::trim(value);
                 } else {

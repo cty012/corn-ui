@@ -40,7 +40,7 @@ namespace cornui {
                     if (!current) return;
                     domNode.widgetID_ = current->getID();
 
-                    // onclick
+                    // onclick, onhover, onmouseenter, onmouseexit
                     if (domNode.attributes_.contains("onclick") && !domNode.attributes_.at("onclick").empty()) {
                         current->setClickable(true);
                     }
@@ -48,8 +48,20 @@ namespace cornui {
                             "corn::ui::onclick", [&domNode, current](const corn::EventArgs& args) {
                                 const auto& args_ = dynamic_cast<const corn::EventArgsUIOnClick&>(args);
                                 if (args_.target == current && args_.mousebtnEvent.status == corn::ButtonEvent::UP) {
-                                    domNode.onClick();
+                                    domNode.runScriptInAttr("onclick");
                                 }
+                            });
+                    current->getEventManager().addListener(
+                            "corn::ui::onhover", [&domNode](const corn::EventArgs&) {
+                                domNode.runScriptInAttr("onhover");
+                            });
+                    current->getEventManager().addListener(
+                            "corn::ui::onenter", [&domNode](const corn::EventArgs&) {
+                                domNode.runScriptInAttr("onmouseenter");
+                            });
+                    current->getEventManager().addListener(
+                            "corn::ui::onexit", [&domNode](const corn::EventArgs&) {
+                                domNode.runScriptInAttr("onmouseexit");
                             });
 
                     // Load to children

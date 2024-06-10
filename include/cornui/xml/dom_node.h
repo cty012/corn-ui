@@ -69,7 +69,8 @@ namespace cornui {
         void setStyle(const std::string& name, const std::string& value) noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getComputedStyle() const noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getAttributes() const noexcept;
-        void setAttributes(const std::string& name, const std::string& value) noexcept;
+        void setAttribute(const std::string& name, const std::string& value) noexcept;
+        void removeAttribute(const std::string& name) noexcept;
 
         [[nodiscard]] DOM* getDOM() const noexcept;
         [[nodiscard]] DOMNode* getParent() const noexcept;
@@ -82,12 +83,12 @@ namespace cornui {
         void computeStyle(const std::unordered_map<std::string, std::string>& inheritedStyles);
 
         /**
-         * @brief Executes the JavaScript string specified with the "onclick" attribute.
+         * @brief Executes the JavaScript string specified with the given attribute.
+         * @param attr Name of the attribute.
          *
-         * This function is automatically triggered when the UI widget is clicked. Note that if the "onclick" attribute
-         * is non-empty, the UI widget will be set to be clickable.
+         * This function is automatically triggered by corresponding events.
          */
-        void onClick();
+        void runScriptInAttr(std::string attr);
 
         std::string tag_;
         std::string name_;

@@ -30,7 +30,6 @@ MainMenuScene::MainMenuScene() {
     auto& tutorial = *(corn::UILabel*)this->getUIManager().getWidgetByName("tutorial");
     auto& exit = *(corn::UILabel*)this->getUIManager().getWidgetByName("exit");
 
-    underlineOnHover(start);
     start.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
                 if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
@@ -39,7 +38,6 @@ MainMenuScene::MainMenuScene() {
                 corn::EventManager::instance().emit(
                         corn::EventArgsScene(corn::SceneOperation::PUSH, new GameScene()));
             });
-    underlineOnHover(settings);
     settings.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
                 if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
@@ -48,7 +46,6 @@ MainMenuScene::MainMenuScene() {
                 corn::EventManager::instance().emit(
                         corn::EventArgsScene(corn::SceneOperation::PUSH, new SettingsScene()));
             });
-    underlineOnHover(tutorial);
     tutorial.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
                 if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
@@ -57,7 +54,6 @@ MainMenuScene::MainMenuScene() {
                 corn::EventManager::instance().emit(
                         corn::EventArgsScene(corn::SceneOperation::PUSH, new TutorialScene()));
             });
-    underlineOnHover(exit);
     exit.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
                 if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {

@@ -68,7 +68,7 @@ namespace cornui {
         return this->attributes_;
     }
 
-    void DOMNode::setAttributes(const std::string& name, const std::string& value) noexcept {
+    void DOMNode::setAttribute(const std::string& name, const std::string& value) noexcept {
         if (name == "class" || name == "style") return;
         this->attributes_[name] = name == "onclick" ? corn::trim(value) : value;
         corn::UIWidget* widget = this->getWidget();
@@ -84,6 +84,24 @@ namespace cornui {
         if (name == "onclick") {
             widget->setClickable(!this->attributes_[name].empty());
         }
+    }
+
+    void DOMNode::removeAttribute(const std::string& name) noexcept {
+        if (name == "class" || name == "style") return;
+        corn::UIWidget* widget = this->getWidget();
+        if (!widget) return;
+
+        // src
+        if (widget->getType() == corn::UIType::IMAGE && name == "src") {
+            return;
+        }
+
+        // onclick
+        if (name == "onclick") {
+            widget->setClickable(!this->attributes_[name].empty());
+        }
+
+        this->attributes_.erase(name);
     }
 
     DOM* DOMNode::getDOM() const noexcept {
