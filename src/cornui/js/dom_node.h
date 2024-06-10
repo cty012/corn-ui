@@ -26,5 +26,4 @@ namespace cornui {
     duk_ret_t domNode_getAttribute(duk_context* ctx);
     duk_ret_t domNode_setAttribute(duk_context* ctx);
     duk_ret_t domNode_removeAttribute(duk_context* ctx);
-    // TODO: attributes
 }
