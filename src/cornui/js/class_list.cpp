@@ -134,7 +134,7 @@ namespace cornui {
     }
 
     duk_ret_t classList_add(duk_context* ctx) {
-        int nargs = duk_get_top(ctx);
+        duk_idx_t nargs = duk_get_top(ctx);
         auto* node = getPtr<DOMNode>(ctx);
 
         // Add each class
@@ -151,7 +151,7 @@ namespace cornui {
     }
 
     duk_ret_t classList_remove(duk_context* ctx) {
-        int nargs = duk_get_top(ctx);
+        duk_idx_t nargs = duk_get_top(ctx);
         auto* node = getPtr<DOMNode>(ctx);
 
         // Remove each class

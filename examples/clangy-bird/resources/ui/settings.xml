@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cornui>
+<head>
+    <style src="menu.ccss"/>
+    <style src="settings.ccss"/>
+    <script src="underline.js"/>
+</head>
+<body>
+    <widget name="body">
+        <widget name="contents">
+            <label name="title">Settings</label>
+            <label name="lang-label" class="num-1">
+                Language:
+                <label name="lang" class="button">English</label>
+            </label>
+        </widget>
+        <label name="save" class="button">Save and exit</label>
+    </widget>
+</body>
+</cornui>

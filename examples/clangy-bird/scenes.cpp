@@ -1,4 +1,5 @@
 #include <corn/ui.h>
+#include <cornui/js/js_event_args.h>
 #include "entities.h"
 #include "event_args.h"
 #include "scenes.h"
@@ -30,35 +31,22 @@ MainMenuScene::MainMenuScene() {
     auto& tutorial = *(corn::UILabel*)this->getUIManager().getWidgetByName("tutorial");
     auto& exit = *(corn::UILabel*)this->getUIManager().getWidgetByName("exit");
 
-    start.getEventManager().addListener(
-            "corn::ui::onclick", [](const corn::EventArgs& args) {
-                if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
-                    return;
+    this->getEventManager().addListener(
+            "js::scene::push", [](const corn::EventArgs& args) {
+                std::string sceneType = dynamic_cast<const cornui::EventArgsJS&>(args).payload;
+                if (sceneType == "game-scene") {
+                    corn::EventManager::instance().emit(
+                            corn::EventArgsScene(corn::SceneOperation::PUSH, new GameScene()));
+                } else if (sceneType == "settings-scene") {
+                    corn::EventManager::instance().emit(
+                            corn::EventArgsScene(corn::SceneOperation::PUSH, new SettingsScene()));
+                } else if (sceneType == "tutorial-scene") {
+                    corn::EventManager::instance().emit(
+                            corn::EventArgsScene(corn::SceneOperation::PUSH, new SettingsScene()));
                 }
-                corn::EventManager::instance().emit(
-                        corn::EventArgsScene(corn::SceneOperation::PUSH, new GameScene()));
             });
-    settings.getEventManager().addListener(
-            "corn::ui::onclick", [](const corn::EventArgs& args) {
-                if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
-                    return;
-                }
-                corn::EventManager::instance().emit(
-                        corn::EventArgsScene(corn::SceneOperation::PUSH, new SettingsScene()));
-            });
-    tutorial.getEventManager().addListener(
-            "corn::ui::onclick", [](const corn::EventArgs& args) {
-                if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
-                    return;
-                }
-                corn::EventManager::instance().emit(
-                        corn::EventArgsScene(corn::SceneOperation::PUSH, new TutorialScene()));
-            });
-    exit.getEventManager().addListener(
-            "corn::ui::onclick", [](const corn::EventArgs& args) {
-                if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
-                    return;
-                }
+    this->getEventManager().addListener(
+            "js::exit", [](const corn::EventArgs&) {
                 corn::EventManager::instance().emit(corn::EventArgsExit());
             });
 
@@ -78,31 +66,12 @@ MainMenuScene::~MainMenuScene() {
 
 SettingsScene::SettingsScene() {
     // UI
-    auto& body = this->getUIManager().createWidget<corn::UIWidget>("body", nullptr);
-    body.setX("(100%pw - min(100%pw * 9, 100%ph * 16) / 9) / 2");
-    body.setY("(100%ph - min(100%pw * 9, 100%ph * 16) / 16) / 2");
-    body.setW("min(100%pw * 9, 100%ph * 16) / 9");
-    body.setH("min(100%pw * 9, 100%ph * 16) / 16");
-    body.setBackground(corn::Color::rgb(60, 179, 113));
-
-    auto& contents = this->getUIManager().createWidget<corn::UIWidget>("contents", &body);
-    contents.setX("200px");
-    contents.setY("120px");
-
-    // Title
-    auto& title = this->getUIManager().createWidget<corn::UILabel>(
-            "title", &contents, TextManager::instance().getRichText("settings-title"));
+    this->ui_.init("resources/ui/settings.xml", this->getUIManager());
 
     // Language change button
-    auto& langLabel = this->getUIManager().createWidget<corn::UILabel>(
-            "lang-label", &contents, TextManager::instance().getRichText("settings-lang"));
-    langLabel.setY("110px");
-    std::string language = (std::string)TextManager::instance().getSettings("lang");
-    auto& lang = this->getUIManager().createWidget<corn::UILabel>(
-            "lang", &langLabel, TextManager::instance().getRichText("settings-lang-" + language));
-    lang.setX("100%pw + 10px");
-    lang.setClickable(true);
-    underlineOnHover(lang);
+    auto& title = *(corn::UILabel*)this->getUIManager().getWidgetByName("title");
+    auto& langLabel = *(corn::UILabel*)this->getUIManager().getWidgetByName("lang-label");
+    auto& lang = *(corn::UILabel*)this->getUIManager().getWidgetByName("lang");
     lang.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
                 if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
@@ -115,12 +84,7 @@ SettingsScene::SettingsScene() {
             });
 
     // Save button
-    auto& save = this->getUIManager().createWidget<corn::UILabel>(
-            "save", &body, TextManager::instance().getRichText("settings-save"));
-    save.setX("100%pw - 100%nw - 200px");
-    save.setY("100%ph - 100%nh - 120px");
-    save.setClickable(true);
-    underlineOnHover(save);
+    auto& save = *(corn::UILabel*)this->getUIManager().getWidgetByName("save");
     save.getEventManager().addListener(
             "corn::ui::onclick", [](const corn::EventArgs& args) {
                 if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
@@ -132,11 +96,12 @@ SettingsScene::SettingsScene() {
 
     this->langChangeEventID_ = corn::EventManager::instance().addListener(
             "clangy-bird::langchange", [&title, &langLabel, &lang, &save](const corn::EventArgs&) {
-                title.setText(TextManager::instance().getRichText("settings-title"));
-                langLabel.setText(TextManager::instance().getRichText("settings-lang"));
-                std::string language = (std::string)TextManager::instance().getSettings("lang");
-                lang.setText(TextManager::instance().getRichText("settings-lang-" + language));
-                save.setText(TextManager::instance().getRichText("settings-save"));
+                (void)title; (void)langLabel; (void)lang; (void)save;
+//                title.setText(TextManager::instance().getRichText("settings-title"));
+//                langLabel.setText(TextManager::instance().getRichText("settings-lang"));
+//                std::string language = (std::string)TextManager::instance().getSettings("lang");
+//                lang.setText(TextManager::instance().getRichText("settings-lang-" + language));
+//                save.setText(TextManager::instance().getRichText("settings-save"));
             });
 }
 

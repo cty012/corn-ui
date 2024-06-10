@@ -1,10 +1,14 @@
 #include <fstream>
 #include <sstream>
+#include <corn/core/scene.h>
+#include <corn/event/event_manager.h>
 #include <cornui/js/runtime.h>
+#include <cornui/xml/dom.h>
 #include "class_list.h"
 #include "console.h"
 #include "document.h"
 #include "dom_node.h"
+#include "event.h"
 #include "runtime_impl.h"
 
 namespace cornui {
@@ -22,6 +26,12 @@ namespace cornui {
 
         // Initialize the "document" object
         create_document(this->ctx_, &dom);
+
+        // Initialize the "Event" object
+        create_event(this->ctx_, "Event", dom.getUIManager()->getScene().getEventManager());
+
+        // Initialize the "GlobalEvent" object
+        create_event(this->ctx_, "GlobalEvent", corn::EventManager::instance());
     }
 
     JSRuntimeImpl::~JSRuntimeImpl() {

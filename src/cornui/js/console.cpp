@@ -23,7 +23,7 @@ namespace cornui {
     }
 
     duk_ret_t console_log(duk_context* ctx) {
-        int nargs = duk_get_top(ctx);
+        duk_idx_t nargs = duk_get_top(ctx);
         if (nargs == 0) return 0;
 
         // Concatenate the items
@@ -38,7 +38,7 @@ namespace cornui {
     }
 
     duk_ret_t console_error(duk_context* ctx) {
-        int nargs = duk_get_top(ctx);
+        duk_idx_t nargs = duk_get_top(ctx);
         if (nargs == 0) return 0;
 
         // Concatenate the items

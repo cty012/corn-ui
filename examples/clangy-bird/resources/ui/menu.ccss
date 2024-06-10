@@ -13,39 +13,35 @@
     y: 120px;
 }
 
+label {
+    font-size: 24px;
+}
+
 #title {
     font-size: 48px;
     font-color: #ff0000;
-}
-
-#start {
-    y: 110px;
-    font-size: 24px;
-}
-
-#settings {
-    y: 155px;
-    font-size: 24px;
-}
-
-#tutorial {
-    y: 200px;
-    font-size: 24px;
-}
-
-#exit {
-    y: 245px;
-    font-size: 24px;
 }
 
 .button {
     clickable: true;
 }
 
-.underline {
-    font-variant: underline;
+.num-1 {
+    y: 110px;
 }
 
-.button:hover {
-    text-variant: underline;
+.num-2 {
+    y: 155px;
+}
+
+.num-3 {
+    y: 200px;
+}
+
+.num-4 {
+    y: 245px;
+}
+
+.underline {
+    font-variant: underline;
 }

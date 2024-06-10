@@ -24,6 +24,7 @@ public:
     ~SettingsScene() override;
 
 private:
+    cornui::UI ui_;
     corn::EventManager::ListenerID langChangeEventID_;
 };
 
