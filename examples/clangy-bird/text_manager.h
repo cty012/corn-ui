@@ -9,6 +9,7 @@ public:
     static TextManager& instance();
     [[nodiscard]] std::string get(const std::string& key) const;
     [[nodiscard]] std::u8string getu8(const std::string& key) const;
+    [[nodiscard]] std::u8string getText(const std::string& key) const;
     [[nodiscard]] corn::RichText getRichText(const std::string& key) const;
 
     const nlohmann::json& getSettings(const std::string& key) const;

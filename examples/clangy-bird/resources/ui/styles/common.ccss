@@ -3,43 +3,15 @@
     y: (100%ph - min(100%pw * 9, 100%ph * 16) / 16) / 2;
     w: min(100%pw * 9, 100%ph * 16) / 9;
     h: min(100%pw * 9, 100%ph * 16) / 16;
-    background: #3cb372;
-
     font-family: noto-sans-zh;
-}
-
-#contents {
-    x: 200px;
-    y: 120px;
 }
 
 label {
     font-size: 24px;
 }
 
-#title {
-    font-size: 48px;
-    font-color: #ff0000;
-}
-
 .button {
     clickable: true;
-}
-
-.num-1 {
-    y: 110px;
-}
-
-.num-2 {
-    y: 155px;
-}
-
-.num-3 {
-    y: 200px;
-}
-
-.num-4 {
-    y: 245px;
 }
 
 .underline {

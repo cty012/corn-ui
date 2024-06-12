@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cornui>
+<head>
+    <style src="../styles/common.ccss"/>
+    <style src="../styles/pause_menu.ccss"/>
+    <script src="../scripts/underline.js"/>
+</head>
+<body>
+    <widget name="body">
+        <widget name="pause-screen">
+            <widget name="pause-menu">
+                <label name="title"/>
+                <label
+                        name="continue" class="button"
+                        onclick="Event.emit('toggle-pause')"
+                />
+                <label
+                        name="exit-to-main-menu" class="button"
+                        onclick="GlobalEvent.emit('scene::pop')"
+                />
+            </widget>
+        </widget>
+    </widget>
+</body>
+</cornui>

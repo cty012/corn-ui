@@ -66,7 +66,7 @@ bool createSettings(const std::string& settingsRootFolder, const std::string& fi
 
 TextManager::TextManager() : text(), settings() {
     // Read texts
-    std::ifstream textFile("resources/text.json");
+    std::ifstream textFile("resources/ui/text.json");
     std::string settingsRootFolder = getSettingsRootFolder();
     createSettings(settingsRootFolder, "settings.json",
                    "{\n"
@@ -89,9 +89,28 @@ std::u8string TextManager::getu8(const std::string& key) const {
     return {textLiteral.begin(), textLiteral.end()};
 }
 
+std::u8string TextManager::getText(const std::string& key) const {
+    std::stringstream ss;
+    nlohmann::basic_json data = this->text[key][this->settings["lang"]];
+    if (!data.is_array()) {
+        data = std::vector{ data };
+    }
+
+    for (const auto& item : data) {
+        ss << std::string(item["text"]);
+    }
+
+    return (const char8_t*)ss.str().c_str();
+}
+
 corn::RichText TextManager::getRichText(const std::string& key) const {
     corn::RichText result;
-    for (const auto& item : this->text[key][this->settings["lang"]]) {
+    nlohmann::basic_json data = this->text[key][this->settings["lang"]];
+    if (!data.is_array()) {
+        data = std::vector{ data };
+    }
+
+    for (const auto& item: data) {
         std::string textLiteral = item["text"];
         const corn::Font* font = corn::FontManager::instance().get(item["font"][0]);
         int size = item["font"][1];
@@ -111,6 +130,7 @@ corn::RichText TextManager::getRichText(const std::string& key) const {
                 std::u8string(textLiteral.begin(), textLiteral.end()),
                 corn::TextStyle(font, size, color, variant));
     }
+
     return result;
 }
 

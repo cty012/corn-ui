@@ -1,0 +1,36 @@
+#body {
+    background: #3cb372;
+}
+
+#contents {
+    x: 200px;
+    y: 120px;
+    w: 100%pw - 400px;
+    h: 100%ph - 240px;
+}
+
+#title {
+    font-size: 48px;
+    font-color: #ff0000;
+}
+
+.num-1 {
+    y: 110px;
+}
+
+.num-2 {
+    y: 155px;
+}
+
+.num-3 {
+    y: 200px;
+}
+
+.num-4 {
+    y: 245px;
+}
+
+.back {
+    x: 100%pw - 100%nw - 200px;
+    y: 100%ph - 100%nh - 120px;
+}

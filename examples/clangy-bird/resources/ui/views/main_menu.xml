@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cornui>
+<head>
+    <style src="../styles/common.ccss"/>
+    <style src="../styles/menu.ccss"/>
+    <script src="../scripts/underline.js"/>
+</head>
+<body>
+    <widget name="body">
+        <widget name="contents">
+            <label name="title">Clangy Bird</label>
+            <label name="start" class="button num-1" onclick="GlobalEvent.emit('scene::push', 'game-scene')">Start</label>
+            <label name="settings" class="button num-2" onclick="GlobalEvent.emit('scene::push', 'settings-scene')">Settings</label>
+            <label name="tutorial" class="button num-3" onclick="GlobalEvent.emit('scene::push', 'tutorial-scene')">How to play</label>
+            <label name="exit" class="button num-4" onclick="GlobalEvent.emit('exit')">Exit</label>
+        </widget>
+    </widget>
+</body>
+</cornui>

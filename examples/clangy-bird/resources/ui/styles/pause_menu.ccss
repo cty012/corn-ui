@@ -1,0 +1,23 @@
+#pause-screen {
+    active: false;
+    w: 100%pw;
+    h: 100%ph;
+    background: #00000064;
+}
+
+#pause-menu {
+    x: 50%pw - 50%nw;
+    y: 50%ph - 50%nh - 50px;
+}
+
+#title {
+    y: 0px;
+}
+
+#continue {
+    y: 100px;
+}
+
+#exit-to-main-menu {
+    y: 150px;
+}

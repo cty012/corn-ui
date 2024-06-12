@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cornui>
+<head>
+    <style src="../styles/common.ccss"/>
+    <style src="../styles/menu.ccss"/>
+    <style src="../styles/tutorial.ccss"/>
+    <script src="../scripts/underline.js"/>
+</head>
+<body>
+    <widget name="body">
+        <widget name="contents">
+            <label name="title">How to Play</label>
+            <widget name="tutorial-container">
+                <label name="text"/>
+            </widget>
+        </widget>
+        <label name="back" class="back button" onclick="GlobalEvent.emit('scene::pop')">Back</label>
+    </widget>
+</body>
+</cornui>

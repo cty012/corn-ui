@@ -1,0 +1,12 @@
+#tutorial-container {
+    y: 80px;
+    w: 100%pw;
+    h: 100%ph - 160px;
+    background: #a0a0a080;
+}
+
+#text {
+    x: 10px;
+    y: 10px;
+    w: 100%pw - 20px;
+}

@@ -14,7 +14,7 @@ public:
 
 private:
     cornui::UI ui_;
-    corn::EventManager::ListenerID langChangeEventID_;
+    corn::EventScope eventScope_;
 };
 
 /// The settings scene
@@ -25,7 +25,7 @@ public:
 
 private:
     cornui::UI ui_;
-    corn::EventManager::ListenerID langChangeEventID_;
+    corn::EventScope eventScope_;
 };
 
 /// The tutorial scene
@@ -35,7 +35,8 @@ public:
     ~TutorialScene() override;
 
 private:
-    corn::EventManager::ListenerID langChangeEventID_;
+    cornui::UI ui_;
+    corn::EventScope eventScope_;
 };
 
 /// The main game scene
@@ -48,15 +49,16 @@ public:
     void togglePause();
 
 private:
+    void onKeyboardEvent(const corn::EventArgsKeyboard& args);
+    void onMouseEvent(const corn::EventArgsMouseButton& args);
+
+    // Game
     bool paused_;
-    corn::UIWidget* pauseMenu_;
     corn::Entity* bird_;
     corn::CMovement2D* birdMovement_;
     std::vector<corn::System*> addedSystems_;
-    corn::EventManager::ListenerID keyboardEventID_;
-    corn::EventManager::ListenerID mouseEventID_;
-    corn::EventManager::ListenerID langChangeEventID_;
 
-    void onKeyboardEvent(const corn::EventArgsKeyboard& args);
-    void onMouseEvent(const corn::EventArgsMouseButton& args);
+    // UI
+    cornui::UI ui_;
+    corn::EventScope eventScope_;
 };

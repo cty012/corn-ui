@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cornui>
 <head>
-    <style src="menu.ccss"/>
-    <style src="settings.ccss"/>
-    <script src="underline.js"/>
+    <style src="../styles/common.ccss"/>
+    <style src="../styles/menu.ccss"/>
+    <style src="../styles/settings.ccss"/>
+    <script src="../scripts/underline.js"/>
 </head>
 <body>
     <widget name="body">
@@ -14,7 +15,7 @@
                 <label name="lang" class="button">English</label>
             </label>
         </widget>
-        <label name="save" class="button">Save and exit</label>
+        <label name="save" class="back button" onclick="GlobalEvent.emit('scene::pop')">Save and exit</label>
     </widget>
 </body>
 </cornui>
