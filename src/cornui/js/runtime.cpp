@@ -57,10 +57,12 @@ namespace cornui {
         codeStream << filestr.rdbuf();
         std::string code = codeStream.str();
 
-        // Execute the file content
-        duk_int_t result = duk_peval_string(this->impl_->ctx_, code.c_str());
-        if (result != 0) {
+        // Compile and run the file content
+        if (duk_pcompile_string(this->impl_->ctx_, 0, code.c_str()) != 0) {
             printf("Error compiling JS file: '%s'\n%s\n", file.c_str(), duk_safe_to_string(this->impl_->ctx_, -1));
+        } else {
+            // Call the function
+            duk_pcall(this->impl_->ctx_, 0);
         }
 
         // Pop the result/error

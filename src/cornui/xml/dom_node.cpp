@@ -231,19 +231,16 @@ namespace cornui {
         if (!this->attributes_.contains(attr)) return;
         duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
 
-        // Compile the function stored in the attribute
+        // Compile and run the function stored in the attribute
         const std::string& jsCode = this->attributes_.at(attr);
         if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
-            printf("Error running script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
-            duk_pop(ctx); // Remove error from stack
-            return;
+            printf("Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
+        } else {
+            // Push the "this" value onto the stack
+            push_domNode(ctx, this);
+            // Call the function
+            duk_pcall_method(ctx, 0);
         }
-
-        // Push the "this" value onto the stack
-        push_domNode(ctx, this);
-
-        // Call the function
-        duk_pcall_method(ctx, 0);
 
         // Pop the result or error
         duk_pop(ctx);
