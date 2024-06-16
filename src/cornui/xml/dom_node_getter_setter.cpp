@@ -69,8 +69,11 @@ namespace cornui {
     }
 
     void DOMNode::setAttribute(const std::string& name, const std::string& value) noexcept {
+        static const std::vector<std::string> scripts = { "onclick", "onhover", "onenter", "onexit", "onscroll" };
         if (name == "class" || name == "style") return;
-        this->attributes_[name] = name == "onclick" ? corn::trim(value) : value;
+        bool isScript = std::find(scripts.begin(), scripts.end(), name) != scripts.end();
+
+        this->attributes_[name] = isScript ? corn::trim(value) : value;
         corn::UIWidget* widget = this->getWidget();
         if (!widget) return;
 
@@ -78,11 +81,6 @@ namespace cornui {
         if (widget->getType() == corn::UIType::IMAGE && name == "src") {
             auto* image = new corn::Image(this->dom_->getFile().parent_path() / value);
             ((corn::UIImage*)widget)->setImage(image);
-        }
-
-        // onclick
-        if (name == "onclick") {
-            widget->setClickable(!this->attributes_[name].empty());
         }
     }
 
@@ -94,11 +92,6 @@ namespace cornui {
         // src
         if (widget->getType() == corn::UIType::IMAGE && name == "src") {
             return;
-        }
-
-        // onclick
-        if (name == "onclick") {
-            widget->setClickable(!this->attributes_[name].empty());
         }
 
         this->attributes_.erase(name);

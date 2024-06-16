@@ -49,8 +49,8 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
                 } else if (strcmp(name, "style") == 0) {
                     // Parse the style
                     node.style_ = parseDeclFromString(value);
-                } else if (strIsIn(name, { "onclick", "onhover", "onmouseenter", "onmouseexit" })) {
-                    // Insert the "onclick" attribute
+                } else if (strIsIn(name, { "onclick", "onhover", "onenter", "onexit", "onscroll" })) {
+                    // Insert the "on-xxx" attribute
                     node.attributes_[name] = corn::trim(value);
                 } else {
                     // Insert the attribute

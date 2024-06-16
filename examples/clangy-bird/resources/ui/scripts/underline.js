@@ -7,6 +7,6 @@ function exitButton(button) {
 }
 
 document.getNodesBySelector(".button").forEach(function (button) {
-    button.setAttribute("onmouseenter", "enterButton(this)");
-    button.setAttribute("onmouseexit", "exitButton(this)");
+    button.setAttribute("onenter", "enterButton(this)");
+    button.setAttribute("onexit", "exitButton(this)");
 });

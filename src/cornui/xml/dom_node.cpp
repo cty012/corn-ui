@@ -124,12 +124,11 @@ namespace cornui {
 
     void DOMNode::computeStyle() {
         // Reset computedStyles to default
-        bool shouldBeClickable = this->attributes_.contains("onclick") && !this->attributes_.at("onclick").empty();
         this->computedStyle_ = {
                 { "active", "true" },
                 { "x", "0px" }, { "y", "0px" }, { "w", "100%nw" }, { "h", "100%nh" },
                 { "z-order", "0" },
-                { "clickable", shouldBeClickable ? "true" : "false" },
+                { "interactable", "false" },
                 { "overflow", "display" },
                 { "background", "#ffffff00" },
                 { "opacity", "255" },
@@ -175,10 +174,10 @@ namespace cornui {
                 widget->setW(this->computedStyle_["w"]);
                 widget->setH(this->computedStyle_["h"]);
                 widget->setZOrder(std::stoi(this->computedStyle_["z-order"]));
-                if (this->computedStyle_["clickable"] == "true") {
-                    widget->setClickable(true);
-                } else if (this->computedStyle_["clickable"] == "false") {
-                    widget->setClickable(false);
+                if (this->computedStyle_["interactable"] == "true") {
+                    widget->setInteractable(true);
+                } else if (this->computedStyle_["interactable"] == "false") {
+                    widget->setInteractable(false);
                 }
                 if (this->computedStyle_["overflow"] == "display") {
                     widget->setOverflow(corn::UIOverflow::DISPLAY);
