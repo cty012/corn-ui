@@ -227,13 +227,14 @@ namespace cornui {
         this->computeStyle();
     }
 
-    void DOMNode::runScriptInAttr(std::string attr) {
+    void DOMNode::runScriptInAttr(const std::string& attr) {
         if (!this->attributes_.contains(attr)) return;
         duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
 
         // Compile the function stored in the attribute
-        std::string jsCode = this->attributes_.at(attr);
+        const std::string& jsCode = this->attributes_.at(attr);
         if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
+            printf("Error running script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
             duk_pop(ctx); // Remove error from stack
             return;
         }

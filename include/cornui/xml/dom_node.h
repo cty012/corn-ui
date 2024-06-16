@@ -88,7 +88,7 @@ namespace cornui {
          *
          * This function is automatically triggered by corresponding events.
          */
-        void runScriptInAttr(std::string attr);
+        void runScriptInAttr(const std::string& attr);
 
         std::string tag_;
         std::string name_;

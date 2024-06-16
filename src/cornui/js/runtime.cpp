@@ -58,10 +58,13 @@ namespace cornui {
         std::string code = codeStream.str();
 
         // Execute the file content
-        duk_int_t result = duk_peval_string_noresult(this->impl_->ctx_, code.c_str());
+        duk_int_t result = duk_peval_string(this->impl_->ctx_, code.c_str());
         if (result != 0) {
-            printf("Error compiling JS file: '%s'", file.c_str());
+            printf("Error compiling JS file: '%s'\n%s\n", file.c_str(), duk_safe_to_string(this->impl_->ctx_, -1));
         }
+
+        // Pop the result/error
+        duk_pop(this->impl_->ctx_);
     }
 
     JSRuntimeImpl* JSRuntime::getImpl() noexcept {
