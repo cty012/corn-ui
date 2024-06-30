@@ -54,7 +54,11 @@ namespace cornui {
         duk_push_c_function(ctx, domNode_getComputedStyle, 0);
         duk_put_prop_string(ctx, nodeIdx, "getComputedStyle");
 
-        // Attach "setStyle" property to the prototype
+        // Attach "getComputedGeometry" function to the prototype
+        duk_push_c_function(ctx, domNode_getComputedGeometry, 0);
+        duk_put_prop_string(ctx, nodeIdx, "getComputedGeometry");
+
+        // Attach "setStyle" function to the prototype
         duk_push_c_function(ctx, domNode_setStyle, 2);
         duk_put_prop_string(ctx, nodeIdx, "setStyle");
 
@@ -63,21 +67,25 @@ namespace cornui {
         duk_push_c_function(ctx, domNode_attributes_get, 0);
         duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "hasAttribute" property to the prototype
+        // Attach "hasAttribute" function to the prototype
         duk_push_c_function(ctx, domNode_hasAttribute, 1);
         duk_put_prop_string(ctx, nodeIdx, "hasAttribute");
 
-        // Attach "getAttribute" property to the prototype
+        // Attach "getAttribute" function to the prototype
         duk_push_c_function(ctx, domNode_getAttribute, 1);
         duk_put_prop_string(ctx, nodeIdx, "getAttribute");
 
-        // Attach "setAttribute" property to the prototype
+        // Attach "setAttribute" function to the prototype
         duk_push_c_function(ctx, domNode_setAttribute, 2);
         duk_put_prop_string(ctx, nodeIdx, "setAttribute");
 
-        // Attach "removeAttribute" property to the prototype
+        // Attach "removeAttribute" function to the prototype
         duk_push_c_function(ctx, domNode_removeAttribute, 1);
         duk_put_prop_string(ctx, nodeIdx, "removeAttribute");
+
+        // Attach "focus" function to the prototype
+        duk_push_c_function(ctx, domNode_focus, 0);
+        duk_put_prop_string(ctx, nodeIdx, "focus");
 
         // Store the prototype in the stash
         duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("DOMNode_prototype"));
@@ -241,6 +249,21 @@ namespace cornui {
         return 1;
     }
 
+    duk_ret_t domNode_getComputedGeometry(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the cached geometry to the stack
+        if (node && node->getWidget()) {
+            corn::UIWidget* widget = node->getWidget();
+            auto [x, y, w, h] = widget->getUIManager().getCachedGeometry(widget);  // NOLINT
+            push_umap_of_string_int(ctx, {{ "x", x }, { "y", y }, { "w", w }, { "h", h }});
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
     duk_ret_t domNode_setStyle(duk_context* ctx) {
         auto* node = getPtr<DOMNode>(ctx);
 
@@ -332,6 +355,18 @@ namespace cornui {
             if (name && value) {
                 node->removeAttribute(name);
             }
+        }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_focus(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Focus on the node
+        if (node && node->getWidget()) {
+            corn::UIWidget* widget = node->getWidget();
+            widget->getUIManager().setFocusedWidget(widget);
         }
 
         return 0;

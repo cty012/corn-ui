@@ -1,6 +1,7 @@
 #include <corn/media/image.h>
 #include <corn/util/rich_text.h>
 #include <corn/util/string_utils.h>
+#include <cornui/util/reserved.h>
 #include <cornui/xml/dom.h>
 #include <cornui/xml/dom_node.h>
 
@@ -69,9 +70,8 @@ namespace cornui {
     }
 
     void DOMNode::setAttribute(const std::string& name, const std::string& value) noexcept {
-        static const std::vector<std::string> scripts = { "onclick", "onhover", "onenter", "onexit", "onscroll" };
-        if (name == "class" || name == "style") return;
-        bool isScript = std::find(scripts.begin(), scripts.end(), name) != scripts.end();
+        if (attrIsReserved(name)) return;
+        bool isScript = attrIsScript(name);
 
         this->attributes_[name] = isScript ? corn::trim(value) : value;
         corn::UIWidget* widget = this->getWidget();

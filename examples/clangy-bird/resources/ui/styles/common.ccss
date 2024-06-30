@@ -11,7 +11,7 @@ label {
 }
 
 .button {
-    interactable: true;
+    mouse-interactable: true;
 }
 
 .underline {

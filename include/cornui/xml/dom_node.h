@@ -21,7 +21,12 @@ namespace cornui {
          */
         void clear() noexcept;
 
-        // Copy constructor & Copy assignment operator
+        /**
+         * @brief Copy constructor & Copy assignment operator.
+         *
+         * Note: Descendants will be copied and attached. The parent_ property will point to null point (target node
+         * only).
+         */
         DOMNode(const DOMNode& other) noexcept;
         DOMNode& operator=(const DOMNode& other) noexcept;
 
@@ -89,6 +94,24 @@ namespace cornui {
          * This function is automatically triggered by corresponding events.
          */
         void runScriptInAttr(const std::string& attr);
+
+        /**
+         * @brief Executes the JavaScript string specified with the given attribute.
+         * @param attr Name of the attribute.
+         * @param key The key triggered.
+         *
+         * This function is automatically triggered by corresponding events.
+         */
+        void runScriptInAttr(const std::string& attr, const corn::Key& key);
+
+        /**
+         * @brief Executes the JavaScript string specified with the given attribute.
+         * @param attr Name of the attribute.
+         * @param text The text entered.
+         *
+         * This function is automatically triggered by corresponding events.
+         */
+        void runScriptInAttr(const std::string& attr, const std::u8string& text);
 
         std::string tag_;
         std::string name_;

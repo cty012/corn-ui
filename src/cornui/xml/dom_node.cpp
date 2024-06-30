@@ -10,6 +10,7 @@ extern "C" {
 #include <cornui/css/cssom.h>
 #include <cornui/js/runtime.h>
 #include <cornui/ui.h>
+#include <cornui/util/key.h>
 #include <cornui/xml/dom.h>
 #include <cornui/xml/dom_node.h>
 #include "../js/runtime_impl.h"
@@ -35,6 +36,7 @@ namespace cornui {
         this->inheritedStyle_.clear();
         this->computedStyle_.clear();
         this->attributes_.clear();
+        this->parent_ = nullptr;
         this->children_.clear();
         this->widgetID_ = 0;
     }
@@ -46,8 +48,12 @@ namespace cornui {
         this->classList_ = other.classList_;
         this->style_ = other.style_;
         this->attributes_ = other.attributes_;
+        this->dom_ = other.dom_;
+        this->parent_ = nullptr;
         for (const DOMNode* child : this->children_) {
-            this->children_.push_back(new DOMNode(*child));
+            auto* childCopy = new DOMNode(*child);
+            childCopy->parent_ = this;
+            this->children_.push_back(childCopy);
         }
     }
 
@@ -60,12 +66,14 @@ namespace cornui {
         this->classList_ = other.classList_;
         this->style_ = other.style_;
         this->attributes_ = other.attributes_;
-        this->widgetID_ = 0;
-        this->dom_ = nullptr;
+        this->dom_ = other.dom_;
         this->parent_ = nullptr;
         for (const DOMNode* child : this->children_) {
-            this->children_.push_back(new DOMNode(*child));
+            auto* childCopy = new DOMNode(*child);
+            childCopy->parent_ = this;
+            this->children_.push_back(childCopy);
         }
+        this->widgetID_ = 0;
         return *this;
     }
 
@@ -128,7 +136,8 @@ namespace cornui {
                 { "active", "true" },
                 { "x", "0px" }, { "y", "0px" }, { "w", "100%nw" }, { "h", "100%nh" },
                 { "z-order", "0" },
-                { "interactable", "false" },
+                { "keyboard-interactable", "false" },
+                { "mouse-interactable", "false" },
                 { "overflow", "display" },
                 { "background", "#ffffff00" },
                 { "opacity", "255" },
@@ -174,10 +183,15 @@ namespace cornui {
                 widget->setW(this->computedStyle_["w"]);
                 widget->setH(this->computedStyle_["h"]);
                 widget->setZOrder(std::stoi(this->computedStyle_["z-order"]));
-                if (this->computedStyle_["interactable"] == "true") {
-                    widget->setInteractable(true);
-                } else if (this->computedStyle_["interactable"] == "false") {
-                    widget->setInteractable(false);
+                if (this->computedStyle_["keyboard-interactable"] == "true") {
+                    widget->setKeyboardInteractable(true);
+                } else if (this->computedStyle_["keyboard-interactable"] == "false") {
+                    widget->setKeyboardInteractable(false);
+                }
+                if (this->computedStyle_["mouse-interactable"] == "true") {
+                    widget->setMouseInteractable(true);
+                } else if (this->computedStyle_["mouse-interactable"] == "false") {
+                    widget->setMouseInteractable(false);
                 }
                 if (this->computedStyle_["overflow"] == "display") {
                     widget->setOverflow(corn::UIOverflow::DISPLAY);
@@ -230,6 +244,52 @@ namespace cornui {
     void DOMNode::runScriptInAttr(const std::string& attr) {
         if (!this->attributes_.contains(attr)) return;
         duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
+
+        // Compile and run the function stored in the attribute
+        const std::string& jsCode = this->attributes_.at(attr);
+        if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
+            printf("Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
+        } else {
+            // Push the "this" value onto the stack
+            push_domNode(ctx, this);
+            // Call the function
+            duk_pcall_method(ctx, 0);
+        }
+
+        // Pop the result or error
+        duk_pop(ctx);
+    }
+
+    void DOMNode::runScriptInAttr(const std::string& attr, const corn::Key& key) {
+        if (!this->attributes_.contains(attr)) return;
+        duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
+
+        // Set the key
+        duk_push_string(ctx, toString(key).c_str());
+        duk_put_global_string(ctx, "__key");
+
+        // Compile and run the function stored in the attribute
+        const std::string& jsCode = this->attributes_.at(attr);
+        if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
+            printf("Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
+        } else {
+            // Push the "this" value onto the stack
+            push_domNode(ctx, this);
+            // Call the function
+            duk_pcall_method(ctx, 0);
+        }
+
+        // Pop the result or error
+        duk_pop(ctx);
+    }
+
+    void DOMNode::runScriptInAttr(const std::string& attr, const std::u8string& text) {
+        if (!this->attributes_.contains(attr)) return;
+        duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
+
+        // Set the text
+        duk_push_string(ctx, (const char*)text.c_str());
+        duk_put_global_string(ctx, "__text");
 
         // Compile and run the function stored in the attribute
         const std::string& jsCode = this->attributes_.at(attr);

@@ -38,4 +38,15 @@ namespace cornui {
             duk_put_prop_string(ctx, objectIdx, key.c_str());
         }
     }
+
+    void push_umap_of_string_int(duk_context* ctx, const std::unordered_map<std::string, int>& target) {
+        duk_idx_t objectIdx = duk_push_object(ctx);
+
+        // Loop through the umap of string -> string
+        for (const auto& [key, val] : target) {
+            // Store the key-val pair in the object
+            duk_push_number(ctx, val);
+            duk_put_prop_string(ctx, objectIdx, key.c_str());
+        }
+    }
 }

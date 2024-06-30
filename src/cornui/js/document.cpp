@@ -26,6 +26,11 @@ namespace cornui {
         duk_push_c_function(ctx, document_getNodesBySelector, 1);
         duk_put_prop_string(ctx, documentIdx, "getNodesBySelector");
 
+        // Add property "focusedNode" to "document"
+        duk_push_string(ctx, "focusedNode");
+        duk_push_c_function(ctx, document_focusedNode_get, 0);
+        duk_def_prop(ctx, documentIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
+
         // Add "document" to the global object
         duk_put_global_string(ctx, "document");
 
@@ -39,7 +44,7 @@ namespace cornui {
 
         // Push result to stack
         if (dom) {
-            duk_push_pointer(ctx, (void*) &dom->getRoot());
+            push_domNode(ctx, &dom->getRoot());
         } else {
             duk_push_undefined(ctx);
         }
@@ -70,6 +75,24 @@ namespace cornui {
         if (dom) {
             std::string selector = duk_get_string(ctx, 0);
             push_domNodeArray(ctx, dom->getNodesBySelector(selector));
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t document_focusedNode_get(duk_context* ctx) {
+        // Get the DOM pointer
+        auto* dom = getPtr<DOM>(ctx);
+
+        // Push result to stack
+        if (dom && dom->getUIManager()) {
+            corn::UIWidget* focusedWidget = dom->getUIManager()->getFocusedWidget();
+            DOMNode* focusedNode = dom->getNodeThat([focusedWidget](const DOMNode* node) {
+                return node->getWidget() == focusedWidget;
+            });
+            push_domNode(ctx, focusedNode);
         } else {
             duk_push_undefined(ctx);
         }

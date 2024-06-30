@@ -11,4 +11,5 @@ namespace cornui {
     duk_ret_t document_root_get(duk_context* ctx);
     duk_ret_t document_getNodeBySelector(duk_context* ctx);
     duk_ret_t document_getNodesBySelector(duk_context* ctx);
+    duk_ret_t document_focusedNode_get(duk_context* ctx);
 }

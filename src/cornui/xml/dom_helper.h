@@ -1,5 +1,5 @@
-std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
-        [&](xmlNodePtr xmlNode, DOMNode& node) {
+std::function<void(xmlNodePtr, DOMNode&, const std::unordered_map<std::string, Def>&)> loadXMLBodyToNode =
+        [&](xmlNodePtr xmlNode, DOMNode& node, const std::unordered_map<std::string, Def>& defs) {
             if (xmlNode->type != XML_ELEMENT_NODE) {
                 throw std::invalid_argument("xmlNode must have type XML_ELEMENT_NODE");
             }
@@ -9,28 +9,15 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
 
             // Copy tag
             node.tag_ = reinterpret_cast<const char*>(xmlNode->name);
+            bool isDefNode = !tagIsReserved(node.tag_);
+
+            // Apply template (def node)
+            if (isDefNode) {
+                node = defs.at(node.tag_).node;
+            }
 
             // Default name
             node.name_ = "";
-
-            // Copy text
-            std::stringstream ssText;
-            for (xmlNodePtr xmlChild = xmlNode->children; xmlChild; xmlChild = xmlChild->next) {
-                if (xmlChild->type == XML_TEXT_NODE) {
-                    ssText << (char*)xmlChild->content;
-                }
-            }
-            std::string temp = ssText.str();
-            corn::trim(temp);
-            node.text_ = reinterpret_cast<const char8_t*>(corn::trim(ssText.str()).c_str());
-
-            // Helper
-            auto strIsIn = [](const char* target, std::vector<const char*> list) {
-                for (const char* candidate : list) {
-                    if (strcmp(target, candidate) == 0) return true;
-                }
-                return false;
-            };
 
             // Copy name, class list, and attributes
             for (xmlAttr* attr = xmlNode->properties; attr; attr = attr->next) {
@@ -49,7 +36,7 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
                 } else if (strcmp(name, "style") == 0) {
                     // Parse the style
                     node.style_ = parseDeclFromString(value);
-                } else if (strIsIn(name, { "onclick", "onhover", "onenter", "onexit", "onscroll" })) {
+                } else if (attrIsScript(name)) {
                     // Insert the "on-xxx" attribute
                     node.attributes_[name] = corn::trim(value);
                 } else {
@@ -59,13 +46,26 @@ std::function<void(xmlNodePtr, DOMNode&)> loadXMLBodyToNode =
                 xmlFree(xmlValue);
             }
 
-            // Copy children
+            // Copy text
+            std::stringstream ssText;
             for (xmlNodePtr xmlChild = xmlNode->children; xmlChild; xmlChild = xmlChild->next) {
-                if (xmlChild->type == XML_ELEMENT_NODE) {
-                    auto* child = new DOMNode();
-                    loadXMLBodyToNode(xmlChild, *child);
-                    child->parent_ = &node;
-                    node.children_.push_back(child);
+                if (xmlChild->type == XML_TEXT_NODE) {
+                    ssText << (char*)xmlChild->content;
+                }
+            }
+            std::string temp = ssText.str();
+            corn::trim(temp);
+            node.text_ = reinterpret_cast<const char8_t*>(corn::trim(ssText.str()).c_str());
+
+            // Copy children (not def node)
+            if (!isDefNode) {
+                for (xmlNodePtr xmlChild = xmlNode->children; xmlChild; xmlChild = xmlChild->next) {
+                    if (xmlChild->type == XML_ELEMENT_NODE) {
+                        auto* child = new DOMNode();
+                        loadXMLBodyToNode(xmlChild, *child, defs);
+                        child->parent_ = &node;
+                        node.children_.push_back(child);
+                    }
                 }
             }
         };

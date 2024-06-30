@@ -20,10 +20,12 @@ namespace cornui {
     duk_ret_t domNode_classList_get(duk_context* ctx);
     duk_ret_t domNode_style_get(duk_context* ctx);
     duk_ret_t domNode_getComputedStyle(duk_context* ctx);
+    duk_ret_t domNode_getComputedGeometry(duk_context* ctx);
     duk_ret_t domNode_setStyle(duk_context* ctx);
     duk_ret_t domNode_attributes_get(duk_context* ctx);
     duk_ret_t domNode_hasAttribute(duk_context* ctx);
     duk_ret_t domNode_getAttribute(duk_context* ctx);
     duk_ret_t domNode_setAttribute(duk_context* ctx);
     duk_ret_t domNode_removeAttribute(duk_context* ctx);
+    duk_ret_t domNode_focus(duk_context* ctx);
 }

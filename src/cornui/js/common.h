@@ -10,6 +10,7 @@ namespace cornui {
 
     void push_vec_of_string(duk_context* ctx, const std::vector<std::string>& target);
     void push_umap_of_string_string(duk_context* ctx, const std::unordered_map<std::string, std::string>& target);
+    void push_umap_of_string_int(duk_context* ctx, const std::unordered_map<std::string, int>& target);
 
     template<typename T>
     T* getPtr(duk_context* ctx) {

@@ -31,6 +31,20 @@ namespace cornui {
         void bind(corn::UIManager& uiManager);
 
         /**
+         * @param pred A predicate function that takes a DOM node pointer and returns whether it satisfy the conditions.
+         * @return All DOM nodes that satisfy the conditions given by the predicate function, or null pointer if it
+         *         doesn't exist.
+         */
+        [[nodiscard]] DOMNode* getNodeThat(const std::function<bool(const DOMNode* node)>& pred) const;
+
+        /**
+         * @param pred A predicate function that takes a DOM node pointer and returns whether it satisfy the conditions.
+         * @return All DOM nodes that satisfy the conditions given by the predicate function, or null pointer if it
+         *         doesn't exist.
+         */
+        [[nodiscard]] std::vector<DOMNode*> getNodesThat(const std::function<bool(const DOMNode* node)>& pred) const;
+
+        /**
          * @brief Get any node that matches the given CSS selector.
          * @param selector The CSS selector to match.
          * @return A node that matches the selector.
@@ -69,6 +83,12 @@ namespace cornui {
         [[nodiscard]] const corn::UIManager* getUIManager() const noexcept;
 
     private:
+        struct Def {
+            std::string tag;
+            std::filesystem::path file;
+            DOMNode node;
+        };
+
         /// @brief Empty constructor.
         explicit DOM(UI* ui);
         DOM(const DOM& dom) = delete;
@@ -77,14 +97,15 @@ namespace cornui {
         /**
          * @brief Constructor. The DOM tree MUST be loaded from a XML file.
          * @param file The path to the XML file.
-         * @param toLoad JavaScript files to load.
+         * @param jsList List of JavaScript files to load.
          * @throw std::invalid_argument If file cannot be opened, or the contents of the file cannot be parsed.
          */
-        void init(const std::filesystem::path& file, std::vector<std::filesystem::path>& toLoad);
+        void init(const std::filesystem::path& file, std::vector<std::filesystem::path>& jsList);
 
         UI* ui_;
         std::filesystem::path file_;
         DOMNode root_;
+        std::unordered_map<std::string, Def> defs_;
         CSSOM cssom_;
         corn::UIManager* uiManager_;
     };

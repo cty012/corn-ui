@@ -1,15 +1,11 @@
 #include <queue>
-#include <stdexcept>
-extern "C" {
-#include <libxml/parser.h>
-}
 #include <corn/event/event_args.h>
 #include <corn/media.h>
 #include <corn/ui.h>
 #include <corn/util/rich_text.h>
-#include <corn/util/string_utils.h>
 #include <cornui/css/cssom.h>
 #include <cornui/util/css_parser.h>
+#include <cornui/util/reserved.h>
 #include <cornui/xml/dom.h>
 
 namespace cornui {
@@ -42,6 +38,16 @@ namespace cornui {
 
                     // Script attributes
                     current->getEventManager().addListener(
+                            "corn::ui::keyboard",
+                            [&domNode](const corn::EventArgs& args) {
+                                const auto& args_ = dynamic_cast<const corn::EventArgsUIKeyboard&>(args);
+                                if (args_.keyboardEvent.status == corn::ButtonEvent::DOWN) {
+                                    domNode.runScriptInAttr("onkeydown", args_.keyboardEvent.key );
+                                } else if (args_.keyboardEvent.status == corn::ButtonEvent::UP) {
+                                    domNode.runScriptInAttr("onkeyup", args_.keyboardEvent.key );
+                                }
+                            });
+                    current->getEventManager().addListener(
                             "corn::ui::onclick",
                             [&domNode, current](const corn::EventArgs& args) {
                                 const auto& args_ = dynamic_cast<const corn::EventArgsUIOnClick&>(args);
@@ -72,6 +78,12 @@ namespace cornui {
                                     domNode.runScriptInAttr("onscroll");
                                 }
                             });
+                    current->getEventManager().addListener(
+                            "corn::input::text",
+                            [&domNode](const corn::EventArgs& args) {
+                                const auto& args_ = dynamic_cast<const corn::EventArgsTextEntered&>(args);
+                                domNode.runScriptInAttr("ontext", args_.character);
+                            });
 
                     // Load to children
                     for (DOMNode* child : domNode.children_) {
@@ -88,7 +100,7 @@ namespace cornui {
         this->root_.computeStyle();
     }
 
-    DOMNode* DOM::getNodeBySelector(const CSSSelector& selector) const {
+    DOMNode* DOM::getNodeThat(const std::function<bool(const DOMNode* node)>& pred) const {
         std::queue<DOMNode*> toCheck;
         toCheck.push(const_cast<DOMNode*>(&this->root_));
 
@@ -98,7 +110,7 @@ namespace cornui {
             if (!current) continue;
 
             // If current node is a match, return the current node
-            if (match(selector, *current)) {
+            if (pred(current)) {
                 return current;
             }
 
@@ -111,9 +123,9 @@ namespace cornui {
         return nullptr;
     }
 
-    std::vector<DOMNode*> DOM::getNodesBySelector(const CSSSelector& selector) const {
+    std::vector<DOMNode*> DOM::getNodesThat(const std::function<bool(const DOMNode* node)>& pred) const {
+        std::vector<DOMNode*> matches;
         std::queue<DOMNode*> toCheck;
-        std::vector<DOMNode*> result;
         toCheck.push(const_cast<DOMNode*>(&this->root_));
 
         while (!toCheck.empty()) {
@@ -121,18 +133,30 @@ namespace cornui {
             toCheck.pop();
             if (!current) continue;
 
-            // If current node is a match, add the current node to the list of results
-            if (match(selector, *current)) {
-                result.push_back(current);
+            // If current node is a match, add the current node to the list of matches
+            if (pred(current)) {
+                matches.push_back(current);
             }
 
-            // Check the child nodes
+            // Otherwise check the child nodes
             for (DOMNode* child : current->children_) {
                 toCheck.push(child);
             }
         }
 
-        return result;
+        return matches;
+    }
+
+    DOMNode* DOM::getNodeBySelector(const CSSSelector& selector) const {
+        return this->getNodeThat([&selector](const DOMNode* node){
+            return match(selector, *node);
+        });
+    }
+
+    std::vector<DOMNode*> DOM::getNodesBySelector(const CSSSelector& selector) const {
+        return this->getNodesThat([&selector](const DOMNode* node){
+            return match(selector, *node);
+        });
     }
 
     DOMNode* DOM::getNodeBySelector(const std::string& selector) const {
@@ -177,85 +201,5 @@ namespace cornui {
 
     const corn::UIManager* DOM::getUIManager() const noexcept {
         return this->uiManager_;
-    }
-
-    void DOM::init(const std::filesystem::path& file, std::vector<std::filesystem::path>& toLoad) {
-        this->file_ = file;
-
-        xmlInitParser();
-        xmlDocPtr doc = xmlReadFile(file.string().c_str(), nullptr, 0);
-        if (doc == nullptr) {
-            throw std::invalid_argument("Cannot load file '" + file.string() + "'!\n");
-        }
-
-        // Root node must be <cornui>
-        xmlNodePtr root = xmlDocGetRootElement(doc);
-        const char* rootTag = reinterpret_cast<const char*>(root->name);
-        if (strcmp(rootTag, "cornui") != 0) {
-            throw std::invalid_argument("File '" + file.string() + "' has root element with tag '<"
-                                        + rootTag + ">', '<cornui>' expected!\n");
-        }
-
-        // Find <head> and <body>
-        xmlNodePtr head = nullptr, body = nullptr;
-        for (xmlNodePtr xmlChild = root->children; xmlChild; xmlChild = xmlChild->next) {
-            if (xmlChild->type == XML_ELEMENT_NODE) {
-                const char* tag = reinterpret_cast<const char*>(xmlChild->name);
-                if (!strcmp(tag, "head")) {
-                    // Avoid multiple heads
-                    if (head) throw std::invalid_argument("File '" + file.string() + "' has multiple <head>s.");
-                    head = xmlChild;
-                } else if (!strcmp(tag, "body")) {
-                    // Avoid multiple heads
-                    if (body) throw std::invalid_argument("File '" + file.string() + "' has multiple <body>s.");
-                    body = xmlChild;
-                }
-            }
-        }
-
-        // If either not found
-        if (!head && !body) {
-            throw std::invalid_argument("File '" + file.string() + "' has no <head> and <body>.");
-        } else if (!head) {
-            throw std::invalid_argument("File '" + file.string() + "' has no <head>.");
-        } else if (!body) {
-            throw std::invalid_argument("File '" + file.string() + "' has no <body>.");
-        }
-
-        // Load head
-        // todo: possibly load <def> when feature is added
-        for (xmlNodePtr xmlChild = head->children; xmlChild; xmlChild = xmlChild->next) {
-            if (xmlChild->type == XML_ELEMENT_NODE) {
-                const char* tag = reinterpret_cast<const char*>(xmlChild->name);
-                if (!strcmp(tag, "style")) {
-                    for (xmlAttr* attr = xmlChild->properties; attr; attr = attr->next) {
-                        const char* name = reinterpret_cast<const char*>(attr->name);
-                        xmlChar* xmlValue = xmlNodeGetContent(attr->children);
-                        const char* value = reinterpret_cast<const char*>(xmlValue);
-                        if (strcmp(name, "src") == 0) {
-                            this->cssom_.loadFromFile(file.parent_path() / value);
-                        }
-                        xmlFree(xmlValue);
-                    }
-                } else if (!strcmp(tag, "script")) {
-                    for (xmlAttr* attr = xmlChild->properties; attr; attr = attr->next) {
-                        const char* name = reinterpret_cast<const char*>(attr->name);
-                        xmlChar* xmlValue = xmlNodeGetContent(attr->children);
-                        const char* value = reinterpret_cast<const char*>(xmlValue);
-                        if (strcmp(name, "src") == 0) {
-                            toLoad.push_back(file.parent_path() / value);
-                        }
-                        xmlFree(xmlValue);
-                    }
-                }
-            }
-        }
-
-        // Load body
-        // helper function
-#include "dom_helper.h"
-
-        loadXMLBodyToNode(body, this->root_);
-        xmlFreeDoc(doc);
     }
 }

@@ -90,7 +90,7 @@ target_link_libraries(cornui PRIVATE LibXml2::LibXml2)
 
 # Link with duktape
 find_package(Duktape CONFIG REQUIRED)
- target_include_directories(cornui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${DUKTAPE_INCLUDE_DIRS})
+target_include_directories(cornui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${DUKTAPE_INCLUDE_DIRS})
 target_link_libraries(cornui PRIVATE ${DUKTAPE_LIBRARY})
 
 # Build examples
