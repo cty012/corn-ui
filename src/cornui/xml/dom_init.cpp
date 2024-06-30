@@ -1,7 +1,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <format>
-#include <unordered_set>
+#include <unordered_map>
 extern "C" {
 #include <libxml/parser.h>
 }
@@ -9,9 +9,12 @@ extern "C" {
 #include <cornui/util/css_parser.h>
 #include <cornui/util/reserved.h>
 #include <cornui/xml/dom.h>
+#include "../util/graph.h"
 
 namespace cornui {
-    void parseXMLFile(const std::filesystem::path& file, xmlDocPtr doc, xmlNodePtr& head) {
+    using std::filesystem::path;
+
+    void parseXMLFile(const path& file, xmlDocPtr doc, xmlNodePtr& head) {
         head = nullptr;
         xmlNodePtr body = nullptr;
 
@@ -60,11 +63,10 @@ namespace cornui {
     }
 
     void parseXMLDefFile(
-            const std::filesystem::path& file, xmlDocPtr doc, xmlNodePtr& head,
-            std::unordered_set<std::string>& defTags) {
+            const path& file, xmlDocPtr doc, xmlNodePtr& head, std::unordered_map<std::string, xmlNodePtr>* defTags) {
 
         head = nullptr;
-        defTags.clear();
+        if (defTags) defTags->clear();
 
         // Root node must be <cornui-def>
         xmlNodePtr root = xmlDocGetRootElement(doc);
@@ -89,13 +91,13 @@ namespace cornui {
                 } else if (tagIsReserved(tag)) {
                     throw std::invalid_argument(
                             "Def file '" + file.string() + "' redefines reserved tag <" + tag + ">.");
-                } else {
+                } else if (defTags) {
                     // Avoid redefining the same tag
-                    if (defTags.contains(tag)) {
+                    if (defTags->contains(tag)) {
                         throw std::invalid_argument(
                                 "Def file '" + file.string() + "' has multiple definitions for tag <" + tag + ">.");
                     }
-                    defTags.insert(tag);
+                    (*defTags)[tag] = xmlChild;
                 }
             }
         }
@@ -108,8 +110,8 @@ namespace cornui {
 
     // Helper function
     void loadHead(
-            xmlNodePtr head, const std::filesystem::path& file, std::vector<std::filesystem::path>& xmlList,
-            std::vector<std::filesystem::path>& cssList, std::vector<std::filesystem::path>& jsList) {
+            xmlNodePtr head, const path& file, std::vector<path>* xmlList,
+            std::vector<path>* cssList, std::vector<path>* jsList) {
 
         for (xmlNodePtr xmlChild = head->children; xmlChild; xmlChild = xmlChild->next) {
             if (xmlChild->type == XML_ELEMENT_NODE) {
@@ -126,12 +128,14 @@ namespace cornui {
                     xmlChar* xmlValue = xmlNodeGetContent(attr->children);
                     const char* value = reinterpret_cast<const char*>(xmlValue);
                     if (strcmp(name, "src") == 0) {
-                        if (isDef) {
-                            xmlList.push_back(file.parent_path() / value);
-                        } else if (isCSS) {
-                            cssList.push_back(file.parent_path() / value);
-                        } else if (isJS) {
-                            jsList.push_back(file.parent_path() / value);
+                        if (isDef && xmlList) {
+                            xmlList->push_back(file.parent_path() / value);
+                        }
+                        if (isCSS && cssList) {
+                            cssList->push_back(file.parent_path() / value);
+                        }
+                        if (isJS && jsList) {
+                            jsList->push_back(file.parent_path() / value);
                         }
                     }
                     xmlFree(xmlValue);
@@ -140,43 +144,35 @@ namespace cornui {
         }
     }
 
-    void DOM::init(const std::filesystem::path& file, std::vector<std::filesystem::path>& jsList) {
+    void DOM::init(const path& file, std::vector<path>& jsList) {
         this->file_ = file;
+        jsList.clear();
         xmlInitParser();
 
-        // Stack of xml files to read
-        std::vector<std::filesystem::path> xmlList;
-        // List of css files to load
-        std::vector<std::filesystem::path> cssList;
-        // List of js files to run is already provided
+        // Graph representing the dependencies between XML def files.
+        std::unordered_map<path, std::vector<path>> xmlGraph;
+        // List of XML def files to load (in topological order)
+        std::vector<path> xmlList;
+        // List of CSS files to load
+        std::vector<path> cssList;
+        // List of JS files to run is already provided
 
-        // helper functions
+        // helper function
 #include "dom_helper.h"
 
+        /**
+         * STEP 1: Resolve Dependency
+         * 1. Find all XML def files that need to be loaded
+         * 2. Detect cyclic dependencies
+         * 3. Sort XML def files in topological order
+         */
+        std::queue<path> xmlToLoad;
+        xmlToLoad.push(this->file_);
+
         // Load the head of target file and check for correctness
-        {
-            // Open XML file
-            xmlDocPtr doc = xmlReadFile(this->file_.string().c_str(), nullptr, 0);
-            if (doc == nullptr) {
-                throw std::invalid_argument(std::format(
-                        "Cannot load file '{}'.\n",
-                        this->file_.string()));
-            }
-
-            // Parse target file's head
-            xmlNodePtr head;
-            parseXMLFile(this->file_, doc, head);
-
-            // Load head
-            loadHead(head, this->file_, xmlList, cssList, jsList);
-
-            // Release XML file
-            xmlFreeDoc(doc);
-        }
-
-        // 1st pass: load ONLY the head of the required def files and check for correctness
-        for (size_t i = 0; i < xmlList.size(); i++) {
-            std::filesystem::path curFile = xmlList[i];
+        while (!xmlToLoad.empty()) {
+            path curFile = xmlToLoad.front();
+            xmlToLoad.pop();
 
             // Open XML file
             xmlDocPtr doc = xmlReadFile(curFile.string().c_str(), nullptr, 0);
@@ -184,54 +180,74 @@ namespace cornui {
                 throw std::invalid_argument(std::format(
                         "Cannot load file '{}'.\n",
                         curFile.string()));
+            }
+
+            // Load head
+            xmlNodePtr head;
+            if (curFile == this->file_) {
+                parseXMLFile(curFile, doc, head);
+            } else {
+                parseXMLDefFile(curFile, doc, head, nullptr);
+            }
+
+            // Resolve file's dependencies
+            std::vector<path>& xmlListTemp = xmlGraph[curFile];
+            loadHead(head, curFile, &xmlListTemp, nullptr, nullptr);
+
+            // Detect cyclic dependencies
+            if (detectCycle(xmlGraph, curFile)) {
+                throw std::invalid_argument(std::format(
+                        "Cyclic dependency found for file '{}'.",
+                        curFile.string()));
+            }
+
+            // Release XML file
+            xmlFreeDoc(doc);
+        }
+
+        // Sort in topological order
+        xmlGraph.erase(this->file_);
+        sortInTopoOrder(xmlGraph, xmlList);
+
+        /**
+         * STEP 2: Create def prototypes
+         * 1. List the CSS and JS files
+         * 2. List the tag definitions
+         * 3. Compute def nodes
+         */
+        for (const path& defFile : xmlList) {
+            // Open XML file
+            xmlDocPtr doc = xmlReadFile(defFile.string().c_str(), nullptr, 0);
+            if (doc == nullptr) {
+                throw std::invalid_argument(std::format(
+                        "Cannot load file '{}'.\n",
+                        defFile.string()));
             }
 
             // Parse def file's head
             xmlNodePtr head;
-            std::unordered_set<std::string> defTags;
-            parseXMLDefFile(curFile, doc, head, defTags);
+            std::unordered_map<std::string, xmlNodePtr> defTags;
+            parseXMLDefFile(defFile, doc, head, &defTags);
 
-            // Load head
-            loadHead(head, curFile, xmlList, cssList, jsList);
+            // List CSS and JS files
+            loadHead(head, defFile, &xmlList, &cssList, &jsList);
 
-            // Record new definitions
-            for (const std::string& tag : defTags) {
+            // List tag definitions
+            for (const auto& [tag, node] : defTags) {
                 // Avoid definition collision
                 if (this->defs_.contains(tag)) {
                     const std::filesystem::path& otherFile = this->defs_[tag].file;
-                    throw std::invalid_argument(std::format(
-                            "Tag <{}> definition collision in def files: '{}' and '{}'.\n",
-                            tag, otherFile.string(), curFile.string()));
-                }
-                Def& def = this->defs_[tag];
-                def.tag = tag;
-                def.file = curFile;
-            }
-
-            // Release XML file
-            xmlFreeDoc(doc);
-        }
-
-        // 2nd pass: load the def files from back to front and parse their body
-        for (int i = (int)xmlList.size() - 1; i >= 0; i--) {
-            std::filesystem::path curFile = xmlList[i];
-
-            // Open XML file
-            xmlDocPtr doc = xmlReadFile(curFile.string().c_str(), nullptr, 0);
-            if (doc == nullptr) {
-                throw std::invalid_argument(std::format(
-                        "Cannot load file '{}'.\n",
-                        curFile.string()));
-            }
-
-            // Load each definition
-            xmlNodePtr root = xmlDocGetRootElement(doc);
-            for (xmlNodePtr xmlChild = root->children; xmlChild; xmlChild = xmlChild->next) {
-                if (xmlChild->type == XML_ELEMENT_NODE) {
-                    const char* tag = reinterpret_cast<const char*>(xmlChild->name);
-                    if (strcmp(tag, "head") != 0) {
-                        loadXMLBodyToNode(xmlChild, this->defs_[tag].node, this->defs_);
+                    if (defFile != otherFile) {
+                        throw std::invalid_argument(std::format(
+                                "Tag <{}> definition collision in def files: '{}' and '{}'.\n",
+                                tag, otherFile.string(), defFile.string()));
                     }
+                } else {
+                    Def& def = this->defs_[tag];
+                    def.tag = tag;
+                    def.file = defFile;
+                    // Compute def node
+                    loadXMLBodyToNode(node, this->defs_[tag].node, this->defs_);
                 }
             }
 
@@ -239,7 +255,11 @@ namespace cornui {
             xmlFreeDoc(doc);
         }
 
-        // Load the target file's body
+        /**
+         * STEP 3: Load target file
+         * 1. Add to the existing list of CSS and JS files
+         * 2. Use def nodes to compute body
+         */
         {
             // Open XML file
             xmlDocPtr doc = xmlReadFile(this->file_.string().c_str(), nullptr, 0);
@@ -248,6 +268,13 @@ namespace cornui {
                         "Cannot load file '{}'.\n",
                         this->file_.string()));
             }
+
+            // Parse def file's head
+            xmlNodePtr head;
+            parseXMLFile(this->file_, doc, head);
+
+            // List CSS and JS files
+            loadHead(head, this->file_, &xmlList, &cssList, &jsList);
 
             // Find and load <body>
             xmlNodePtr root = xmlDocGetRootElement(doc);
@@ -256,6 +283,7 @@ namespace cornui {
                     const char* tag = reinterpret_cast<const char*>(xmlChild->name);
                     if (strcmp(tag, "body") == 0) {
                         loadXMLBodyToNode(xmlChild, this->root_, this->defs_);
+                        break;
                     }
                 }
             }
@@ -265,7 +293,7 @@ namespace cornui {
         }
 
         // Load all CSS files after XML files are loaded
-        for (const std::filesystem::path& cssFile: cssList) {
+        for (const path& cssFile: cssList) {
             this->cssom_.loadFromFile(cssFile);
         }
 
