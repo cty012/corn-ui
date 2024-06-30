@@ -73,7 +73,7 @@ namespace cornui {
                     current->getEventManager().addListener(
                             "corn::ui::onscroll",
                             [&domNode, current](const corn::EventArgs& args) {
-                                const auto& args_ = dynamic_cast<const corn::EventArgsUIOnClick&>(args);
+                                const auto& args_ = dynamic_cast<const corn::EventArgsUIOnScroll&>(args);
                                 if (args_.target == current) {
                                     domNode.runScriptInAttr("onscroll");
                                 }
