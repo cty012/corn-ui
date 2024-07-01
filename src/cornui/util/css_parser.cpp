@@ -1,3 +1,4 @@
+#include <format>
 #include <regex>
 #include <sstream>
 #include <corn/util/string_utils.h>
@@ -95,6 +96,7 @@ namespace cornui {
     CSSSelector parseSelectorFromString(const std::string& contents) {
         CSSSelector selector;
         std::vector<std::string> groups = corn::split(contents, ",");
+
         for (std::string group : groups) {
             group = corn::trim(group);
 
@@ -116,9 +118,11 @@ namespace cornui {
                     bool noBasicSelectors = selectorGroup.basicSelectors.empty();
                     bool multipleCombs = (nextCombinator != CSSSelectorCombinator::DESCENDANT) && (comb != CSSSelectorCombinator::DESCENDANT);
                     if (noBasicSelectors) {
-                        throw CSSSelectorSyntaxError(contents, "CSS selector cannot start with combinator '" + token + "'");
+                        throw CSSSelectorSyntaxError(
+                                contents, std::format("CSS selector cannot start with combinator '{}'.", token));
                     } else if (multipleCombs) {
-                        throw CSSSelectorSyntaxError(contents, "CSS selector cannot have multiple adjacent combinators");
+                        throw CSSSelectorSyntaxError(
+                                contents, "CSS selector cannot have multiple adjacent combinators.");
                     }
                     nextCombinator = (comb == CSSSelectorCombinator::DESCENDANT) ? nextCombinator : comb;
                 } else {  // If token is basic selector
@@ -132,6 +136,12 @@ namespace cornui {
                 }
             }
         }
+
+        // Must have at least one group
+        if (selector.groups.empty()) {
+            throw CSSSelectorSyntaxError(contents, "CSS selector cannot be empty.");
+        }
+
         return selector;
     }
 
@@ -148,7 +158,7 @@ namespace cornui {
                 if (key.empty()) {
                     return declarations;
                 } else {
-                    throw CSSDeclSyntaxError(key, "Delimiter \":\" is expected.");
+                    throw CSSDeclSyntaxError(key, "Delimiter ':' is expected.");
                 }
             } else {
                 if (!isValidIdentifier(key)) {
@@ -162,7 +172,7 @@ namespace cornui {
             untrimmed += token;
             std::string value = corn::trim(token);
             if (!hasSemicolon) {
-                throw CSSDeclSyntaxError(corn::trim(untrimmed), "Expect token \";\" at the end of declaration.");
+                throw CSSDeclSyntaxError(corn::trim(untrimmed), "Expect token ';' at the end of declaration.");
             }
 
             // Add to the results
@@ -184,7 +194,7 @@ namespace cornui {
                 if (selectorStr.empty()) {
                     return result;
                 } else {
-                    throw CSSRuleSyntaxError(selectorStr, "Expect token \"{\" after the selector.");
+                    throw CSSRuleSyntaxError(selectorStr, "Expect token '{' after the selector.");
                 }
             }
 
@@ -196,7 +206,7 @@ namespace cornui {
             untrimmed += token;
             std::string declString = corn::trim(token);
             if (!hasRightBracket) {
-                throw CSSRuleSyntaxError(corn::trim(untrimmed), "Expect token \"}\" at the end of rule.");
+                throw CSSRuleSyntaxError(corn::trim(untrimmed), "Expect token '}' at the end of rule.");
             }
             if (token.find('{') != std::string::npos) {
                 throw CSSRuleSyntaxError(corn::trim(untrimmed) + "}", "Nested brackets are not allowed.");

@@ -32,48 +32,61 @@ namespace cornui {
 
         /**
          * @param pred A predicate function that takes a DOM node pointer and returns whether it satisfy the conditions.
+         * @param parent Parent to start searching from.
          * @return All DOM nodes that satisfy the conditions given by the predicate function, or null pointer if it
          *         doesn't exist.
          */
-        [[nodiscard]] DOMNode* getNodeThat(const std::function<bool(const DOMNode* node)>& pred) const;
+        [[nodiscard]] DOMNode* getNodeThat(
+                const std::function<bool(const DOMNode* node)>& pred, const DOMNode* parent = nullptr) const;
 
         /**
          * @param pred A predicate function that takes a DOM node pointer and returns whether it satisfy the conditions.
+         * @param parent Parent to start searching from.
          * @return All DOM nodes that satisfy the conditions given by the predicate function, or null pointer if it
          *         doesn't exist.
          */
-        [[nodiscard]] std::vector<DOMNode*> getNodesThat(const std::function<bool(const DOMNode* node)>& pred) const;
+        [[nodiscard]] std::vector<DOMNode*> getNodesThat(
+                const std::function<bool(const DOMNode* node)>& pred, const DOMNode* parent = nullptr) const;
 
-        /// @return All DOM nodes.
-        [[nodiscard]] std::vector<DOMNode*> getAllNodes() const;
+        /**
+         * @param parent Parent to start searching from.
+         * @return All DOM nodes.
+         */
+        [[nodiscard]] std::vector<DOMNode*> getAllNodes(const DOMNode* parent = nullptr) const;
 
         /**
          * @brief Get any node that matches the given CSS selector.
          * @param selector The CSS selector to match.
+         * @param parent Parent to start searching from.
          * @return A node that matches the selector.
          */
-        [[nodiscard]] DOMNode* getNodeBySelector(const CSSSelector& selector) const;
+        [[nodiscard]] DOMNode* getNodeBySelector(const CSSSelector& selector, const DOMNode* parent = nullptr) const;
 
         /**
          * @brief Get all nodes that match the given CSS selector.
          * @param selector The CSS selector to match.
+         * @param parent Parent to start searching from.
          * @return All nodes that match the selector.
          */
-        [[nodiscard]] std::vector<DOMNode*> getNodesBySelector(const CSSSelector& selector) const;
+        [[nodiscard]] std::vector<DOMNode*> getNodesBySelector(
+                const CSSSelector& selector, const DOMNode* parent = nullptr) const;
 
         /**
          * @brief Get any node that matches the given CSS selector.
          * @param selector The CSS selector to match.
+         * @param parent Parent to start searching from.
          * @return A node that matches the selector.
          */
-        [[nodiscard]] DOMNode* getNodeBySelector(const std::string& selector) const;
+        [[nodiscard]] DOMNode* getNodeBySelector(const std::string& selector, const DOMNode* parent = nullptr) const;
 
         /**
          * @brief Get all nodes that match the given CSS selector.
          * @param selector The CSS selector to match.
+         * @param parent Parent to start searching from.
          * @return All nodes that match the selector.
          */
-        [[nodiscard]] std::vector<DOMNode*> getNodesBySelector(const std::string& selector) const;
+        [[nodiscard]] std::vector<DOMNode*> getNodesBySelector(
+                const std::string& selector, const DOMNode* parent = nullptr) const;
 
         [[nodiscard]] const UI& getUI() const noexcept;
         [[nodiscard]] UI& getUI() noexcept;

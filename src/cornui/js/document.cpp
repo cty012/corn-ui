@@ -1,3 +1,4 @@
+#include <cornui/util/exception.h>
 #include <cornui/xml/dom.h>
 #include "common.h"
 #include "document.h"
@@ -58,8 +59,12 @@ namespace cornui {
 
         // Push result to stack
         if (dom) {
-            std::string selector = duk_get_string(ctx, 0);
-            push_domNode(ctx, dom->getNodeBySelector(selector));
+            try {
+                std::string selector = duk_get_string(ctx, 0);
+                push_domNode(ctx, dom->getNodeBySelector(selector));
+            } catch (const CSSSelectorSyntaxError& e) {
+                duk_push_null(ctx);
+            }
         } else {
             duk_push_undefined(ctx);
         }
@@ -73,8 +78,12 @@ namespace cornui {
 
         // Push result to stack
         if (dom) {
-            std::string selector = duk_get_string(ctx, 0);
-            push_domNodeArray(ctx, dom->getNodesBySelector(selector));
+            try {
+                std::string selector = duk_get_string(ctx, 0);
+                push_domNodeArray(ctx, dom->getNodesBySelector(selector));
+            } catch (const CSSSelectorSyntaxError& e) {
+                duk_push_array(ctx);
+            }
         } else {
             duk_push_undefined(ctx);
         }
@@ -92,7 +101,11 @@ namespace cornui {
             DOMNode* focusedNode = dom->getNodeThat([focusedWidget](const DOMNode* node) {
                 return node->getWidget() == focusedWidget;
             });
-            push_domNode(ctx, focusedNode);
+            if (focusedNode) {
+                push_domNode(ctx, focusedNode);
+            } else {
+                duk_push_null(ctx);
+            }
         } else {
             duk_push_undefined(ctx);
         }

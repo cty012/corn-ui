@@ -91,7 +91,7 @@ namespace cornui {
         });
     }
 
-    bool matchGroup(const CSSSelectorGroup& selectorGroup, const DOMNode& node) {
+    bool matchGroup(const CSSSelectorGroup& selectorGroup, const DOMNode& node, const DOMNode* root) {
         const std::vector<CSSBasicSelector>& basicSelectors = selectorGroup.basicSelectors;
         const std::vector<CSSSelectorCombinator>& combinators = selectorGroup.combinators;
 
@@ -112,12 +112,12 @@ namespace cornui {
                     // Find any ancestor that matches the next selector
                     do {
                         currentNode = currentNode->getParent();
-                        if (!currentNode) return false;
+                        if (!currentNode || currentNode == root) return false;
                     } while (!matchBasicSelector(basicSelectors.at(index), *currentNode));
                     break;
                 case CSSSelectorCombinator::CHILD:
                     currentNode = currentNode->getParent();
-                    if (!currentNode || !matchBasicSelector(basicSelectors.at(index), *currentNode)) {
+                    if (!currentNode || currentNode == root || !matchBasicSelector(basicSelectors.at(index), *currentNode)) {
                         return false;
                     }
                     break;
@@ -129,9 +129,9 @@ namespace cornui {
         return index < 0; // Match successful if all selectors matched
     }
 
-    bool match(const CSSSelector& selector, const DOMNode& node) {
-        return std::ranges::any_of(selector.groups, [&node](const CSSSelectorGroup& group) {
-            return matchGroup(group, node);
+    bool match(const CSSSelector& selector, const DOMNode& node, const DOMNode* root) {
+        return std::ranges::any_of(selector.groups, [&node, root](const CSSSelectorGroup& group) {
+            return matchGroup(group, node, root);
         });
     }
 }
