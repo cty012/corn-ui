@@ -1,3 +1,5 @@
+#include <cornui/util/exception.h>
+#include <cornui/xml/dom.h>
 #include <cornui/xml/dom_node.h>
 #include "class_list.h"
 #include "common.h"
@@ -82,6 +84,24 @@ namespace cornui {
         // Attach "removeAttribute" function to the prototype
         duk_push_c_function(ctx, domNode_removeAttribute, 1);
         duk_put_prop_string(ctx, nodeIdx, "removeAttribute");
+
+        // Attach "parent" property to the prototype
+        duk_push_string(ctx, "parent");
+        duk_push_c_function(ctx, domNode_parent_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
+
+        // Attach "children" property to the prototype
+        duk_push_string(ctx, "children");
+        duk_push_c_function(ctx, domNode_children_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
+
+        // Attach "getNodeBySelector" function to the prototype
+        duk_push_c_function(ctx, domNode_getNodeBySelector, 1);
+        duk_put_prop_string(ctx, nodeIdx, "getNodeBySelector");
+
+        // Attach "getNodesBySelector" function to the prototype
+        duk_push_c_function(ctx, domNode_getNodesBySelector, 1);
+        duk_put_prop_string(ctx, nodeIdx, "getNodesBySelector");
 
         // Attach "focus" function to the prototype
         duk_push_c_function(ctx, domNode_focus, 0);
@@ -358,6 +378,74 @@ namespace cornui {
         }
 
         return 0;
+    }
+
+    duk_ret_t domNode_parent_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the parent nodes to the stack
+        if (node) {
+            DOMNode* parent = node->getParent();
+            if (parent) {
+                push_domNode(ctx, parent);
+            } else {
+                duk_push_undefined(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_children_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the child nodes to the stack
+        if (node) {
+            std::vector<DOMNode*> children = node->getChildren();
+            push_domNodeArray(ctx, children);
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_getNodeBySelector(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the node to stack
+        if (node) {
+            try {
+                std::string selector = duk_get_string(ctx, 0);
+                push_domNode(ctx, node->getDOM()->getNodeBySelector(selector, node));
+            } catch (const CSSSelectorSyntaxError& e) {
+                duk_push_null(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_getNodesBySelector(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the node to stack
+        if (node) {
+            try {
+                std::string selector = duk_get_string(ctx, 0);
+                push_domNodeArray(ctx, node->getDOM()->getNodesBySelector(selector, node));
+            } catch (const CSSSelectorSyntaxError& e) {
+                duk_push_array(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
     }
 
     duk_ret_t domNode_focus(duk_context* ctx) {

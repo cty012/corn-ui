@@ -88,5 +88,11 @@ namespace cornui {
     bool precede(const CSSSelectorGroup& selector1, const CSSSelectorGroup& selector2);
 
     class DOMNode;
-    bool match(const CSSSelector& selector, const DOMNode& node);
+    /**
+     * @param selector The CSS selector.
+     * @param node The node to match.
+     * @param root The root node specifying the scope. Null pointer refers to the highest root.
+     * @return Whether it is a match.
+     */
+    bool match(const CSSSelector& selector, const DOMNode& node, const DOMNode* root = nullptr);
 }

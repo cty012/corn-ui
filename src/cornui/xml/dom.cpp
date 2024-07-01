@@ -105,9 +105,10 @@ namespace cornui {
         this->root_.computeStyle();
     }
 
-    DOMNode* DOM::getNodeThat(const std::function<bool(const DOMNode* node)>& pred) const {
+    DOMNode* DOM::getNodeThat(const std::function<bool(const DOMNode* node)>& pred, const DOMNode* parent) const {
         std::queue<DOMNode*> toCheck;
-        toCheck.push(const_cast<DOMNode*>(&this->root_));
+        if (parent && parent->dom_ != this) return nullptr;
+        toCheck.push(const_cast<DOMNode*>(parent ? parent : &this->root_));
 
         while (!toCheck.empty()) {
             DOMNode* current = toCheck.front();
@@ -128,10 +129,11 @@ namespace cornui {
         return nullptr;
     }
 
-    std::vector<DOMNode*> DOM::getNodesThat(const std::function<bool(const DOMNode* node)>& pred) const {
+    std::vector<DOMNode*> DOM::getNodesThat(const std::function<bool(const DOMNode* node)>& pred, const DOMNode* parent) const {
         std::vector<DOMNode*> matches;
         std::queue<DOMNode*> toCheck;
-        toCheck.push(const_cast<DOMNode*>(&this->root_));
+        if (parent && parent->dom_ != this) return matches;
+        toCheck.push(const_cast<DOMNode*>(parent ? parent : &this->root_));
 
         while (!toCheck.empty()) {
             DOMNode* current = toCheck.front();
@@ -152,30 +154,28 @@ namespace cornui {
         return matches;
     }
 
-    std::vector<DOMNode*> DOM::getAllNodes() const {
-        return this->getNodesThat([](const DOMNode* node) {
-            return true;
-        });
+    std::vector<DOMNode*> DOM::getAllNodes(const DOMNode* parent) const {
+        return this->getNodesThat([](const DOMNode*) { return true; }, parent);
     }
 
-    DOMNode* DOM::getNodeBySelector(const CSSSelector& selector) const {
+    DOMNode* DOM::getNodeBySelector(const CSSSelector& selector, const DOMNode* parent) const {
         return this->getNodeThat([&selector](const DOMNode* node){
             return match(selector, *node);
-        });
+        }, parent);
     }
 
-    std::vector<DOMNode*> DOM::getNodesBySelector(const CSSSelector& selector) const {
+    std::vector<DOMNode*> DOM::getNodesBySelector(const CSSSelector& selector, const DOMNode* parent) const {
         return this->getNodesThat([&selector](const DOMNode* node){
             return match(selector, *node);
-        });
+        }, parent);
     }
 
-    DOMNode* DOM::getNodeBySelector(const std::string& selector) const {
-        return this->getNodeBySelector(parseSelectorFromString(selector));
+    DOMNode* DOM::getNodeBySelector(const std::string& selector, const DOMNode* parent) const {
+        return this->getNodeBySelector(parseSelectorFromString(selector), parent);
     }
 
-    std::vector<DOMNode*> DOM::getNodesBySelector(const std::string& selector) const {
-        return this->getNodesBySelector(parseSelectorFromString(selector));
+    std::vector<DOMNode*> DOM::getNodesBySelector(const std::string& selector, const DOMNode* parent) const {
+        return this->getNodesBySelector(parseSelectorFromString(selector), parent);
     }
 
     const UI& DOM::getUI() const noexcept {
