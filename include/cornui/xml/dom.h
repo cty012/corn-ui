@@ -44,6 +44,9 @@ namespace cornui {
          */
         [[nodiscard]] std::vector<DOMNode*> getNodesThat(const std::function<bool(const DOMNode* node)>& pred) const;
 
+        /// @return All DOM nodes.
+        [[nodiscard]] std::vector<DOMNode*> getAllNodes() const;
+
         /**
          * @brief Get any node that matches the given CSS selector.
          * @param selector The CSS selector to match.

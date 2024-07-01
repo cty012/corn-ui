@@ -96,6 +96,11 @@ namespace cornui {
             loadWidgetFromDOMNode(uiManager, nullptr, *child);
         }
 
+        // Invoke the "onload" properties of all nodes
+        for (DOMNode* node : this->getAllNodes()) {
+            node->runScriptInAttr("onload");
+        }
+
         // Finally compute and apply the styles
         this->root_.computeStyle();
     }
@@ -145,6 +150,12 @@ namespace cornui {
         }
 
         return matches;
+    }
+
+    std::vector<DOMNode*> DOM::getAllNodes() const {
+        return this->getNodesThat([](const DOMNode* node) {
+            return true;
+        });
     }
 
     DOMNode* DOM::getNodeBySelector(const CSSSelector& selector) const {

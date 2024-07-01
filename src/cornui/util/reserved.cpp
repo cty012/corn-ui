@@ -4,7 +4,7 @@
 
 bool tagIsReserved(const std::string& tag) noexcept {
     static const std::vector<std::string> reservedTags = {
-            "body", "widget", "label", "image"
+            "head", "body", "widget", "label", "image"
     };
     return std::find(reservedTags.begin(), reservedTags.end(), tag) != reservedTags.end();
 }
@@ -15,6 +15,7 @@ bool attrIsReserved(const std::string& name) noexcept {
 
 bool attrIsScript(const std::string& name) noexcept {
     static const std::vector<std::string> scripts = {
+            "onload",
             "onkeydown", "onkeyup", "ontext",
             "onclick", "onhover", "onenter", "onexit", "onscroll"
     };

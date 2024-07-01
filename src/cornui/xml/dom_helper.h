@@ -14,6 +14,7 @@ std::function<void(xmlNodePtr, DOMNode&, const std::unordered_map<std::string, D
             // Apply template (def node)
             if (isDefNode) {
                 node = defs.at(node.tag_).node;
+                node.tag_ = "widget";
             }
 
             // Default name
