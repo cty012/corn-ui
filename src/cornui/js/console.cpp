@@ -48,7 +48,7 @@ namespace cornui {
             ss << duk_to_string(ctx, i);
         }
 
-        printf("[JS runtime error] %s\n", ss.str().c_str());
+        fprintf(stderr, "[JS runtime error] %s\n", ss.str().c_str());
         return 0;
     }
 }

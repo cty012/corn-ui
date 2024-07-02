@@ -22,9 +22,9 @@ namespace cornui {
         xmlNodePtr root = xmlDocGetRootElement(doc);
         const char* rootTag = reinterpret_cast<const char*>(root->name);
         if (strcmp(rootTag, "cornui") != 0) {
-            throw std::invalid_argument(
-                    "File '" + file.string() + "' has root element with tag '<"
-                    + rootTag + ">', but '<cornui>' expected.\n");
+            throw std::invalid_argument(std::format(
+                    R"(File "{}" has root element with tag <{}>, but <cornui> expected.)",
+                    file.string(), rootTag));
         }
 
         // Find <head> and <body>
@@ -34,31 +34,40 @@ namespace cornui {
                 if (strcmp(tag, "head") == 0) {
                     // Avoid multiple heads
                     if (head) {
-                        throw std::invalid_argument(
-                                "File '" + file.string() + "' has multiple <head> nodes under root.");
+                        throw std::invalid_argument(std::format(
+                                R"(File "{}" has multiple <head> nodes under root.)",
+                                file.string()));
                     }
                     head = xmlChild;
                 } else if (strcmp(tag, "body") == 0) {
                     // Avoid multiple heads
                     if (body) {
-                        throw std::invalid_argument(
-                                "File '" + file.string() + "' has multiple <body> nodes under root.");
+                        throw std::invalid_argument(std::format(
+                                R"(File "{}" has multiple <body> nodes under root.)",
+                                file.string()));
                     }
                     body = xmlChild;
                 } else {
-                    throw std::invalid_argument(
-                            "File '" + file.string() + "' has invalid node with tag <" + tag + "> under root");
+                    throw std::invalid_argument(std::format(
+                            R"(File "{}" has invalid node with tag <{}> under root.)",
+                            file.string(), tag));
                 }
             }
         }
 
         // If either not found
         if (!head && !body) {
-            throw std::invalid_argument("File '" + file.string() + "' has no <head> and <body>.");
+            throw std::invalid_argument(std::format(
+                    R"(File "{}" has no <head> and <body>.)",
+                    file.string()));
         } else if (!head) {
-            throw std::invalid_argument("File '" + file.string() + "' has no <head>.");
+            throw std::invalid_argument(std::format(
+                    R"(File "{}" has no <head>.)",
+                    file.string()));
         } else if (!body) {
-            throw std::invalid_argument("File '" + file.string() + "' has no <body>.");
+            throw std::invalid_argument(std::format(
+                    R"(File "{}" has no <body>.)",
+                    file.string()));
         }
     }
 
@@ -72,9 +81,9 @@ namespace cornui {
         xmlNodePtr root = xmlDocGetRootElement(doc);
         const char* rootTag = reinterpret_cast<const char*>(root->name);
         if (strcmp(rootTag, "cornui-def") != 0) {
-            throw std::invalid_argument(
-                    "Def file '" + file.string() + "' has root element with tag '<"
-                    + rootTag + ">', but '<cornui-def>' expected.\n");
+            throw std::invalid_argument(std::format(
+                    R"(Def file "{}" has root element with tag <{}>, but <cornui-def> expected.)",
+                    file.string(), rootTag));
         }
 
         // Find <head> and definitions
@@ -84,18 +93,21 @@ namespace cornui {
                 if (strcmp(tag, "head") == 0) {
                     // Avoid multiple heads
                     if (head) {
-                        throw std::invalid_argument(
-                                "Def file '" + file.string() + "' has multiple <head> nodes under root.");
+                        throw std::invalid_argument(std::format(
+                                R"(Def file "{}" has multiple <head> nodes under root.)",
+                                file.string()));
                     }
                     head = xmlChild;
                 } else if (tagIsReserved(tag)) {
-                    throw std::invalid_argument(
-                            "Def file '" + file.string() + "' redefines reserved tag <" + tag + ">.");
+                    throw std::invalid_argument(std::format(
+                            R"(Def file "{}" redefines reserved tag <{}>.)",
+                            file.string(), tag));
                 } else if (defTags) {
                     // Avoid redefining the same tag
                     if (defTags->contains(tag)) {
-                        throw std::invalid_argument(
-                                "Def file '" + file.string() + "' has multiple definitions for tag <" + tag + ">.");
+                        throw std::invalid_argument(std::format(
+                                R"(Def file "{}" has multiple definitions for tag <{}>.)",
+                                file.string(), tag));
                     }
                     (*defTags)[tag] = xmlChild;
                 }
@@ -104,7 +116,9 @@ namespace cornui {
 
         // If head not found (it is allowed to have no definitions)
         if (!head) {
-            throw std::invalid_argument("Def file '" + file.string() + "' has no <head>.");
+            throw std::invalid_argument(std::format(
+                    R"(Def file "{}" has no <head>.)",
+                    file.string()));
         }
     }
 
@@ -167,7 +181,9 @@ namespace cornui {
          * 3. Sort XML def files in topological order
          */
         std::queue<path> xmlToLoad;
+        std::unordered_set<path> pathsFound;
         xmlToLoad.push(this->file_);
+        pathsFound.insert(this->file_);
 
         // Load the head of target file and check for correctness
         while (!xmlToLoad.empty()) {
@@ -178,7 +194,7 @@ namespace cornui {
             xmlDocPtr doc = xmlReadFile(curFile.string().c_str(), nullptr, 0);
             if (doc == nullptr) {
                 throw std::invalid_argument(std::format(
-                        "Cannot load file '{}'.\n",
+                        R"(Cannot load file "{}".)",
                         curFile.string()));
             }
 
@@ -197,8 +213,16 @@ namespace cornui {
             // Detect cyclic dependencies
             if (detectCycle(xmlGraph, curFile)) {
                 throw std::invalid_argument(std::format(
-                        "Cyclic dependency found for file '{}'.",
+                        R"(Cyclic dependency found for file "{}".)",
                         curFile.string()));
+            }
+
+            // Dependencies need to be analyzed
+            for (const path& xmlPath : xmlListTemp) {
+                if (!pathsFound.contains(xmlPath)) {
+                    xmlToLoad.push(xmlPath);
+                    pathsFound.insert(xmlPath);
+                }
             }
 
             // Release XML file
@@ -220,7 +244,7 @@ namespace cornui {
             xmlDocPtr doc = xmlReadFile(defFile.string().c_str(), nullptr, 0);
             if (doc == nullptr) {
                 throw std::invalid_argument(std::format(
-                        "Cannot load file '{}'.\n",
+                        R"(Cannot load file "{}".)",
                         defFile.string()));
             }
 
@@ -230,7 +254,7 @@ namespace cornui {
             parseXMLDefFile(defFile, doc, head, &defTags);
 
             // List CSS and JS files
-            loadHead(head, defFile, &xmlList, &cssList, &jsList);
+            loadHead(head, defFile, nullptr, &cssList, &jsList);
 
             // List tag definitions
             for (const auto& [tag, node] : defTags) {
@@ -239,7 +263,7 @@ namespace cornui {
                     const std::filesystem::path& otherFile = this->defs_[tag].file;
                     if (defFile != otherFile) {
                         throw std::invalid_argument(std::format(
-                                "Tag <{}> definition collision in def files: '{}' and '{}'.\n",
+                                R"(Tag <{}> definition collision in def files: "{}" and "{}".)",
                                 tag, otherFile.string(), defFile.string()));
                     }
                 } else {
@@ -247,7 +271,7 @@ namespace cornui {
                     def.tag = tag;
                     def.file = defFile;
                     // Compute def node
-                    loadXMLBodyToNode(node, this->defs_[tag].node, this->defs_);
+                    loadXMLBodyToNode(node, this->defs_[tag].node, this->defs_, tag, true);
                 }
             }
 
@@ -265,7 +289,7 @@ namespace cornui {
             xmlDocPtr doc = xmlReadFile(this->file_.string().c_str(), nullptr, 0);
             if (doc == nullptr) {
                 throw std::invalid_argument(std::format(
-                        "Cannot load file '{}'.\n",
+                        "Cannot load file \"{}\".",
                         this->file_.string()));
             }
 
@@ -282,7 +306,7 @@ namespace cornui {
                 if (xmlChild->type == XML_ELEMENT_NODE) {
                     const char* tag = reinterpret_cast<const char*>(xmlChild->name);
                     if (strcmp(tag, "body") == 0) {
-                        loadXMLBodyToNode(xmlChild, this->root_, this->defs_);
+                        loadXMLBodyToNode(xmlChild, this->root_, this->defs_, tag, true);
                         break;
                     }
                 }

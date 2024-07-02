@@ -1,7 +1,9 @@
-std::function<void(xmlNodePtr, DOMNode&, const std::unordered_map<std::string, Def>&)> loadXMLBodyToNode =
-        [&](xmlNodePtr xmlNode, DOMNode& node, const std::unordered_map<std::string, Def>& defs) {
+std::function<void(xmlNodePtr, DOMNode&, const std::unordered_map<std::string, Def>&, const std::string&, bool)> loadXMLBodyToNode =
+        [&](xmlNodePtr xmlNode, DOMNode& node, const std::unordered_map<std::string, Def>& defs,
+                const std::string& rootTag, bool isRoot) {
+
             if (xmlNode->type != XML_ELEMENT_NODE) {
-                throw std::invalid_argument("xmlNode must have type XML_ELEMENT_NODE");
+                throw std::logic_error("xmlNode must have type XML_ELEMENT_NODE.");
             }
             node.clear();
             node.dom_ = this;
@@ -11,10 +13,27 @@ std::function<void(xmlNodePtr, DOMNode&, const std::unordered_map<std::string, D
             node.tag_ = reinterpret_cast<const char*>(xmlNode->name);
             bool isDefNode = !tagIsReserved(node.tag_);
 
-            // Apply template (def node)
             if (isDefNode) {
-                node = defs.at(node.tag_).node;
-                node.tag_ = "widget";
+                if (isRoot) {
+                    // NEVER use templates for root nodes
+                    // Instead reset their tag to widget
+                    node.tag_ = "widget";
+                } else {
+                    // Apply template if the non-root node is a def node
+                    // But make sure to avoid recursions
+                    if (node.tag_ == rootTag) {
+                        throw std::invalid_argument(std::format(
+                                "Recursive definition for tag <{}>.",
+                                rootTag));
+                    } else if (defs.contains(node.tag_)) {
+                        node = defs.at(node.tag_).node;
+                    } else {
+                        // todo: Do not use invalid argument
+                        throw std::invalid_argument(std::format(
+                                "Tag definition not found for <{}>.",
+                                node.tag_));
+                    }
+                }
             }
 
             // Default name
@@ -32,16 +51,21 @@ std::function<void(xmlNodePtr, DOMNode&, const std::unordered_map<std::string, D
                     std::istringstream iss(value);
                     std::string token;
                     while (iss >> token) {
-                        node.classList_.push_back(token);
+                        if (std::find(node.classList_.begin(), node.classList_.end(), token) == node.classList_.end()) {
+                            node.classList_.push_back(token);
+                        }
                     }
                 } else if (strcmp(name, "style") == 0) {
                     // Parse the style
-                    node.style_ = parseDeclFromString(value);
+                    std::unordered_map<std::string, std::string> styleTemp = parseDeclFromString(value);
+                    for (const auto& [key, val] : styleTemp) {
+                        node.style_[key] = val;
+                    }
                 } else if (attrIsScript(name)) {
-                    // Insert the "on-xxx" attribute
+                    // Insert the "on-xxx" attributes
                     node.attributes_[name] = corn::trim(value);
                 } else {
-                    // Insert the attribute
+                    // Insert the normal attributes
                     node.attributes_[name] = value;
                 }
                 xmlFree(xmlValue);
@@ -58,12 +82,12 @@ std::function<void(xmlNodePtr, DOMNode&, const std::unordered_map<std::string, D
             corn::trim(temp);
             node.text_ = reinterpret_cast<const char8_t*>(corn::trim(ssText.str()).c_str());
 
-            // Copy children (not def node)
-            if (!isDefNode) {
+            // Copy children
+            if (isRoot || !isDefNode) {
                 for (xmlNodePtr xmlChild = xmlNode->children; xmlChild; xmlChild = xmlChild->next) {
                     if (xmlChild->type == XML_ELEMENT_NODE) {
                         auto* child = new DOMNode();
-                        loadXMLBodyToNode(xmlChild, *child, defs);
+                        loadXMLBodyToNode(xmlChild, *child, defs, rootTag, false);
                         child->parent_ = &node;
                         node.children_.push_back(child);
                     }

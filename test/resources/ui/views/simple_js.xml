@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cornui>
+<head>
+    <style src="../styles/simple.ccss"/>
+    <script src="../scripts/simple_js.js"/>
+</head>
+<body>
+    <widget name="body">
+        <label class="text">Hello world</label>
+        <image src="../../image/corn-logo.png"/>
+    </widget>
+</body>
+</cornui>

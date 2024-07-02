@@ -50,7 +50,7 @@ namespace cornui {
         this->attributes_ = other.attributes_;
         this->dom_ = other.dom_;
         this->parent_ = nullptr;
-        for (const DOMNode* child : this->children_) {
+        for (const DOMNode* child : other.children_) {
             auto* childCopy = new DOMNode(*child);
             childCopy->parent_ = this;
             this->children_.push_back(childCopy);
@@ -68,7 +68,7 @@ namespace cornui {
         this->attributes_ = other.attributes_;
         this->dom_ = other.dom_;
         this->parent_ = nullptr;
-        for (const DOMNode* child : this->children_) {
+        for (const DOMNode* child : other.children_) {
             auto* childCopy = new DOMNode(*child);
             childCopy->parent_ = this;
             this->children_.push_back(childCopy);
@@ -248,7 +248,7 @@ namespace cornui {
         // Compile and run the function stored in the attribute
         const std::string& jsCode = this->attributes_.at(attr);
         if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
-            printf("Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
+            fprintf(stderr, "Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
         } else {
             // Push the "this" value onto the stack
             push_domNode(ctx, this);
@@ -271,7 +271,7 @@ namespace cornui {
         // Compile and run the function stored in the attribute
         const std::string& jsCode = this->attributes_.at(attr);
         if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
-            printf("Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
+            fprintf(stderr, "Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
         } else {
             // Push the "this" value onto the stack
             push_domNode(ctx, this);
@@ -294,7 +294,7 @@ namespace cornui {
         // Compile and run the function stored in the attribute
         const std::string& jsCode = this->attributes_.at(attr);
         if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
-            printf("Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
+            fprintf(stderr, "Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
         } else {
             // Push the "this" value onto the stack
             push_domNode(ctx, this);

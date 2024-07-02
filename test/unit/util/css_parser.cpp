@@ -25,9 +25,16 @@ namespace cornui::test::css_parser {
     bool TestSelectorEqual(const CSSSelector& selector1, const CSSSelector& selector2) {
         EXPECT_EQ_RETURN(selector1.groups.size(), selector2.groups.size(), false);
         for (size_t i = 0; i < selector1.groups.size(); i++) {
-            VectorsEqual(selector1.groups[i].basicSelectors, selector2.groups[i].basicSelectors);
-            MappedVectorsEqual(selector1.groups[i].combinators, selector2.groups[i].combinators,
-                               std::function(combinatorToString));
+            const CSSSelectorGroup& group1 = selector1.groups[i];
+            const CSSSelectorGroup& group2 = selector2.groups[i];
+            // Check that the CSS selector groups have same size
+            EXPECT_EQ_RETURN(group1.basicSelectors.size(), group2.basicSelectors.size(), false);
+            // Check that each basic selectors are the same
+            for (size_t j = 0; j < group1.basicSelectors.size(); j++) {
+                VectorsEqual(group1.basicSelectors[j].parts, group2.basicSelectors[j].parts);
+            }
+            // Check that each combinators are the same
+            MappedVectorsEqual(group1.combinators, group2.combinators, std::function(combinatorToString));
         }
         return true;
     }
@@ -110,9 +117,9 @@ namespace cornui::test::css_parser {
         // One declaration
         stream = std::istringstream(" .example  {hello:\tworld  ; } ");
         ans = {
-                {{{{{".example"}, {}}}}, {
+                {{{{{{{ ".example" }}}, {}}}}, {
                     { "hello", "world" }
-                } }
+                }}
         };
         result = parseCSSFromStream(stream);
         TestCSSEqual(result, ans);
@@ -121,17 +128,17 @@ namespace cornui::test::css_parser {
         stream = std::istringstream(
                 "#id1   {\nhello: \tworld  ;\n\r\n good-bye :world; }#id2, #id3 .cls1{lname:Engine;fname:Corn;}");
         ans = {
-                {{{{{"#id1"}, {}}}}, {
+                {{{{{{{ "#id1" }}}, {}}}}, {
                         { "hello", "world" },
                         { "good-bye", "world" }
-                } },
+                }},
                 {{{
-                    {{"#id2"}, {}},
-                    {{"#id3", ".cls1"}, {CSSSelectorCombinator::DESCENDANT}}
+                    {{{{ "#id2" }}}, {}},
+                    {{{{ "#id3" }}, {{ ".cls1" }}}, {CSSSelectorCombinator::DESCENDANT}}
                 }}, {
                         { "lname", "Engine" },
                         { "fname", "Corn" }
-                } }
+                }}
         };
         result = parseCSSFromStream(stream);
         TestCSSEqual(result, ans);
@@ -146,7 +153,7 @@ namespace cornui::test::css_parser {
 
         // Empty identifier
         stream = std::istringstream("{\n\thello: world;\n}");
-        EXPECT_THROW(parseCSSFromStream(stream), CSSRuleSyntaxError);
+        EXPECT_THROW(parseCSSFromStream(stream), CSSSelectorSyntaxError);
 
         // Invalid identifier
         // @todo
