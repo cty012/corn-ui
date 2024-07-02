@@ -52,9 +52,10 @@ namespace cornui {
         duk_push_c_function(ctx, domNode_style_get, 0);
         duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "getComputedStyle" function to the prototype
-        duk_push_c_function(ctx, domNode_getComputedStyle, 0);
-        duk_put_prop_string(ctx, nodeIdx, "getComputedStyle");
+        // Attach "computedStyle" property to the prototype
+        duk_push_string(ctx, "computedStyle");
+        duk_push_c_function(ctx, domNode_computedStyle_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
         // Attach "getComputedGeometry" function to the prototype
         duk_push_c_function(ctx, domNode_getComputedGeometry, 0);
@@ -256,7 +257,7 @@ namespace cornui {
         return 1;
     }
 
-    duk_ret_t domNode_getComputedStyle(duk_context* ctx) {
+    duk_ret_t domNode_computedStyle_get(duk_context* ctx) {
         auto* node = getPtr<DOMNode>(ctx);
 
         // Push the name to the stack

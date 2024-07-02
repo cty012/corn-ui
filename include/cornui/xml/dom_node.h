@@ -11,6 +11,7 @@ namespace cornui {
     class DOMNode {
     public:
         friend class DOM;
+        friend class UI;
 
         DOMNode() noexcept;
         ~DOMNode();

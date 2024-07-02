@@ -41,10 +41,13 @@ namespace cornui {
                             "corn::ui::keyboard",
                             [&domNode](const corn::EventArgs& args) {
                                 const auto& args_ = dynamic_cast<const corn::EventArgsUIKeyboard&>(args);
-                                if (args_.keyboardEvent.status == corn::ButtonEvent::DOWN) {
-                                    domNode.runScriptInAttr("onkeydown", args_.keyboardEvent.key );
-                                } else if (args_.keyboardEvent.status == corn::ButtonEvent::UP) {
-                                    domNode.runScriptInAttr("onkeyup", args_.keyboardEvent.key );
+                                switch (args_.keyboardEvent.status) {
+                                    case corn::ButtonEvent::DOWN:
+                                        domNode.runScriptInAttr("onkeydown", args_.keyboardEvent.key);
+                                        break;
+                                    case corn::ButtonEvent::UP:
+                                        domNode.runScriptInAttr("onkeyup", args_.keyboardEvent.key);
+                                        break;
                                 }
                             });
                     current->getEventManager().addListener(
@@ -94,11 +97,6 @@ namespace cornui {
         // Load all children
         for (DOMNode* child : this->root_.children_) {
             loadWidgetFromDOMNode(uiManager, nullptr, *child);
-        }
-
-        // Invoke the "onload" properties of all nodes
-        for (DOMNode* node : this->getAllNodes()) {
-            node->runScriptInAttr("onload");
         }
 
         // Finally compute and apply the styles

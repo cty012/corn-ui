@@ -26,6 +26,11 @@ namespace cornui {
         for (const std::filesystem::path& jsFile : toLoad) {
             this->jsRuntime_->addFile(jsFile);
         }
+
+        // Invoke the "onload" properties of all nodes
+        for (DOMNode* node : this->dom_->getAllNodes()) {
+            node->runScriptInAttr("onload");
+        }
     }
 
     const std::filesystem::path& UI::getFile() const noexcept {

@@ -265,7 +265,8 @@ namespace cornui {
         duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
 
         // Set the key
-        duk_push_string(ctx, toString(key).c_str());
+        std::string keyStr = toString(key);
+        duk_push_string(ctx, keyStr.c_str());
         duk_put_global_string(ctx, "__key");
 
         // Compile and run the function stored in the attribute
