@@ -51,6 +51,12 @@ namespace cornui {
                                 }
                             });
                     current->getEventManager().addListener(
+                            "corn::input::text",
+                            [&domNode](const corn::EventArgs& args) {
+                                const auto& args_ = dynamic_cast<const corn::EventArgsTextEntered&>(args);
+                                domNode.runScriptInAttr("ontext", args_.character);
+                            });
+                    current->getEventManager().addListener(
                             "corn::ui::onclick",
                             [&domNode, current](const corn::EventArgs& args) {
                                 const auto& args_ = dynamic_cast<const corn::EventArgsUIOnClick&>(args);
@@ -82,10 +88,14 @@ namespace cornui {
                                 }
                             });
                     current->getEventManager().addListener(
-                            "corn::input::text",
-                            [&domNode](const corn::EventArgs& args) {
-                                const auto& args_ = dynamic_cast<const corn::EventArgsTextEntered&>(args);
-                                domNode.runScriptInAttr("ontext", args_.character);
+                            "corn::ui::onhover",
+                            [&domNode](const corn::EventArgs& ) {
+                                domNode.runScriptInAttr("onhover");
+                            });
+                    current->getEventManager().addListener(
+                            "corn::ui::onunhover",
+                            [&domNode](const corn::EventArgs&) {
+                                domNode.runScriptInAttr("onunhover");
                             });
 
                     // Load to children

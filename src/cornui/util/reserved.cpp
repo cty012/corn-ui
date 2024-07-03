@@ -17,7 +17,8 @@ bool attrIsScript(const std::string& name) noexcept {
     static const std::vector<std::string> scripts = {
             "onload",
             "onkeydown", "onkeyup", "ontext",
-            "onclick", "onhover", "onenter", "onexit", "onscroll"
+            "onclick", "onhover", "onenter", "onexit", "onscroll",
+            "onfocus", "onunfocus",
     };
     return std::find(scripts.begin(), scripts.end(), name) != scripts.end();
 }
