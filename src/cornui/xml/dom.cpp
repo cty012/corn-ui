@@ -88,14 +88,14 @@ namespace cornui {
                                 }
                             });
                     current->getEventManager().addListener(
-                            "corn::ui::onhover",
+                            "corn::ui::onfocus",
                             [&domNode](const corn::EventArgs& ) {
-                                domNode.runScriptInAttr("onhover");
+                                domNode.runScriptInAttr("onfocus");
                             });
                     current->getEventManager().addListener(
-                            "corn::ui::onunhover",
+                            "corn::ui::onunfocus",
                             [&domNode](const corn::EventArgs&) {
-                                domNode.runScriptInAttr("onunhover");
+                                domNode.runScriptInAttr("onunfocus");
                             });
 
                     // Load to children
