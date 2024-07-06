@@ -4,7 +4,7 @@
 
 bool tagIsReserved(const std::string& tag) noexcept {
     static const std::vector<std::string> reservedTags = {
-            "head", "body", "widget", "label", "image"
+            "head", "body", "widget", "label", "image", "text"
     };
     return std::find(reservedTags.begin(), reservedTags.end(), tag) != reservedTags.end();
 }

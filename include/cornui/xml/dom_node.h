@@ -16,11 +16,11 @@ namespace cornui {
         DOMNode() noexcept;
         ~DOMNode();
 
-        /**
-         * Clears all descendants of the node.
-         * @param node The target node to clear.
-         */
+        /// @brief Clears all descendants of the node.
         void clear() noexcept;
+
+        /// @brief Removes all child nodes.
+        void clearChildren() noexcept;
 
         /**
          * @brief Copy constructor & Copy assignment operator.
@@ -44,6 +44,21 @@ namespace cornui {
         [[nodiscard]] std::string getOuterXML() const noexcept;
 
         /**
+         * @param content The content to parse as inner XML.
+         */
+        void setInnerXML(const std::string& content);
+
+        /**
+         * @brief Create a new DOM node from the given outer XML.
+         * @param dom The DOM object.
+         * @param outerXML The outer XML of the node.
+         * @param isDefNode Whether the node to construct is the root of a definition node.
+         * @param allowTextNode Whether to allow node with tag <text>.
+         */
+        static DOMNode fromOuterXML(
+                DOM* dom, const std::string& outerXML, bool isDefNode = false, bool allowTextNode = false);
+
+        /**
          * @param className The class to check.
          * @return Whether the DOM node has the class.
          */
@@ -64,16 +79,22 @@ namespace cornui {
          */
         bool removeClass(const std::string& className) noexcept;
 
+        /// @brief Sync the node with the UI.
+        void sync();
+
         // Getters & Setters
         [[nodiscard]] const std::string& getTag() const noexcept;
         [[nodiscard]] const std::string& getName() const noexcept;
         void setName(const std::string& name) noexcept;
         [[nodiscard]] const std::u8string& getText() const noexcept;
         void setText(const std::u8string& text) noexcept;
+        [[nodiscard]] corn::RichText getRichText() const;
+        void setRichText(const corn::RichText& richText);
         [[nodiscard]] const std::vector<std::string>& getClassList() const noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getStyle() const noexcept;
         void setStyle(const std::string& name, const std::string& value) noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getComputedStyle() const noexcept;
+        [[nodiscard]] corn::Vec4 getComputedGeometry() const noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getAttributes() const noexcept;
         void setAttribute(const std::string& name, const std::string& value) noexcept;
         void removeAttribute(const std::string& name) noexcept;
@@ -85,8 +106,29 @@ namespace cornui {
         [[nodiscard]] corn::UIWidget* getWidget() const noexcept;
 
     private:
+        /// @brief Sync the children of the node with the UI.
+        void syncChildren() const;
+
+        /// @brief Computes the style of an element node.
+        void computeElementStyle();
+
+        /// @brief Computes the style of a text node.
+        void computeTextStyle();
+
+        /// @brief Computes the style of a node.
         void computeStyle();
+
+        /**
+         * @brief Computes the style of a node.
+         * @param inheritedStyles Styles inherited from parent nodes.
+         */
         void computeStyle(const std::unordered_map<std::string, std::string>& inheritedStyles);
+
+        /**
+         * @brief If current node is a text node, set the inner XML as text.
+         * @param content The content to set.
+         */
+        void setInnerXMLAsText(const std::string& content) noexcept;
 
         /**
          * @brief Executes the JavaScript string specified with the given attribute.

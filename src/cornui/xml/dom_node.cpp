@@ -1,12 +1,6 @@
-#include <cstring>
 #include <duktape.h>
-#include <sstream>
-extern "C" {
-#include <libxml/parser.h>
-}
 #include <corn/media/image.h>
 #include <corn/util/rich_text.h>
-#include <corn/util/string_utils.h>
 #include <cornui/css/cssom.h>
 #include <cornui/js/runtime.h>
 #include <cornui/ui.h>
@@ -24,10 +18,7 @@ namespace cornui {
     }
 
     void DOMNode::clear() noexcept {
-        for (DOMNode* child : this->children_) {
-            child->clear();
-            delete child;
-        }
+        this->clearChildren();
         this->tag_ = "";
         this->name_ = "";
         this->text_ = u8"";
@@ -39,6 +30,14 @@ namespace cornui {
         this->parent_ = nullptr;
         this->children_.clear();
         this->widgetID_ = 0;
+    }
+
+    void DOMNode::clearChildren() noexcept {
+        for (DOMNode* child : this->children_) {
+            child->clear();
+            delete child;
+        }
+        this->children_.clear();
     }
 
     DOMNode::DOMNode(const DOMNode& other) noexcept : DOMNode() {
@@ -77,39 +76,6 @@ namespace cornui {
         return *this;
     }
 
-    std::string DOMNode::getInnerXML() const noexcept {
-        std::stringstream ss;
-        ss << reinterpret_cast<const char*>(this->text_.c_str());
-        for (const DOMNode* child : this->children_) {
-            ss << child->getOuterXML();
-        }
-        return ss.str();
-    }
-
-    std::string DOMNode::getOuterXML() const noexcept {
-        std::stringstream ss;
-
-        // Opening tag & name
-        ss << "<" << this->tag_ << " name=\"" << this->name_ << "\"";
-
-        // Class list
-        if (!this->classList_.empty()) {
-            ss << " class=\"";
-            for (size_t i = 0; i < this->classList_.size(); i++) {
-                if (i) ss << " ";
-                ss << this->classList_[i];
-            }
-            ss << "\"";
-        }
-        // Other attributes
-        for (auto& [name, val] : this->attributes_) {
-            ss << " " << name << "=\"" << val << "\"";
-        }
-        // Closing tag
-        ss << ">" << this->getInnerXML() << "</" << this->tag_ << ">";
-        return ss.str();
-    }
-
     bool DOMNode::hasClass(const std::string& className) const noexcept {
         return std::find(this->classList_.begin(), this->classList_.end(), className) == this->classList_.end();
     }
@@ -130,7 +96,180 @@ namespace cornui {
         return success;
     }
 
-    void DOMNode::computeStyle() {
+    void DOMNode::sync() {
+        // Syncing a text node is equivalent to syncing its parent
+        if (this->tag_ == "text") {
+            if (this->parent_) this->parent_->sync();
+            return;
+        }
+
+        // Must be bound to a UI manager
+        if (!this->dom_ || !this->dom_->getUIManager()) return;
+        corn::UIManager& uiManager = *this->dom_->getUIManager();
+
+        // Root node only syncs its children
+        if (!this->parent_) {
+            this->syncChildren();
+            return;
+        }
+
+        // Get the parent widget and the current widget
+        corn::UIWidget* parentWidget = this->parent_->getWidget();
+        corn::UIWidget* current = this->getWidget();
+
+        // Check if widget needs to be discarded
+        bool needToDiscard =
+                current != nullptr &&
+                ((current->getType() == corn::UIType::PANEL && this->tag_ != "widget") ||
+                 (current->getType() == corn::UIType::LABEL && this->tag_ != "label") ||
+                 (current->getType() == corn::UIType::IMAGE && this->tag_ != "image"));
+        if (needToDiscard) {
+            current->destroy();
+            current = nullptr;
+        }
+
+        // Create a new widget if needed
+        if (current == nullptr) {
+            // Recreate the widget
+            if (this->tag_ == "widget") {
+                current = &uiManager.createWidget<corn::UIWidget>(this->name_, parentWidget);
+            } else if (this->tag_ == "label") {
+                current = &uiManager.createWidget<corn::UILabel>(this->name_, parentWidget, corn::RichText());
+            } else if (this->tag_ == "image") {
+                current = &uiManager.createWidget<corn::UIImage>(
+                        this->name_, parentWidget,
+                        new corn::Image(50, 50, corn::Color::rgb(255, 255, 255, 0)));
+            } else {
+                // Invalid tag
+                return;
+            }
+
+            // Update widgetIDs
+            this->widgetID_ = current->getID();
+            for (DOMNode* child: this->children_) {
+                child->widgetID_ = 0;
+            }
+
+            // Register scripts as callbacks
+            current->getEventManager().addListener(
+                    "corn::ui::keyboard",
+                    [this](const corn::EventArgs& args) {
+                        const auto& args_ = dynamic_cast<const corn::EventArgsUIKeyboard&>(args);
+                        switch (args_.keyboardEvent.status) {
+                            case corn::ButtonEvent::DOWN:
+                                this->runScriptInAttr("onkeydown", args_.keyboardEvent.key);
+                                break;
+                            case corn::ButtonEvent::UP:
+                                this->runScriptInAttr("onkeyup", args_.keyboardEvent.key);
+                                break;
+                        }
+                    });
+            current->getEventManager().addListener(
+                    "corn::input::text",
+                    [this](const corn::EventArgs& args) {
+                        const auto& args_ = dynamic_cast<const corn::EventArgsTextEntered&>(args);
+                        this->runScriptInAttr("ontext", args_.character);
+                    });
+            current->getEventManager().addListener(
+                    "corn::ui::onclick",
+                    [this, current](const corn::EventArgs& args) {
+                        const auto& args_ = dynamic_cast<const corn::EventArgsUIOnClick&>(args);
+                        if (args_.target == current && args_.mousebtnEvent.status == corn::ButtonEvent::UP) {
+                            this->runScriptInAttr("onclick");
+                        }
+                    });
+            current->getEventManager().addListener(
+                    "corn::ui::onhover",
+                    [this](const corn::EventArgs&) {
+                        this->runScriptInAttr("onhover");
+                    });
+            current->getEventManager().addListener(
+                    "corn::ui::onenter",
+                    [this](const corn::EventArgs&) {
+                        this->runScriptInAttr("onenter");
+                    });
+            current->getEventManager().addListener(
+                    "corn::ui::onexit",
+                    [this](const corn::EventArgs&) {
+                        this->runScriptInAttr("onexit");
+                    });
+            current->getEventManager().addListener(
+                    "corn::ui::onscroll",
+                    [this, current](const corn::EventArgs& args) {
+                        const auto& args_ = dynamic_cast<const corn::EventArgsUIOnScroll&>(args);
+                        if (args_.target == current) {
+                            this->runScriptInAttr("onscroll");
+                        }
+                    });
+            current->getEventManager().addListener(
+                    "corn::ui::onfocus",
+                    [this](const corn::EventArgs&) {
+                        this->runScriptInAttr("onfocus");
+                    });
+            current->getEventManager().addListener(
+                    "corn::ui::onunfocus",
+                    [this](const corn::EventArgs&) {
+                        this->runScriptInAttr("onunfocus");
+                    });
+        }
+
+        // Apply styles
+        if (this->widgetID_ > 0) {
+            corn::UIWidget* widget = this->dom_->getUIManager()->getWidgetByID(this->widgetID_);
+            if (widget != nullptr) {
+                // Apply general styles
+                widget->setName(this->name_);
+                if (this->computedStyle_.at("active") == "true") {
+                    widget->setActive(true);
+                } else if (this->computedStyle_.at("active") == "false") {
+                    widget->setActive(false);
+                }
+                widget->setX(this->computedStyle_.at("x"));
+                widget->setY(this->computedStyle_.at("y"));
+                widget->setW(this->computedStyle_.at("w"));
+                widget->setH(this->computedStyle_.at("h"));
+                widget->setZOrder(std::stoi(this->computedStyle_.at("z-order")));
+                if (this->computedStyle_.at("keyboard-interactable") == "true") {
+                    widget->setKeyboardInteractable(true);
+                } else if (this->computedStyle_.at("keyboard-interactable") == "false") {
+                    widget->setKeyboardInteractable(false);
+                }
+                if (this->computedStyle_.at("mouse-interactable") == "true") {
+                    widget->setMouseInteractable(true);
+                } else if (this->computedStyle_.at("mouse-interactable") == "false") {
+                    widget->setMouseInteractable(false);
+                }
+                if (this->computedStyle_.at("overflow") == "display") {
+                    widget->setOverflow(corn::UIOverflow::DISPLAY);
+                } else if (this->computedStyle_.at("overflow") == "hidden") {
+                    widget->setOverflow(corn::UIOverflow::HIDDEN);
+                }
+                widget->setBackground(corn::Color::parse(this->computedStyle_.at("background")));
+                widget->setOpacity((unsigned char)std::stoi(this->computedStyle_.at("opacity")));
+
+                // Apply widget type-specific styles
+                if (this->tag_ == "label") {
+                    ((corn::UILabel*) widget)->setText(this->getRichText());
+                } else if (this->tag_ == "image") {
+                    auto* image = new corn::Image(this->dom_->getFile().parent_path() / this->attributes_.at("src"));
+                    ((corn::UIImage*)widget)->setImage(image);
+                }
+            }
+        }
+
+        // Sync children
+        this->syncChildren();
+    }
+
+    void DOMNode::syncChildren() const {
+        for (DOMNode* child : this->children_) {
+            // Skip text nodes
+            if (child->tag_ == "text") continue;
+            child->sync();
+        }
+    }
+
+    void DOMNode::computeElementStyle() {
         // Reset computedStyles to default
         this->computedStyle_ = {
                 { "active", "true" },
@@ -167,68 +306,44 @@ namespace cornui {
             this->computedStyle_[name] = value;
         }
 
-        // Apply styles to the UIWidgets
-        if (this->widgetID_ > 0) {
-            corn::UIWidget* widget = this->dom_->getUIManager()->getWidgetByID(this->widgetID_);
-            if (widget != nullptr) {
-                // Apply general styles
-                widget->setName(this->name_);
-                if (this->computedStyle_["active"] == "true") {
-                    widget->setActive(true);
-                } else if (this->computedStyle_["active"] == "false") {
-                    widget->setActive(false);
-                }
-                widget->setX(this->computedStyle_["x"]);
-                widget->setY(this->computedStyle_["y"]);
-                widget->setW(this->computedStyle_["w"]);
-                widget->setH(this->computedStyle_["h"]);
-                widget->setZOrder(std::stoi(this->computedStyle_["z-order"]));
-                if (this->computedStyle_["keyboard-interactable"] == "true") {
-                    widget->setKeyboardInteractable(true);
-                } else if (this->computedStyle_["keyboard-interactable"] == "false") {
-                    widget->setKeyboardInteractable(false);
-                }
-                if (this->computedStyle_["mouse-interactable"] == "true") {
-                    widget->setMouseInteractable(true);
-                } else if (this->computedStyle_["mouse-interactable"] == "false") {
-                    widget->setMouseInteractable(false);
-                }
-                if (this->computedStyle_["overflow"] == "display") {
-                    widget->setOverflow(corn::UIOverflow::DISPLAY);
-                } else if (this->computedStyle_["overflow"] == "hidden") {
-                    widget->setOverflow(corn::UIOverflow::HIDDEN);
-                }
-                widget->setBackground(corn::Color::parse(this->computedStyle_["background"]));
-                widget->setOpacity((unsigned char)std::stoi(this->computedStyle_["opacity"]));
-
-                // Apply widget type-specific styles
-                if (this->tag_ == "label") {
-                    const corn::Font* font = corn::FontManager::instance().get(this->computedStyle_["font-family"]);
-                    size_t fontSize = std::stoi(this->computedStyle_["font-size"]);
-                    corn::Color fontColor = corn::Color::parse(this->computedStyle_["font-color"]);
-                    corn::FontVariant fontVariant = corn::FontVariant::REGULAR;
-                    if (this->computedStyle_["font-variant"] == "bold") {
-                        fontVariant = corn::FontVariant::BOLD;
-                    } else if (this->computedStyle_["font-variant"] == "italic") {
-                        fontVariant = corn::FontVariant::ITALIC;
-                    } else if (this->computedStyle_["font-variant"] == "underline") {
-                        fontVariant = corn::FontVariant::UNDERLINE;
-                    }
-
-                    if (font) {
-                        ((corn::UILabel*) widget)->setText(corn::RichText().addText(
-                                this->text_, corn::TextStyle(font, fontSize, fontColor, fontVariant)));
-                    }
-                } else if (this->tag_ == "image") {
-                    auto* image = new corn::Image(this->dom_->getFile().parent_path() / this->attributes_["src"]);
-                    ((corn::UIImage*)widget)->setImage(image);
-                }
-            }
+        // Compute styles of child nodes
+        for (DOMNode* child : this->children_) {
+            child->computeStyle(this->computedStyle_);
         }
+    }
+
+    void DOMNode::computeTextStyle() {
+        // Only compute font-related styles
+        this->computedStyle_ = {
+                { "font-family", "noto-sans" },
+                { "font-size", "16" },
+                { "font-color", "#000000" },
+                { "font-variant", "regular" }
+        };
+
+        // Inherit
+        for (const auto& [name, value] : this->inheritedStyle_) {
+            this->computedStyle_[name] = value;
+        }
+
+        // Inline styles
+        for (const auto& [name, value] : this->style_) {
+            this->computedStyle_[name] = value;
+        }
+
+        // No need to apply styles since text nodes do not have widgets
 
         // Compute styles of child nodes
         for (DOMNode* child : this->children_) {
             child->computeStyle(this->computedStyle_);
+        }
+    }
+
+    void DOMNode::computeStyle() {
+        if (this->tag_ == "text") {
+            this->computeTextStyle();
+        } else {
+            this->computeElementStyle();
         }
     }
 

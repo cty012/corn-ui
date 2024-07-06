@@ -9,9 +9,10 @@
 void updateText(cornui::UI& ui, const std::string& tag, const std::string& key) {
     cornui::DOMNode* node = ui.getDOM()->getNodeBySelector(tag);
     corn::RichText richText = TextManager::instance().getRichText(key);
-    node->setText(richText.segments[0].str);
+    node->setRichText(richText);
     node->setStyle("font-size", std::to_string(richText.segments[0].style.size) + "px");
     node->setStyle("font-color", richText.segments[0].style.color.hexStringAlpha());
+    node->sync();
 }
 
 MainMenuScene::MainMenuScene() {

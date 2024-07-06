@@ -4,11 +4,13 @@
 #include <unordered_map>
 extern "C" {
 #include <libxml/parser.h>
+#include <libxml/xmlreader.h>
 }
 #include <corn/util/string_utils.h>
 #include <cornui/util/css_parser.h>
 #include <cornui/util/reserved.h>
 #include <cornui/xml/dom.h>
+#include "xml_helper.h"
 #include "../util/graph.h"
 
 namespace cornui {
@@ -171,9 +173,6 @@ namespace cornui {
         std::vector<path> cssList;
         // List of JS files to run is already provided
 
-        // helper function
-#include "dom_helper.h"
-
         /**
          * STEP 1: Resolve Dependency
          * 1. Find all XML def files that need to be loaded
@@ -267,11 +266,17 @@ namespace cornui {
                                 tag, otherFile.string(), defFile.string()));
                     }
                 } else {
-                    Def& def = this->defs_[tag];
+                    Def def;
                     def.tag = tag;
                     def.file = defFile;
+
                     // Compute def node
-                    loadXMLBodyToNode(node, this->defs_[tag].node, this->defs_, tag, true);
+                    std::string outerXML = getOuterXMLFromNode(node);
+                    def.node = DOMNode::fromOuterXML(this, outerXML, true, false);
+                    def.node.tag_ = "widget";
+
+                    // Store the def
+                    this->defs_[tag] = def;
                 }
             }
 
@@ -306,7 +311,8 @@ namespace cornui {
                 if (xmlChild->type == XML_ELEMENT_NODE) {
                     const char* tag = reinterpret_cast<const char*>(xmlChild->name);
                     if (strcmp(tag, "body") == 0) {
-                        loadXMLBodyToNode(xmlChild, this->root_, this->defs_, tag, true);
+                        std::string outerXML = getOuterXMLFromNode(xmlChild);
+                        this->root_ = DOMNode::fromOuterXML(this, outerXML, false, false);
                         break;
                     }
                 }
@@ -320,6 +326,9 @@ namespace cornui {
         for (const path& cssFile: cssList) {
             this->cssom_.loadFromFile(cssFile);
         }
+
+        // Compute and apply the styles
+        this->root_.computeStyle();
 
         // JS files will be loaded by UI class, no need to manage it here
     }

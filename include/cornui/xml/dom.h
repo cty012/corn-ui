@@ -21,6 +21,12 @@ namespace cornui {
     public:
         friend class UI;
 
+        struct Def {
+            std::string tag;
+            std::filesystem::path file;
+            DOMNode node;
+        };
+
         /**
          * @brief Bind the data in the DOM tree with the UI manager. Changes in the DOM will sync in the UI.
          * @param uiManager The UI manager for generating the UI.
@@ -95,16 +101,12 @@ namespace cornui {
         [[nodiscard]] const DOMNode& getRoot() const noexcept;
         [[nodiscard]] CSSOM& getCSSOM() noexcept;
         [[nodiscard]] const CSSOM& getCSSOM() const noexcept;
+        [[nodiscard]] std::unordered_map<std::string, Def>& getDefs() noexcept;
+        [[nodiscard]] const std::unordered_map<std::string, Def>& getDefs() const noexcept;
         [[nodiscard]] corn::UIManager* getUIManager() noexcept;
         [[nodiscard]] const corn::UIManager* getUIManager() const noexcept;
 
     private:
-        struct Def {
-            std::string tag;
-            std::filesystem::path file;
-            DOMNode node;
-        };
-
         /// @brief Empty constructor.
         explicit DOM(UI* ui);
         DOM(const DOM& dom) = delete;

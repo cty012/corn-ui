@@ -26,25 +26,105 @@ namespace cornui {
     }
 
     void DOMNode::setText(const std::u8string& text) noexcept {
-        this->text_ = text;
-        corn::UIWidget* widget = this->getWidget();
-        if (!widget || widget->getType() != corn::UIType::LABEL) return;
+        if (this->tag_ == "label") {
+            // Clear all child text nodes
+            std::vector<DOMNode*> toDelete;
+            for (DOMNode* child: this->children_) {
+                if (child->tag_ == "text") {
+                    delete child;
+                    toDelete.push_back(child);
+                }
+            }
+            for (DOMNode* child: toDelete) {
+                std::erase(this->children_, child);
+            }
 
-        // Set the text
-        const corn::Font* font = corn::FontManager::instance().get(this->computedStyle_["font-family"]);
-        size_t fontSize = std::stoi(this->computedStyle_["font-size"]);
-        corn::Color fontColor = corn::Color::parse(this->computedStyle_["font-color"]);
-        corn::FontVariant fontVariant = corn::FontVariant::REGULAR;
-        if (this->computedStyle_["font-variant"] == "bold") {
-            fontVariant = corn::FontVariant::BOLD;
-        } else if (this->computedStyle_["font-variant"] == "italic") {
-            fontVariant = corn::FontVariant::ITALIC;
-        } else if (this->computedStyle_["font-variant"] == "underline") {
-            fontVariant = corn::FontVariant::UNDERLINE;
+            // Create a new text node containing the text
+            auto* child = new DOMNode();
+            child->tag_ = "text";
+            child->text_ = text;
+            this->children_.push_back(child);
+
+            // Update the computed style
+            this->computeStyle();
+        } else if (this->tag_ == "text") {
+            // Clear all child nodes
+            this->clearChildren();
+
+            // Store the text in itself
+            this->text_ = text;
+
+            // Update the computed style
+            this->computeStyle();
         }
-        if (font) {
-            ((corn::UILabel*)widget)->setText(corn::RichText().addText(
-                    this->text_, corn::TextStyle(font, fontSize, fontColor, fontVariant)));
+    }
+
+    corn::RichText DOMNode::getRichText() const {
+        corn::RichText richText;
+
+        // Only label and text nodes can have rich text
+        if (this->tag_ != "label" && this->tag_ != "text") {
+            return richText;
+        }
+
+        if (this->tag_ == "text" && this->children_.empty()) {
+            // Leaf text nodes
+            const corn::Font* font = corn::FontManager::instance().get(this->computedStyle_.at("font-family"));
+            if (!font) {
+                // todo: Use default font
+                throw std::logic_error("Font not found: " + this->computedStyle_.at("font-family"));
+            }
+            size_t fontSize = std::stoi(this->computedStyle_.at("font-size"));
+            corn::Color fontColor = corn::Color::parse(this->computedStyle_.at("font-color"));
+            corn::FontVariant fontVariant = corn::FontVariant::REGULAR;
+            if (this->computedStyle_.at("font-variant") == "bold") {
+                fontVariant = corn::FontVariant::BOLD;
+            } else if (this->computedStyle_.at("font-variant") == "italic") {
+                fontVariant = corn::FontVariant::ITALIC;
+            } else if (this->computedStyle_.at("font-variant") == "underline") {
+                fontVariant = corn::FontVariant::UNDERLINE;
+            }
+            richText.addText(this->text_, corn::TextStyle(font, fontSize, fontColor, fontVariant));
+        } else {
+            // Non-leaf text nodes
+            for (DOMNode* child: this->children_) {
+                // Only text nodes are considered
+                if (child->tag_ != "text") continue;
+
+                corn::RichText childRichText = child->getRichText();
+                for (const corn::RichText::Segment& segment: childRichText.segments) {
+                    richText.addText(segment.str, segment.style);
+                }
+            }
+        }
+
+        return richText;
+    }
+
+    void DOMNode::setRichText(const corn::RichText& richText) {
+        // Only label and text nodes can have rich text
+        if (this->tag_ != "label" && this->tag_ != "text") {
+            return;
+        }
+
+        // Clear all child text nodes
+        std::vector<DOMNode*> toDelete;
+        for (DOMNode* child: this->children_) {
+            if (child->tag_ == "text") {
+                delete child;
+                toDelete.push_back(child);
+            }
+        }
+        for (DOMNode* child: toDelete) {
+            std::erase(this->children_, child);
+        }
+
+        // Store the rich text in its children
+        for (const corn::RichText::Segment& segment: richText.segments) {
+            auto* child = new DOMNode();
+            child->tag_ = "text";
+            child->text_ = segment.str;
+            this->children_.push_back(child);
         }
     }
 
@@ -63,6 +143,16 @@ namespace cornui {
 
     const std::unordered_map<std::string, std::string>& DOMNode::getComputedStyle() const noexcept {
         return this->computedStyle_;
+    }
+
+    corn::Vec4 DOMNode::getComputedGeometry() const noexcept {
+        if (!this->dom_ || !this->dom_->getUIManager() || this->widgetID_ == 0) {
+            return {};
+        }
+
+        corn::UIManager& uiManager = *this->dom_->getUIManager();
+        corn::UIWidget* widget = this->getWidget();
+        return uiManager.getCachedGeometry(widget);
     }
 
     const std::unordered_map<std::string, std::string>& DOMNode::getAttributes() const noexcept {

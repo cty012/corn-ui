@@ -7,7 +7,7 @@ namespace cornui::test {
         // This method will be called once before all tests are run
         void SetUp() override {
             corn::FontManager::instance().load(
-                    "noto-sans-zh", "resources/fonts/noto-sans-zh/static/NotoSansSC-Regular.ttf");
+                    "noto-sans", "resources/fonts/noto-sans/NotoSans-Regular.ttf");
         }
 
         // This method will be called once after all tests have finished

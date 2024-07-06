@@ -139,12 +139,15 @@ namespace cornui {
 
         // Add each class
         if (node) {
+            bool altered = false;
             for (int i = 0; i < nargs; i++) {
                 const char* className = duk_get_string(ctx, i);
                 if (className) {
                     node->addClass(className);
+                    altered = true;
                 }
             }
+            if (altered) node->sync();
         }
 
         return 0;
@@ -156,12 +159,15 @@ namespace cornui {
 
         // Remove each class
         if (node) {
+            bool altered = false;
             for (int i = 0; i < nargs; i++) {
                 const char* className = duk_get_string(ctx, i);
                 if (className) {
                     node->removeClass(className);
+                    altered = true;
                 }
             }
+            if (altered) node->sync();
         }
 
         return 0;
@@ -179,6 +185,7 @@ namespace cornui {
                 } else {
                     node->removeClass(className);
                 }
+                node->sync();
             }
         }
 
@@ -195,6 +202,7 @@ namespace cornui {
             if (oldClassName && newClassName && node->hasClass(oldClassName)) {
                 node->removeClass(oldClassName);
                 node->addClass(newClassName);
+                node->sync();
             }
         }
 

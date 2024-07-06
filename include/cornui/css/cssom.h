@@ -88,6 +88,7 @@ namespace cornui {
     bool precede(const CSSSelectorGroup& selector1, const CSSSelectorGroup& selector2);
 
     class DOMNode;
+
     /**
      * @param selector The CSS selector.
      * @param node The node to match.

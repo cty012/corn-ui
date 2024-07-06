@@ -16,101 +16,8 @@ namespace cornui {
         this->uiManager_ = &uiManager;
         uiManager.clear();
 
-        std::function<void(corn::UIManager&, const corn::UIWidget*, DOMNode&)> loadWidgetFromDOMNode =
-                [&](corn::UIManager& uiManager, const corn::UIWidget* parent, DOMNode& domNode) {
-                    corn::UIWidget* current = nullptr;
-                    // Load to current node
-                    if (domNode.tag_ == "widget") {
-                        current = &uiManager.createWidget<corn::UIWidget>(domNode.name_, parent);
-                    } else if (domNode.tag_ == "label") {  // @todo: find a way to encode richtext in xml
-                        const corn::Font* font = corn::FontManager::instance().get("noto-sans-zh");
-                        current = &uiManager.createWidget<corn::UILabel>(domNode.name_, parent, corn::RichText().addText(
-                                domNode.text_, corn::TextStyle(font, 16)));
-                    } else if (domNode.tag_ == "image") {
-                        current = &uiManager.createWidget<corn::UIImage>(
-                                domNode.name_, parent,
-                                new corn::Image(50, 50, corn::Color::rgb(255, 255, 255, 0)));
-                    }
-
-                    // Invalid DOM node
-                    if (!current) return;
-                    domNode.widgetID_ = current->getID();
-
-                    // Script attributes
-                    current->getEventManager().addListener(
-                            "corn::ui::keyboard",
-                            [&domNode](const corn::EventArgs& args) {
-                                const auto& args_ = dynamic_cast<const corn::EventArgsUIKeyboard&>(args);
-                                switch (args_.keyboardEvent.status) {
-                                    case corn::ButtonEvent::DOWN:
-                                        domNode.runScriptInAttr("onkeydown", args_.keyboardEvent.key);
-                                        break;
-                                    case corn::ButtonEvent::UP:
-                                        domNode.runScriptInAttr("onkeyup", args_.keyboardEvent.key);
-                                        break;
-                                }
-                            });
-                    current->getEventManager().addListener(
-                            "corn::input::text",
-                            [&domNode](const corn::EventArgs& args) {
-                                const auto& args_ = dynamic_cast<const corn::EventArgsTextEntered&>(args);
-                                domNode.runScriptInAttr("ontext", args_.character);
-                            });
-                    current->getEventManager().addListener(
-                            "corn::ui::onclick",
-                            [&domNode, current](const corn::EventArgs& args) {
-                                const auto& args_ = dynamic_cast<const corn::EventArgsUIOnClick&>(args);
-                                if (args_.target == current && args_.mousebtnEvent.status == corn::ButtonEvent::UP) {
-                                    domNode.runScriptInAttr("onclick");
-                                }
-                            });
-                    current->getEventManager().addListener(
-                            "corn::ui::onhover",
-                            [&domNode](const corn::EventArgs&) {
-                                domNode.runScriptInAttr("onhover");
-                            });
-                    current->getEventManager().addListener(
-                            "corn::ui::onenter",
-                            [&domNode](const corn::EventArgs&) {
-                                domNode.runScriptInAttr("onenter");
-                            });
-                    current->getEventManager().addListener(
-                            "corn::ui::onexit",
-                            [&domNode](const corn::EventArgs&) {
-                                domNode.runScriptInAttr("onexit");
-                            });
-                    current->getEventManager().addListener(
-                            "corn::ui::onscroll",
-                            [&domNode, current](const corn::EventArgs& args) {
-                                const auto& args_ = dynamic_cast<const corn::EventArgsUIOnScroll&>(args);
-                                if (args_.target == current) {
-                                    domNode.runScriptInAttr("onscroll");
-                                }
-                            });
-                    current->getEventManager().addListener(
-                            "corn::ui::onfocus",
-                            [&domNode](const corn::EventArgs& ) {
-                                domNode.runScriptInAttr("onfocus");
-                            });
-                    current->getEventManager().addListener(
-                            "corn::ui::onunfocus",
-                            [&domNode](const corn::EventArgs&) {
-                                domNode.runScriptInAttr("onunfocus");
-                            });
-
-                    // Load to children
-                    for (DOMNode* child : domNode.children_) {
-                        loadWidgetFromDOMNode(uiManager, current, *child);
-                    }
-                };
-
-        // Load all children
-        for (DOMNode* child : this->root_.children_) {
-            loadWidgetFromDOMNode(uiManager, nullptr, *child);
-        }
-
-        // Finally compute and apply the styles
-        this->root_.computeStyle();
+        // Sync with the UI
+        this->root_.sync();
     }
 
     DOMNode* DOM::getNodeThat(const std::function<bool(const DOMNode* node)>& pred, const DOMNode* parent) const {
@@ -212,6 +119,14 @@ namespace cornui {
 
     const CSSOM& DOM::getCSSOM() const noexcept {
         return this->cssom_;
+    }
+
+    std::unordered_map<std::string, DOM::Def>& DOM::getDefs() noexcept {
+        return this->defs_;
+    }
+
+    const std::unordered_map<std::string, DOM::Def>& DOM::getDefs() const noexcept {
+        return this->defs_;
     }
 
     corn::UIManager* DOM::getUIManager() noexcept {

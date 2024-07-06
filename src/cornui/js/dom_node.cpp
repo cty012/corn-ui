@@ -198,6 +198,7 @@ namespace cornui {
             const char* name = duk_get_string(ctx, 0);
             if (name) {
                 node->setName(name);
+                node->sync();
             }
         }
 
@@ -225,6 +226,7 @@ namespace cornui {
             const auto* text = (const char8_t*)duk_get_string(ctx, 0);
             if (text) {
                 node->setText(text);
+                node->sync();
             }
         }
 
@@ -294,6 +296,7 @@ namespace cornui {
             const char* value = duk_get_string(ctx, 1);
             if (name && value) {
                 node->setStyle(name, value);
+                node->sync();
             }
         }
 
@@ -360,6 +363,7 @@ namespace cornui {
             const char* value = duk_get_string(ctx, 1);
             if (name && value) {
                 node->setAttribute(name, value);
+                node->sync();
             }
         }
 
@@ -375,6 +379,7 @@ namespace cornui {
             const char* value = duk_get_string(ctx, 1);
             if (name && value) {
                 node->removeAttribute(name);
+                node->sync();
             }
         }
 
@@ -449,6 +454,7 @@ namespace cornui {
         return 1;
     }
 
+    // todo: Create API in DOMNode to focus on the node
     duk_ret_t domNode_focus(duk_context* ctx) {
         auto* node = getPtr<DOMNode>(ctx);
 
