@@ -326,6 +326,16 @@ namespace cornui {
             this->computedStyle_[name] = value;
         }
 
+        // Styles from stylesheet
+        for (const CSSRule& style : this->getDOM()->getCSSOM().getRules()) {
+            // Apply the styles if the selector matches the current node
+            if (match(style.selector, *this)) {
+                for (const auto& [name, value] : style.declarations) {
+                    this->computedStyle_[name] = value;
+                }
+            }
+        }
+
         // Inline styles
         for (const auto& [name, value] : this->style_) {
             this->computedStyle_[name] = value;

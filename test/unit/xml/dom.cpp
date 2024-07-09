@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <cornui/js/js_event_args.h>
 #include <cornui/ui.h>
+#include <cornui/util/css_parser.h>
 #include "dummy_scene.h"
 #include "virtual_node.h"
 
@@ -82,6 +83,9 @@ namespace cornui::test::dom {
         nodeConnect(&vnodes[2], &vnodes[4]);
         nodeConnect(&vnodes[1], &vnodes[5]);
         nodeCompare(&ui.getDOM()->getRoot(), &vnodes[0]);
+
+        bool isMatch = match(parseSelectorFromString(".text text"), *ui.getDOM()->getNodeBySelector(".text")->getChildren()[0]);
+        EXPECT_TRUE(isMatch);
 
         // innerXML
         ui.init("resources/ui/views/empty.xml", scene.getUIManager());

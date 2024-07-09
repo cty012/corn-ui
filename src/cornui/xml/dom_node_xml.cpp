@@ -78,7 +78,9 @@ namespace cornui {
             if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
                 // Create a new child node to store the element
                 xmlChar* outerXML = xmlTextReaderReadOuterXml(reader);
-                this->children_.push_back(new DOMNode(DOMNode::fromOuterXML(this->dom_, (const char*)outerXML, false, false)));
+                auto* child = new DOMNode(DOMNode::fromOuterXML(this->dom_, (const char*)outerXML, false, false));
+                child->parent_ = this;
+                this->children_.push_back(child);
                 xmlFree(outerXML);
             }
 
@@ -126,10 +128,12 @@ namespace cornui {
 
                 // Create a new child node to store the element
                 xmlChar* outerXML = xmlTextReaderReadOuterXml(reader);
-                this->children_.push_back(new DOMNode(DOMNode::fromOuterXML(this->dom_, (const char*)outerXML, false, true)));
+                auto* child = new DOMNode(DOMNode::fromOuterXML(this->dom_, (const char*)outerXML, false, true));
+                child->parent_ = this;
+                this->children_.push_back(child);
                 xmlFree(outerXML);
             } else if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_TEXT) {
-                const auto* text = (const char8_t*)xmlTextReaderConstValue(reader);
+                std::u8string text = (const char8_t*)xmlTextReaderConstValue(reader);
 
                 ret = xmlTextReaderNext(reader);
                 if (nodeCount == 1 && (ret != 1 || xmlTextReaderNodeType(reader) == XML_READER_TYPE_END_ELEMENT)) {
@@ -140,6 +144,7 @@ namespace cornui {
                     auto* child = new DOMNode();
                     child->clear();
                     child->dom_ = this->dom_;
+                    child->parent_ = this;
                     this->children_.push_back(child);
 
                     // Add the text directly to child
