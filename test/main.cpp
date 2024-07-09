@@ -12,7 +12,7 @@ namespace cornui::test {
 
         // This method will be called once after all tests have finished
         void TearDown() override {
-            corn::FontManager::instance().unload("noto-sans-zh");
+            corn::FontManager::instance().unload("noto-sans");
         }
     };
 

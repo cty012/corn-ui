@@ -1,6 +1,7 @@
 #pragma once
 
 #include <duktape.h>
+#include <corn/event/event_scope.h>
 
 namespace cornui {
     /**
@@ -12,5 +13,8 @@ namespace cornui {
 
         explicit JSRuntimeImpl(DOM& dom);
         ~JSRuntimeImpl();
+
+    private:
+        corn::EventScope eventScope_;
     };
 }

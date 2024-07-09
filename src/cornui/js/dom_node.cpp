@@ -14,7 +14,8 @@ namespace cornui {
         // Attach "innerXML" property to the prototype
         duk_push_string(ctx, "innerXML");
         duk_push_c_function(ctx, domNode_innerXML_get, 0);
-        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
+        duk_push_c_function(ctx, domNode_innerXML_set, 1);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_HAVE_SETTER | DUK_DEFPROP_ENUMERABLE);
 
         // Attach "outerXML" property to the prototype
         duk_push_string(ctx, "outerXML");
@@ -149,6 +150,21 @@ namespace cornui {
         }
 
         return 1;
+    }
+
+    duk_ret_t domNode_innerXML_set(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the inner XML to the stack
+        if (node) {
+            const char* innerXML = duk_get_string(ctx, 0);
+            if (innerXML) {
+                node->setInnerXML(innerXML);
+                node->sync();
+            }
+        }
+
+        return 0;
     }
 
     duk_ret_t domNode_outerXML_get(duk_context* ctx) {

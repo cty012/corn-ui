@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cornui>
+<head>
+    <style src="../styles/simple.ccss"/>
+</head>
+<body>
+    <widget name="body"/>
+</body>
+</cornui>

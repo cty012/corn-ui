@@ -96,7 +96,8 @@ namespace cornui {
             return;
         }
 
-        // Clear the children
+        // Clear
+        this->text_.clear();
         this->clearChildren();
 
         // Create a new xmlTextReader for the input string
@@ -108,13 +109,17 @@ namespace cornui {
         }
 
         xmlTextReaderRead(reader);  // Read the dummy root node
+
         int ret = xmlTextReaderRead(reader);  // Read the first child node
+        size_t nodeCount = 0;
         while (ret == 1) {
+            nodeCount++;
+
             // Check if the current node is an element node
             if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT) {
                 // Skip nodes that are not text nodes
                 const char* tag = (const char*)xmlTextReaderConstName(reader);
-                if (!tag || !strcmp(tag, "text")) {
+                if (!tag || strcmp(tag, "text") != 0) {
                     ret = xmlTextReaderNext(reader);
                     continue;
                 }
@@ -124,15 +129,27 @@ namespace cornui {
                 this->children_.push_back(new DOMNode(DOMNode::fromOuterXML(this->dom_, (const char*)outerXML, false, true)));
                 xmlFree(outerXML);
             } else if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_TEXT) {
-                // Create a new child node to store the text
-                auto* child = new DOMNode();
-                child->clear();
-                child->dom_ = this->dom_;
-                this->children_.push_back(child);
+                const auto* text = (const char8_t*)xmlTextReaderConstValue(reader);
 
-                // Add the text directly to child
-                child->tag_ = "text";
-                child->text_ = (const char8_t*)xmlTextReaderConstValue(reader);
+                ret = xmlTextReaderNext(reader);
+                if (nodeCount == 1 && (ret != 1 || xmlTextReaderNodeType(reader) == XML_READER_TYPE_END_ELEMENT)) {
+                    // If this is the only text node, directly store the text in the current node
+                    this->text_ = text;
+                } else {
+                    // Create a new child node to store the text
+                    auto* child = new DOMNode();
+                    child->clear();
+                    child->dom_ = this->dom_;
+                    this->children_.push_back(child);
+
+                    // Add the text directly to child
+                    child->tag_ = "text";
+                    child->text_ = text;
+                }
+
+                continue;
+            } else if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_END_ELEMENT) {
+                break;
             }
 
             // Move to the end of the current element

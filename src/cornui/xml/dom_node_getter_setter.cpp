@@ -21,42 +21,28 @@ namespace cornui {
         widget->setName(name);
     }
 
-    const std::u8string& DOMNode::getText() const noexcept {
+    const std::u8string& DOMNode::getLocalText() const noexcept {
         return this->text_;
     }
 
-    void DOMNode::setText(const std::u8string& text) noexcept {
-        if (this->tag_ == "label") {
-            // Clear all child text nodes
-            std::vector<DOMNode*> toDelete;
-            for (DOMNode* child: this->children_) {
-                if (child->tag_ == "text") {
-                    delete child;
-                    toDelete.push_back(child);
-                }
-            }
-            for (DOMNode* child: toDelete) {
-                std::erase(this->children_, child);
-            }
-
-            // Create a new text node containing the text
-            auto* child = new DOMNode();
-            child->tag_ = "text";
-            child->text_ = text;
-            this->children_.push_back(child);
-
-            // Update the computed style
-            this->computeStyle();
-        } else if (this->tag_ == "text") {
-            // Clear all child nodes
-            this->clearChildren();
-
-            // Store the text in itself
-            this->text_ = text;
-
-            // Update the computed style
-            this->computeStyle();
+    std::u8string DOMNode::getText() const noexcept {
+        if (!this->text_.empty()) {
+            return this->text_;
         }
+
+        std::u8string text;
+        for (DOMNode* child: this->children_) {
+            if (child->tag_ == "text") {
+                text += child->getText();
+            }
+        }
+        return text;
+    }
+
+    void DOMNode::setText(const std::u8string& text) noexcept {
+        this->clearChildren();
+        this->text_ = text;
+        this->computeStyle();
     }
 
     corn::RichText DOMNode::getRichText() const {
@@ -67,8 +53,16 @@ namespace cornui {
             return richText;
         }
 
-        if (this->tag_ == "text" && this->children_.empty()) {
-            // Leaf text nodes
+        bool isLeaf = true;
+        for (DOMNode* child: this->children_) {
+            if (child->tag_ == "text") {
+                isLeaf = false;
+                break;
+            }
+        }
+
+        if (isLeaf) {
+            // Leaf nodes
             const corn::Font* font = corn::FontManager::instance().get(this->computedStyle_.at("font-family"));
             if (!font) {
                 // todo: Use default font

@@ -86,7 +86,8 @@ namespace cornui {
         [[nodiscard]] const std::string& getTag() const noexcept;
         [[nodiscard]] const std::string& getName() const noexcept;
         void setName(const std::string& name) noexcept;
-        [[nodiscard]] const std::u8string& getText() const noexcept;
+        [[nodiscard]] const std::u8string& getLocalText() const noexcept;
+        [[nodiscard]] std::u8string getText() const noexcept;
         void setText(const std::u8string& text) noexcept;
         [[nodiscard]] corn::RichText getRichText() const;
         void setRichText(const corn::RichText& richText);

@@ -10,6 +10,7 @@ namespace cornui {
     void push_domNodeArray(duk_context* ctx, std::vector<DOMNode*> nodes);
 
     duk_ret_t domNode_innerXML_get(duk_context* ctx);
+    duk_ret_t domNode_innerXML_set(duk_context* ctx);
     duk_ret_t domNode_outerXML_get(duk_context* ctx);
 
     duk_ret_t domNode_tag_get(duk_context* ctx);

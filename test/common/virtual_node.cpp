@@ -23,7 +23,7 @@ namespace cornui::test {
         // Compare current node
         EXPECT_EQ_MSG_RETURN(domNode->getTag(), virtualNode->tag, msg, false);
         EXPECT_EQ_MSG_RETURN(domNode->getName(), virtualNode->name, msg, false);
-        std::string domText = (const char*)domNode->getText().c_str();
+        std::string domText = (const char*)domNode->getLocalText().c_str();
         std::string virtualText = (const char*)virtualNode->text.c_str();
         EXPECT_EQ_MSG_RETURN(domText, virtualText, msg, false);
         EXPECT_EQ_MSG_RETURN(

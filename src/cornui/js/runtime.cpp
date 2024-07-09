@@ -28,10 +28,10 @@ namespace cornui {
         create_document(this->ctx_, &dom);
 
         // Initialize the "Event" object
-        create_event(this->ctx_, "Event", dom.getUIManager()->getScene().getEventManager());
+        create_event(this->ctx_, "Event", dom.getUIManager()->getScene().getEventManager(), this->eventScope_);
 
         // Initialize the "GlobalEvent" object
-        create_event(this->ctx_, "GlobalEvent", corn::EventManager::instance());
+        create_event(this->ctx_, "GlobalEvent", corn::EventManager::instance(), this->eventScope_);
     }
 
     JSRuntimeImpl::~JSRuntimeImpl() {

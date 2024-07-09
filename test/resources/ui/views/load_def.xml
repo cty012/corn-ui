@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cornui>
-    <head>
-        <def src="../def/views/mytag.xml"/>
-        <style src="../styles/simple.ccss"/>
-    </head>
-    <body>
-        <widget name="body">
-            <my-tag class="text"/>
-            <image src="../../image/corn-logo.png"/>
-        </widget>
-    </body>
+<head>
+    <def src="../def/views/mytag.xml"/>
+    <style src="../styles/simple.ccss"/>
+</head>
+<body>
+    <widget name="body">
+        <my-tag class="text"/>
+        <image src="../../image/corn-logo.png"/>
+    </widget>
+</body>
 </cornui>

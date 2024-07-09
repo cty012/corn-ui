@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cornui>
+<head>
+    <script src="../scripts/events.js"/>
+</head>
+<body>
+    <label name="local-event"/>
+    <label name="global-event"/>
+</body>
+</cornui>

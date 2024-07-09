@@ -148,8 +148,9 @@ bool GameScene::isPaused() const {
 
 void GameScene::togglePause() {
     this->paused_ = !this->paused_;
-    this->ui_.getDOM()->getNodeBySelector("#pause-screen")
-            ->setStyle("active", this->paused_ ? "true" : "false");
+    cornui::DOMNode* pauseNode = this->ui_.getDOM()->getNodeBySelector("#pause-screen");
+    pauseNode->setStyle("active", this->paused_ ? "true" : "false");
+    pauseNode->sync();
     for (corn::System* system : this->addedSystems_) {
         system->setActive(!this->paused_);
     }
