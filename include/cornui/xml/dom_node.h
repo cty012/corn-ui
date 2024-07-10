@@ -142,6 +142,15 @@ namespace cornui {
         /**
          * @brief Executes the JavaScript string specified with the given attribute.
          * @param attr Name of the attribute.
+         * @param value The value to pass in.
+         *
+         * This function is automatically triggered by corresponding events.
+         */
+        void runScriptInAttr(const std::string& attr, float value);
+
+        /**
+         * @brief Executes the JavaScript string specified with the given attribute.
+         * @param attr Name of the attribute.
          * @param key The key triggered.
          *
          * This function is automatically triggered by corresponding events.

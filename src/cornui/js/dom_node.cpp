@@ -58,9 +58,15 @@ namespace cornui {
         duk_push_c_function(ctx, domNode_computedStyle_get, 0);
         duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "getComputedGeometry" function to the prototype
-        duk_push_c_function(ctx, domNode_getComputedGeometry, 0);
-        duk_put_prop_string(ctx, nodeIdx, "getComputedGeometry");
+        // Attach "computedGeometry" property to the prototype
+        duk_push_string(ctx, "computedGeometry");
+        duk_push_c_function(ctx, domNode_computedGeometry_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
+
+        // Attach "naturalSize" property to the prototype
+        duk_push_string(ctx, "naturalSize");
+        duk_push_c_function(ctx, domNode_naturalSize_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
         // Attach "setStyle" function to the prototype
         duk_push_c_function(ctx, domNode_setStyle, 2);
@@ -288,7 +294,7 @@ namespace cornui {
         return 1;
     }
 
-    duk_ret_t domNode_getComputedGeometry(duk_context* ctx) {
+    duk_ret_t domNode_computedGeometry_get(duk_context* ctx) {
         auto* node = getPtr<DOMNode>(ctx);
 
         // Push the cached geometry to the stack
@@ -296,6 +302,21 @@ namespace cornui {
             corn::UIWidget* widget = node->getWidget();
             auto [x, y, w, h] = widget->getUIManager().getCachedGeometry(widget);  // NOLINT
             push_umap_of_string_int(ctx, {{ "x", x }, { "y", y }, { "w", w }, { "h", h }});
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_naturalSize_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the cached geometry to the stack
+        if (node && node->getWidget()) {
+            corn::UIWidget* widget = node->getWidget();
+            auto [w, h] = widget->getNaturalSize();  // NOLINT
+            push_umap_of_string_int(ctx, {{ "w", w }, { "h", h }});
         } else {
             duk_push_undefined(ctx);
         }

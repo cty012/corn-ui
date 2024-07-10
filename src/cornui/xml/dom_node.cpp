@@ -198,7 +198,7 @@ namespace cornui {
                     [this, current](const corn::EventArgs& args) {
                         const auto& args_ = dynamic_cast<const corn::EventArgsUIOnScroll&>(args);
                         if (args_.target == current) {
-                            this->runScriptInAttr("onscroll");
+                            this->runScriptInAttr("onscroll", args_.mousescEvent.value);
                         }
                     });
             current->getEventManager().addListener(
@@ -385,6 +385,18 @@ namespace cornui {
         duk_pop(ctx);
     }
 
+    void DOMNode::runScriptInAttr(const std::string& attr, float value) {
+        if (!this->attributes_.contains(attr)) return;
+        duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
+
+        // Set the value
+        duk_push_number(ctx, value);
+        duk_put_global_string(ctx, "__value");
+
+        // Run the script
+        this->runScriptInAttr(attr);
+    }
+
     void DOMNode::runScriptInAttr(const std::string& attr, const corn::Key& key) {
         if (!this->attributes_.contains(attr)) return;
         duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
@@ -394,19 +406,8 @@ namespace cornui {
         duk_push_string(ctx, keyStr.c_str());
         duk_put_global_string(ctx, "__key");
 
-        // Compile and run the function stored in the attribute
-        const std::string& jsCode = this->attributes_.at(attr);
-        if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
-            fprintf(stderr, "Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
-        } else {
-            // Push the "this" value onto the stack
-            push_domNode(ctx, this);
-            // Call the function
-            duk_pcall_method(ctx, 0);
-        }
-
-        // Pop the result or error
-        duk_pop(ctx);
+        // Run the script
+        this->runScriptInAttr(attr);
     }
 
     void DOMNode::runScriptInAttr(const std::string& attr, const std::u8string& text) {
@@ -417,18 +418,7 @@ namespace cornui {
         duk_push_string(ctx, (const char*)text.c_str());
         duk_put_global_string(ctx, "__text");
 
-        // Compile and run the function stored in the attribute
-        const std::string& jsCode = this->attributes_.at(attr);
-        if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
-            fprintf(stderr, "Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
-        } else {
-            // Push the "this" value onto the stack
-            push_domNode(ctx, this);
-            // Call the function
-            duk_pcall_method(ctx, 0);
-        }
-
-        // Pop the result or error
-        duk_pop(ctx);
+        // Run the script
+        this->runScriptInAttr(attr);
     }
 }

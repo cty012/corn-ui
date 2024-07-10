@@ -21,7 +21,8 @@ namespace cornui {
     duk_ret_t domNode_classList_get(duk_context* ctx);
     duk_ret_t domNode_style_get(duk_context* ctx);
     duk_ret_t domNode_computedStyle_get(duk_context* ctx);
-    duk_ret_t domNode_getComputedGeometry(duk_context* ctx);
+    duk_ret_t domNode_computedGeometry_get(duk_context* ctx);
+    duk_ret_t domNode_naturalSize_get(duk_context* ctx);
     duk_ret_t domNode_setStyle(duk_context* ctx);
     duk_ret_t domNode_attributes_get(duk_context* ctx);
     duk_ret_t domNode_hasAttribute(duk_context* ctx);
