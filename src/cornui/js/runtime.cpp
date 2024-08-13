@@ -2,6 +2,7 @@
 #include <sstream>
 #include <corn/core/scene.h>
 #include <corn/event/event_manager.h>
+#include <corn/ui/ui_manager.h>
 #include <cornui/js/runtime.h>
 #include <cornui/xml/dom.h>
 #include "class_list.h"

@@ -1,3 +1,4 @@
+#include <corn/ui/ui_manager.h>
 #include <cornui/util/exception.h>
 #include <cornui/xml/dom.h>
 #include <cornui/xml/dom_node.h>
@@ -365,26 +366,26 @@ namespace cornui {
                 return 0;
             }
 
-            AnimationType type;
+            std::unique_ptr<EasingFunction> ease;
             if (strcmp(typeStr, "linear") == 0) {
-                type = AnimationType::LINEAR;
+                ease = std::make_unique<EasingLinear>();
             } else if (strcmp(typeStr, "step-start") == 0) {
-                type = AnimationType::STEP_START;
+                ease = std::make_unique<EasingStepStart>();
             } else if (strcmp(typeStr, "step-end") == 0) {
-                type = AnimationType::STEP_END;
+                ease = std::make_unique<EasingStepEnd>();
             } else if (strcmp(typeStr, "ease") == 0) {
-                type = AnimationType::EASE;
+                ease = std::make_unique<EasingEase>();
             } else if (strcmp(typeStr, "ease-in") == 0) {
-                type = AnimationType::EASE_IN;
+                ease = std::make_unique<EasingEaseIn>();
             } else if (strcmp(typeStr, "ease-out") == 0) {
-                type = AnimationType::EASE_OUT;
+                ease = std::make_unique<EasingEaseOut>();
             } else if (strcmp(typeStr, "ease-in-out") == 0) {
-                type = AnimationType::EASE_IN_OUT;
+                ease = std::make_unique<EasingEaseInOut>();
             } else {
-                type = AnimationType::LINEAR;
+                ease = std::make_unique<EasingEase>();
             }
 
-            node->animate(name, value, type, duration);
+            node->animate(name, value, std::move(ease), duration);
         }
 
         return 0;

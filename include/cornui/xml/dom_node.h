@@ -3,20 +3,14 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <corn/ui.h>
+#include <corn/event/input.h>
+#include <corn/ui/ui_image.h>
+#include <corn/ui/ui_label.h>
+#include <corn/ui/ui_widget.h>
+#include <cornui/xml/easing_function.h>
 
 namespace cornui {
     class DOM;
-
-    enum class AnimationType {
-        LINEAR,                 ///< Transform in constant speed.
-        STEP_START,             ///< Jumps to the end value at the start of the animation.
-        STEP_END,               ///< Jumps to the end value hy the end of the animation.
-        EASE,                   ///< Default animation. Similar to EASE_IN_OUT but asymmetrical.
-        EASE_IN,                ///< Start smoothly and speed up by the end.
-        EASE_OUT,               ///< Abruptly start and slow down smoothly by the end.
-        EASE_IN_OUT,            ///< Start and end smoothly, like an "S" curve.
-    };
 
     class DOMNode {
     public:
@@ -27,7 +21,7 @@ namespace cornui {
             std::string name;
             std::string startValue;
             std::string endValue;
-            AnimationType type;
+            std::unique_ptr<EasingFunction> ease;
             float totalTime;
             float currentTime;
 
@@ -108,11 +102,11 @@ namespace cornui {
          * @brief Transform the style smoothly with an animation.
          * @param name The name of the style to animate.
          * @param value The end value to transform into.
-         * @param type The type of animation to use.
+         * @param ease The easing function to use.
          * @param duration Duration of the animation.
          * @return Whether the animation is executed. If not, will set the end value directly.
          */
-        bool animate(const std::string& name, const std::string& value, AnimationType type, float duration) noexcept;
+        bool animate(const std::string& name, const std::string& value, std::unique_ptr<EasingFunction> ease, float duration) noexcept;
 
         // Getters & Setters
         [[nodiscard]] const std::string& getTag() const noexcept;

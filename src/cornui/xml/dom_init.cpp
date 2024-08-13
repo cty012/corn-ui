@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <format>
 #include <unordered_map>
+#include <unordered_set>
 extern "C" {
 #include <libxml/parser.h>
 #include <libxml/xmlreader.h>

@@ -23,25 +23,7 @@ namespace cornui {
         }
 
         // Find the percentage
-        float perc;
-        switch (this->type) {
-            case AnimationType::LINEAR:
-                perc = this->currentTime / this->totalTime;
-                break;
-            case AnimationType::STEP_START:
-                perc = this->currentTime == 0.0f ? 0.0f : 1.0f;
-                break;
-            case AnimationType::STEP_END:
-                perc = this->currentTime < this->totalTime ? 0.0f : 1.0f;
-                break;
-            case AnimationType::EASE:
-            case AnimationType::EASE_IN:
-            case AnimationType::EASE_OUT:
-            case AnimationType::EASE_IN_OUT:
-                // todo: solve bezier equation
-                perc = 1;
-                break;
-        }
+        float perc = (*this->ease)(this->currentTime / this->totalTime);
 
         switch (getStyleValueType(this->name)) {
             case StyleValueType::INTEGER: {
@@ -325,7 +307,7 @@ namespace cornui {
         this->syncChildren();
     }
 
-    bool DOMNode::animate(const std::string& name, const std::string& value, AnimationType type, float duration) noexcept {
+    bool DOMNode::animate(const std::string& name, const std::string& value, std::unique_ptr<EasingFunction> ease, float duration) noexcept {
         switch (getStyleValueType(name)) {
             case StyleValueType::NONE:
                 return false;
@@ -346,7 +328,9 @@ namespace cornui {
                 }
 
                 // Start the animation
-                this->animations_[name] = { name, this->computedStyle_.at(name), value, type, duration, 0.0f };
+                this->animations_[name] = {
+                        name, this->computedStyle_.at(name), value, std::move(ease), duration, 0.0f
+                };
                 this->getDOM()->getUIManager()->getScene().getEventManager().emit(EventArgsAnimation(this));
 
                 return true;

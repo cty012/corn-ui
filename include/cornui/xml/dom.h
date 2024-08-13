@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <cornui/css/cssom.h>
 #include <cornui/xml/dom_node.h>
