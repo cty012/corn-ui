@@ -36,7 +36,7 @@ namespace cornui {
                 { "background",               StyleValueType::COLOR },
                 { "opacity",                  StyleValueType::INTEGER },
                 { "font-family",              StyleValueType::STRING },
-                { "font-size",                StyleValueType::INTEGER },
+                { "font-size",                StyleValueType::NUMBER },
                 { "font-color",               StyleValueType::COLOR },
                 { "font-variant",             StyleValueType::ENUM }
         };

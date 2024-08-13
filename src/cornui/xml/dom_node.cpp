@@ -29,7 +29,13 @@ namespace cornui {
             case StyleValueType::INTEGER: {
                 int a = std::stoi(this->startValue);
                 int b = std::stoi(this->endValue);
-                int val = (int)(std::round(a * (1 - perc) + b * perc));
+                int val = (int)(std::round((float)a * (1 - perc) + (float)b * perc));
+                return std::to_string(val);
+            }
+            case StyleValueType::NUMBER: {
+                float a = std::stof(this->startValue);
+                float b = std::stof(this->endValue);
+                float val = a * (1 - perc) + b * perc;
                 return std::to_string(val);
             }
             case StyleValueType::EXPRESSION: {
@@ -312,6 +318,7 @@ namespace cornui {
             case StyleValueType::NONE:
                 return false;
             case StyleValueType::INTEGER:
+            case StyleValueType::NUMBER:
             case StyleValueType::EXPRESSION:
             case StyleValueType::COLOR:
                 // Invalid duration
@@ -322,8 +329,8 @@ namespace cornui {
 
                 // Stop previous animation
                 if (this->animations_.contains(name)) {
-                    // If the animation is already running, update the end value
-                    this->setStyle(name, this->animations_.at(name).endValue);
+                    // If another animation is running, remove it
+                    // Use the current value as the start value
                     this->animations_.erase(name);
                 }
 
