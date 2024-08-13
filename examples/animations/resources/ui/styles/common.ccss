@@ -1,0 +1,19 @@
+#body {
+    x: (100%pw - min(100%pw * 9, 100%ph * 16) / 9) / 2;
+    y: (100%ph - min(100%pw * 9, 100%ph * 16) / 16) / 2;
+    w: min(100%pw * 9, 100%ph * 16) / 9;
+    h: min(100%pw * 9, 100%ph * 16) / 16;
+    font-family: noto-sans;
+}
+
+label {
+    font-size: 24px;
+}
+
+.button {
+    mouse-interactable: true;
+}
+
+.underline {
+    font-variant: underline;
+}

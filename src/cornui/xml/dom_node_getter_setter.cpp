@@ -118,6 +118,8 @@ namespace cornui {
             auto* child = new DOMNode();
             child->tag_ = "text";
             child->text_ = segment.str;
+            child->dom_ = this->dom_;
+            child->parent_ = this;
             this->children_.push_back(child);
         }
     }
@@ -179,6 +181,10 @@ namespace cornui {
         }
 
         this->attributes_.erase(name);
+    }
+
+    std::unordered_map<std::string, DOMNode::Animation>& DOMNode::getAnimations() noexcept {
+        return this->animations_;
     }
 
     DOM* DOMNode::getDOM() const noexcept {

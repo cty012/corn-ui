@@ -8,10 +8,32 @@
 namespace cornui {
     class DOM;
 
+    enum class AnimationType {
+        LINEAR,                 ///< Transform in constant speed.
+        STEP_START,             ///< Jumps to the end value at the start of the animation.
+        STEP_END,               ///< Jumps to the end value hy the end of the animation.
+        EASE,                   ///< Default animation. Similar to EASE_IN_OUT but asymmetrical.
+        EASE_IN,                ///< Start smoothly and speed up by the end.
+        EASE_OUT,               ///< Abruptly start and slow down smoothly by the end.
+        EASE_IN_OUT,            ///< Start and end smoothly, like an "S" curve.
+    };
+
     class DOMNode {
     public:
         friend class DOM;
         friend class UI;
+
+        struct Animation {
+            std::string name;
+            std::string startValue;
+            std::string endValue;
+            AnimationType type;
+            float totalTime;
+            float currentTime;
+
+            /// @brief Get the current value of the transformation. If invalid then return the end value.
+            [[nodiscard]] std::string getCurrentValue() const;
+        };
 
         DOMNode() noexcept;
         ~DOMNode();
@@ -82,6 +104,16 @@ namespace cornui {
         /// @brief Sync the node with the UI.
         void sync();
 
+        /**
+         * @brief Transform the style smoothly with an animation.
+         * @param name The name of the style to animate.
+         * @param value The end value to transform into.
+         * @param type The type of animation to use.
+         * @param duration Duration of the animation.
+         * @return Whether the animation is executed. If not, will set the end value directly.
+         */
+        bool animate(const std::string& name, const std::string& value, AnimationType type, float duration) noexcept;
+
         // Getters & Setters
         [[nodiscard]] const std::string& getTag() const noexcept;
         [[nodiscard]] const std::string& getName() const noexcept;
@@ -99,6 +131,7 @@ namespace cornui {
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getAttributes() const noexcept;
         void setAttribute(const std::string& name, const std::string& value) noexcept;
         void removeAttribute(const std::string& name) noexcept;
+        [[nodiscard]] std::unordered_map<std::string, Animation>& getAnimations() noexcept;
 
         [[nodiscard]] DOM* getDOM() const noexcept;
         [[nodiscard]] DOMNode* getParent() const noexcept;
@@ -173,6 +206,7 @@ namespace cornui {
         std::unordered_map<std::string, std::string> style_;
         std::unordered_map<std::string, std::string> inheritedStyle_;
         std::unordered_map<std::string, std::string> computedStyle_;
+        std::unordered_map<std::string, Animation> animations_;
         std::unordered_map<std::string, std::string> attributes_;
 
         DOM* dom_;

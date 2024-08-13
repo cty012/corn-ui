@@ -11,7 +11,7 @@ namespace cornui::test {
         child->parent = parent;
     }
 
-    bool nodeCompare(const DOMNode* domNode, const VirtualNode* virtualNode) {
+    bool nodeCompare(const DOMNode* domNode, const VirtualNode* virtualNode, const DOMNode* parent) {
         if (!domNode && !virtualNode) {
             return true;
         } else if (!domNode || !virtualNode) {
@@ -38,12 +38,15 @@ namespace cornui::test {
             return false;
         }
 
+        // Compare parent
+        EXPECT_EQ_MSG_RETURN(parent, domNode->getParent(), msg, false);
+
         // Compare children
         const std::vector<DOMNode*>& domChildren = domNode->getChildren();
         const std::vector<VirtualNode*>& virtualChildren = virtualNode->children;
         EXPECT_EQ_MSG_RETURN(domChildren.size(), virtualChildren.size(), msg, false);
         for (size_t i = 0; i < domChildren.size(); i++) {
-            if (!nodeCompare(domChildren.at(i), virtualChildren.at(i))) {
+            if (!nodeCompare(domChildren.at(i), virtualChildren.at(i), domNode)) {
                 return false;
             }
         }

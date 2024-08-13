@@ -72,6 +72,10 @@ namespace cornui {
         duk_push_c_function(ctx, domNode_setStyle, 2);
         duk_put_prop_string(ctx, nodeIdx, "setStyle");
 
+        // Attach "animate" function to the prototype
+        duk_push_c_function(ctx, domNode_animate, 4);
+        duk_put_prop_string(ctx, nodeIdx, "animate");
+
         // Attach "attributes" property to the prototype
         duk_push_string(ctx, "attributes");
         duk_push_c_function(ctx, domNode_attributes_get, 0);
@@ -335,6 +339,52 @@ namespace cornui {
                 node->setStyle(name, value);
                 node->sync();
             }
+        }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_animate(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Animate the style
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            const char* value = duk_get_string(ctx, 1);
+            const char* typeStr = duk_get_string(ctx, 2);
+            auto duration = (float)duk_get_number(ctx, 3);
+
+            // Validate input
+            if (!name || !value || !typeStr) {
+                return 0;
+            }
+
+            if (duration <= 0) {
+                node->setStyle(name, value);
+                node->sync();
+                return 0;
+            }
+
+            AnimationType type;
+            if (strcmp(typeStr, "linear") == 0) {
+                type = AnimationType::LINEAR;
+            } else if (strcmp(typeStr, "step-start") == 0) {
+                type = AnimationType::STEP_START;
+            } else if (strcmp(typeStr, "step-end") == 0) {
+                type = AnimationType::STEP_END;
+            } else if (strcmp(typeStr, "ease") == 0) {
+                type = AnimationType::EASE;
+            } else if (strcmp(typeStr, "ease-in") == 0) {
+                type = AnimationType::EASE_IN;
+            } else if (strcmp(typeStr, "ease-out") == 0) {
+                type = AnimationType::EASE_OUT;
+            } else if (strcmp(typeStr, "ease-in-out") == 0) {
+                type = AnimationType::EASE_IN_OUT;
+            } else {
+                type = AnimationType::LINEAR;
+            }
+
+            node->animate(name, value, type, duration);
         }
 
         return 0;

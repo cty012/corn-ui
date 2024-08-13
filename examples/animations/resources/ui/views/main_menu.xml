@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cornui>
+<head>
+    <style src="../styles/common.ccss"/>
+    <style src="../styles/menu.ccss"/>
+    <script src="../scripts/animation.js"/>
+</head>
+<body>
+    <widget name="body">
+        <widget name="contents">
+            <label name="title">Animations</label>
+            <label class="button num-1" onenter="onButtonEnter(this)" onexit="onButtonExit(this)">Start</label>
+            <label class="button num-2" onenter="onButtonEnter(this)" onexit="onButtonExit(this)">Settings</label>
+            <label class="button num-3" onenter="onButtonEnter(this)" onexit="onButtonExit(this)">Tutorial</label>
+            <label class="button num-4" onenter="onButtonEnter(this)" onexit="onButtonExit(this)" onclick="GlobalEvent.emit('exit')">Exit</label>
+        </widget>
+    </widget>
+</body>
+</cornui>
