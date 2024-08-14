@@ -129,7 +129,7 @@ namespace cornui {
     }
 
     bool DOMNode::hasClass(const std::string& className) const noexcept {
-        return std::find(this->classList_.begin(), this->classList_.end(), className) == this->classList_.end();
+        return std::find(this->classList_.begin(), this->classList_.end(), className) != this->classList_.end();
     }
 
     bool DOMNode::addClass(const std::string& className) noexcept {
