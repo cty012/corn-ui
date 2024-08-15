@@ -1,4 +1,6 @@
+#include <corn/geometry/vec4.h>
 #include <corn/media/image.h>
+#include <corn/ui/ui_manager.h>
 #include <corn/util/rich_text.h>
 #include <corn/util/string_utils.h>
 #include <cornui/util/reserved.h>
@@ -68,7 +70,7 @@ namespace cornui {
                 // todo: Use default font
                 throw std::logic_error("Font not found: " + this->computedStyle_.at("font-family"));
             }
-            size_t fontSize = std::stoi(this->computedStyle_.at("font-size"));
+            float fontSize = std::stof(this->computedStyle_.at("font-size"));
             corn::Color fontColor = corn::Color::parse(this->computedStyle_.at("font-color"));
             corn::FontVariant fontVariant = corn::FontVariant::REGULAR;
             if (this->computedStyle_.at("font-variant") == "bold") {
@@ -118,6 +120,8 @@ namespace cornui {
             auto* child = new DOMNode();
             child->tag_ = "text";
             child->text_ = segment.str;
+            child->dom_ = this->dom_;
+            child->parent_ = this;
             this->children_.push_back(child);
         }
     }
@@ -179,6 +183,10 @@ namespace cornui {
         }
 
         this->attributes_.erase(name);
+    }
+
+    std::unordered_map<std::string, DOMNode::Animation>& DOMNode::getAnimations() noexcept {
+        return this->animations_;
     }
 
     DOM* DOMNode::getDOM() const noexcept {

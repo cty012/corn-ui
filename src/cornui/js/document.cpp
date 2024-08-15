@@ -1,3 +1,4 @@
+#include <corn/ui/ui_manager.h>
 #include <cornui/util/exception.h>
 #include <cornui/xml/dom.h>
 #include "common.h"

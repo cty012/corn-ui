@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <corn/ui/ui_manager.h>
+#include <cornui/css/animation.h>
 #include <cornui/xml/dom.h>
 #include <cornui/js/runtime.h>
 
@@ -30,6 +31,7 @@ namespace cornui {
     private:
         std::filesystem::path file_;
         DOM* dom_;
+        SAnimation* animation_;
         JSRuntime* jsRuntime_;
     };
 };

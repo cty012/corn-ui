@@ -1,16 +1,68 @@
+#include <format>
 #include <duktape.h>
+#include <corn/core/scene.h>
 #include <corn/media/image.h>
 #include <corn/util/rich_text.h>
+#include <cornui/css/animation.h>
 #include <cornui/css/cssom.h>
 #include <cornui/js/runtime.h>
 #include <cornui/ui.h>
 #include <cornui/util/key.h>
 #include <cornui/xml/dom.h>
 #include <cornui/xml/dom_node.h>
+#include "../css/event_animation.h"
 #include "../js/runtime_impl.h"
 #include "../js/dom_node.h"
+#include "../util/style_name.h"
 
 namespace cornui {
+    std::string DOMNode::Animation::getCurrentValue() const {
+        // Edge case: invalid time
+        if (this->totalTime <= 0.0f || this->currentTime < 0.0f || this->currentTime >= this->totalTime) {
+            return this->endValue;
+        }
+
+        // Find the percentage
+        float perc = (*this->ease)(this->currentTime / this->totalTime);
+
+        switch (getStyleValueType(this->name)) {
+            case StyleValueType::INTEGER: {
+                int a = std::stoi(this->startValue);
+                int b = std::stoi(this->endValue);
+                int val = (int)(std::round((float)a * (1 - perc) + (float)b * perc));
+                return std::to_string(val);
+            }
+            case StyleValueType::NUMBER: {
+                float a = std::stof(this->startValue);
+                float b = std::stof(this->endValue);
+                float val = a * (1 - perc) + b * perc;
+                return std::to_string(val);
+            }
+            case StyleValueType::EXPRESSION: {
+                return std::format("({}) * {} + ({}) * {}", startValue, 1 - perc, endValue, perc);
+            }
+            case StyleValueType::COLOR: {
+                corn::Color c1 = corn::Color::parse(this->startValue);
+                corn::Color c2 = corn::Color::parse(this->endValue);
+                auto [h1, s1, l1, a1] = c1.getHSLA();
+                auto [h2, s2, l2, a2] = c2.getHSLA();
+                // Interpolate degree
+                corn::Deg h;
+                if ((h2 - h1).get() <= 180.0f) {
+                    h = h1 + (h2 - h1) * perc;
+                } else {
+                    h = h1 - (h1 - h2) * perc;
+                }
+                float s = s1 * (1 - perc) + s2 * perc;
+                float l = l1 * (1 - perc) + l2 * perc;
+                auto a = (unsigned char)((float)a1 * (1 - perc) + (float)a2 * perc);
+                return corn::Color::hsl({ h, s, l, a }).hexStringAlpha();
+            }
+            default:
+                return this->endValue;
+        }
+    }
+
     DOMNode::DOMNode() noexcept : dom_(nullptr), parent_(nullptr), widgetID_(0) {}
 
     DOMNode::~DOMNode() {
@@ -77,7 +129,7 @@ namespace cornui {
     }
 
     bool DOMNode::hasClass(const std::string& className) const noexcept {
-        return std::find(this->classList_.begin(), this->classList_.end(), className) == this->classList_.end();
+        return std::find(this->classList_.begin(), this->classList_.end(), className) != this->classList_.end();
     }
 
     bool DOMNode::addClass(const std::string& className) noexcept {
@@ -259,6 +311,40 @@ namespace cornui {
 
         // Sync children
         this->syncChildren();
+    }
+
+    bool DOMNode::animate(const std::string& name, const std::string& value, std::unique_ptr<EasingFunction> ease, float duration) noexcept {
+        switch (getStyleValueType(name)) {
+            case StyleValueType::NONE:
+                return false;
+            case StyleValueType::INTEGER:
+            case StyleValueType::NUMBER:
+            case StyleValueType::EXPRESSION:
+            case StyleValueType::COLOR:
+                // Invalid duration
+                if (duration <= 0.0f) {
+                    this->setStyle(name, value);
+                    return false;
+                }
+
+                // Stop previous animation
+                if (this->animations_.contains(name)) {
+                    // If another animation is running, remove it
+                    // Use the current value as the start value
+                    this->animations_.erase(name);
+                }
+
+                // Start the animation
+                this->animations_[name] = {
+                        name, this->computedStyle_.at(name), value, std::move(ease), duration, 0.0f
+                };
+                this->getDOM()->getUIManager()->getScene().getEventManager().emit(EventArgsAnimation(this));
+
+                return true;
+            default:
+                this->setStyle(name, value);
+                return false;
+        }
     }
 
     void DOMNode::syncChildren() const {

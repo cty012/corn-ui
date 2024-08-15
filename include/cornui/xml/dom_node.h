@@ -3,7 +3,11 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <corn/ui.h>
+#include <corn/event/input.h>
+#include <corn/ui/ui_image.h>
+#include <corn/ui/ui_label.h>
+#include <corn/ui/ui_widget.h>
+#include <cornui/xml/easing_function.h>
 
 namespace cornui {
     class DOM;
@@ -12,6 +16,18 @@ namespace cornui {
     public:
         friend class DOM;
         friend class UI;
+
+        struct Animation {
+            std::string name;
+            std::string startValue;
+            std::string endValue;
+            std::unique_ptr<EasingFunction> ease;
+            float totalTime;
+            float currentTime;
+
+            /// @brief Get the current value of the transformation. If invalid then return the end value.
+            [[nodiscard]] std::string getCurrentValue() const;
+        };
 
         DOMNode() noexcept;
         ~DOMNode();
@@ -82,6 +98,16 @@ namespace cornui {
         /// @brief Sync the node with the UI.
         void sync();
 
+        /**
+         * @brief Transform the style smoothly with an animation.
+         * @param name The name of the style to animate.
+         * @param value The end value to transform into.
+         * @param ease The easing function to use.
+         * @param duration Duration of the animation.
+         * @return Whether the animation is executed. If not, will set the end value directly.
+         */
+        bool animate(const std::string& name, const std::string& value, std::unique_ptr<EasingFunction> ease, float duration) noexcept;
+
         // Getters & Setters
         [[nodiscard]] const std::string& getTag() const noexcept;
         [[nodiscard]] const std::string& getName() const noexcept;
@@ -99,6 +125,7 @@ namespace cornui {
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getAttributes() const noexcept;
         void setAttribute(const std::string& name, const std::string& value) noexcept;
         void removeAttribute(const std::string& name) noexcept;
+        [[nodiscard]] std::unordered_map<std::string, Animation>& getAnimations() noexcept;
 
         [[nodiscard]] DOM* getDOM() const noexcept;
         [[nodiscard]] DOMNode* getParent() const noexcept;
@@ -173,6 +200,7 @@ namespace cornui {
         std::unordered_map<std::string, std::string> style_;
         std::unordered_map<std::string, std::string> inheritedStyle_;
         std::unordered_map<std::string, std::string> computedStyle_;
+        std::unordered_map<std::string, Animation> animations_;
         std::unordered_map<std::string, std::string> attributes_;
 
         DOM* dom_;

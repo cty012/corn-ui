@@ -19,5 +19,5 @@ namespace cornui::test {
     };
 
     void nodeConnect(VirtualNode* parent, VirtualNode* child);
-    bool nodeCompare(const DOMNode* domNode, const VirtualNode* virtualNode);
+    bool nodeCompare(const DOMNode* domNode, const VirtualNode* virtualNode, const DOMNode* parent = nullptr);
 }

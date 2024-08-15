@@ -61,3 +61,4 @@ function (build_example EXAMPLE_NAME)
 endfunction ()
 
 build_example("clangy-bird")
+build_example("animations")

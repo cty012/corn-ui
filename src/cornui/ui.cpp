@@ -1,7 +1,8 @@
+#include <corn/core/scene.h>
 #include <cornui/ui.h>
 
 namespace cornui {
-    UI::UI() : dom_(nullptr), jsRuntime_(nullptr) {}
+    UI::UI() : dom_(nullptr), animation_(nullptr), jsRuntime_(nullptr) {}
 
     UI::~UI() {
         delete this->dom_;
@@ -12,9 +13,16 @@ namespace cornui {
         // Reset
         this->file_ = std::move(file);
         delete this->jsRuntime_;
+        if (this->animation_) {
+            this->animation_->getScene().removeSystem(this->animation_);
+            this->animation_ = nullptr;
+        }
         delete this->dom_;
         this->dom_ = new DOM(this);
         this->jsRuntime_ = new JSRuntime();
+
+        // Add animation system
+        this->animation_ = uiManager.getScene().addSystem<SAnimation>(this);
 
         // Load DOM from file
         std::vector<std::filesystem::path> toLoad;
