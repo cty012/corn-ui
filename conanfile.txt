@@ -6,6 +6,9 @@ quickjs/2024-01-13
 [test_requires]
 gtest/1.15.0
 
+[options]
+*:shared=False
+
 [generators]
 CMakeDeps
 CMakeToolchain

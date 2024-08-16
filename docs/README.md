@@ -37,7 +37,7 @@ Check their respective websites for installation and setup instructions.
 1. Follow the [instructions](https://github.com/cty012/corn) to build and install the Corn Game Engine. Retrieve the
    library in the `dist` folder and place it in the `deps` of this project.
 
-2. Run the following command, replacing `<profile>` with your desired Conan profile:
+2. Run the following command, replacing `<profile>` with your own Conan profile:
 
    ```shell
    conan install . -pr=<profile> -of=conan/<profile> -b=missing

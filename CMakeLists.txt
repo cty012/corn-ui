@@ -6,7 +6,6 @@ option(BUILD_TESTS "Build the test cases in the `test/` folder." OFF)
 
 if (BUILD_TESTS)
     enable_testing()
-    set(VCPKG_MANIFEST_FEATURES "${VCPKG_MANIFEST_FEATURES};tests")
 endif ()
 
 # Project settings
@@ -47,9 +46,12 @@ else()
 endif()
 
 # Compiler flags
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
 if (MSVC)
     add_compile_options(/utf-8 /W4 /WX)
-    add_compile_options("$<$<CONFIG:Release>:/O2>")
+    add_compile_options("$<$<CONFIG:Release>:/Ox>")
     add_compile_options("$<$<CONFIG:Debug>:/Zi>")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -89,7 +91,7 @@ find_package(nlohmann_json REQUIRED)
 target_link_libraries(cornui PUBLIC nlohmann_json::nlohmann_json)
 
 # Link with libxml2
-find_package(LibXml2 REQUIRED)
+find_package(libxml2 REQUIRED)
 target_link_libraries(cornui PRIVATE LibXml2::LibXml2)
 
 # Link with quickjs
