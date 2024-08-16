@@ -84,14 +84,17 @@ target_include_directories(cornui PRIVATE "${CMAKE_SOURCE_DIR}/include")
 find_package(Corn REQUIRED)
 target_link_libraries(cornui PRIVATE Corn::Corn)
 
+# Link with nlohmann json
+find_package(nlohmann_json REQUIRED)
+target_link_libraries(cornui PUBLIC nlohmann_json::nlohmann_json)
+
 # Link with libxml2
 find_package(LibXml2 REQUIRED)
 target_link_libraries(cornui PRIVATE LibXml2::LibXml2)
 
-# Link with duktape
-find_package(Duktape CONFIG REQUIRED)
-target_include_directories(cornui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${DUKTAPE_INCLUDE_DIRS})
-target_link_libraries(cornui PRIVATE ${DUKTAPE_LIBRARY})
+# Link with quickjs
+find_package(quickjs REQUIRED)
+target_link_libraries(cornui PRIVATE quickjs::quickjs)
 
 # Build examples
 if (BUILD_EXAMPLES)
@@ -111,6 +114,7 @@ install(TARGETS cornui
         ARCHIVE DESTINATION "lib"
 )
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/cornui" DESTINATION "include")
+install(DIRECTORY "${nlohmann_json_INCLUDE_DIR}/nlohmann" DESTINATION "include")
 
 configure_file(cornui-config.cmake.in cornui-config.cmake @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cornui-config.cmake" DESTINATION "cmake")

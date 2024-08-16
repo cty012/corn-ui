@@ -95,6 +95,9 @@ namespace cornui {
          */
         bool removeClass(const std::string& className) noexcept;
 
+        /// @brief Focus on the node.
+        void focus() noexcept;
+
         /// @brief Sync the node with the UI.
         void sync();
 

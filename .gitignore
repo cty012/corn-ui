@@ -16,6 +16,8 @@ build/
 cmake-build-*/
 out/
 dist/
+conan/
+CMakeUserPresets.json
 
 # Others
 .DS_Store

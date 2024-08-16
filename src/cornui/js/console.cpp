@@ -1,54 +1,71 @@
 #include <sstream>
+#include "common.h"
 #include "console.h"
 
 namespace cornui {
-    void create_console(duk_context* ctx) {
-        // Push the global object and "document" object onto the stack
-        duk_push_global_object(ctx);
-        duk_idx_t consoleIdx = duk_push_object(ctx);
+    void create_console(JSContext* ctx) {
+        // Create empty "console" object
+        JSValue global = JS_GetGlobalObject(ctx);
+        JSValue console = JS_NewObject(ctx);
 
-        // Add function "log" to "console"
-        duk_push_c_function(ctx, console_log, DUK_VARARGS);
-        duk_put_prop_string(ctx, consoleIdx, "log");
+        // Attach "log" function
+        JS_SetPropertyStr(
+                ctx, console, "log",
+                JS_NewCFunction(ctx, js_console_log, "log", 1));
 
-        // Add function "error" to "console"
-        duk_push_c_function(ctx, console_error, DUK_VARARGS);
-        duk_put_prop_string(ctx, consoleIdx, "error");
+        // Attach "error" function
+        JS_SetPropertyStr(
+                ctx, console, "error",
+                JS_NewCFunction(ctx, js_console_error, "error", 1));
 
-        // Add "console" to the global object
-        duk_put_global_string(ctx, "console");
+        // Attach "console" to the global object
+        JS_SetPropertyStr(
+                ctx, global, "console",
+                console);
 
-        // Pop the global object
-        duk_pop(ctx);
+        // Cleanup
+        JS_FreeValue(ctx, global);
     }
 
-    duk_ret_t console_log(duk_context* ctx) {
-        duk_idx_t nargs = duk_get_top(ctx);
-        if (nargs == 0) return 0;
+    JSValue js_console_log(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+        if (argc == 0) return JS_UNDEFINED;
 
         // Concatenate the items
         std::stringstream ss;
-        for (int i = 0; i < nargs; i++) {
-            if (i) ss << " ";
-            ss << duk_to_string(ctx, i);
+        bool isFirst = true;
+        for (int i = 0; i < argc; i++) {
+            // Skip if the item cannot be converted to string
+            std::string item;
+            if (!getString(ctx, &item, argv[i])) continue;
+
+            // Print the item
+            if (!isFirst) ss << " ";
+            isFirst = false;
+            ss << item;
         }
 
         printf("[JS runtime log] %s\n", ss.str().c_str());
-        return 0;
+        return JS_UNDEFINED;
     }
 
-    duk_ret_t console_error(duk_context* ctx) {
-        duk_idx_t nargs = duk_get_top(ctx);
-        if (nargs == 0) return 0;
+    JSValue js_console_error(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+        if (argc == 0) return JS_UNDEFINED;
 
         // Concatenate the items
         std::stringstream ss;
-        for (int i = 0; i < nargs; i++) {
-            if (i) ss << " ";
-            ss << duk_to_string(ctx, i);
+        bool isFirst = true;
+        for (int i = 0; i < argc; i++) {
+            // Skip if the item cannot be converted to string
+            std::string item;
+            if (!getString(ctx, &item, argv[i])) continue;
+
+            // Print the item
+            if (!isFirst) ss << " ";
+            isFirst = false;
+            ss << item;
         }
 
         fprintf(stderr, "[JS runtime error] %s\n", ss.str().c_str());
-        return 0;
+        return JS_UNDEFINED;
     }
 }

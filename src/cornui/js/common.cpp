@@ -1,52 +1,78 @@
+#include <quickjs/quickjs.h>
 #include "common.h"
+#include "context_data.h"
 
 namespace cornui {
-    void push_prototype(duk_context* ctx, const char* name) {
-        // The target object
-        duk_idx_t objIdx = duk_push_object(ctx);
+    JSValue from_njson(JSContext* ctx, const nlohmann::json& target) {
+        // Create a new object
+        JSValue object;
 
-        // Push the global stash and the prop string
-        duk_push_global_stash(ctx);
-        duk_get_prop_string(ctx, -1, name);
+        // Categorize the JSON object
+        if (target.is_object()) {
+            object = JS_NewObject(ctx);
+            // Loop through the JSON object
+            for (const auto& [key, val] : target.items()) {
+                // Store the key-val pair in the object
+                JS_SetPropertyStr(ctx, object, key.c_str(), from_njson(ctx, val));
+            }
+        } else if (target.is_array()) {
+            object = JS_NewArray(ctx);
+            // Loop through the JSON array
+            for (size_t i = 0; i < target.size(); i++) {
+                // Store the value in the object
+                JS_SetPropertyUint32(ctx, object, i, from_njson(ctx, target[i]));
+            }
+        } else if (target.is_string()) {
+            // Store the string in the object
+            object = JS_NewString(ctx, target.get<std::string>().c_str());
+        } else if (target.is_number_integer()) {
+            // Store the integer in the object
+            object = JS_NewInt32(ctx, target.get<int>());
+        } else if (target.is_number_float()) {
+            // Store the float in the object
+            object = JS_NewFloat64(ctx, target.get<double>());
+        } else if (target.is_boolean()) {
+            // Store the boolean in the object
+            object = JS_NewBool(ctx, target.get<bool>());
+        } else if (target.is_null()) {
+            // Store the null in the object
+            object = JS_NULL;
+        } else {
+            // Store the undefined in the object
+            object = JS_UNDEFINED;
+        }
 
-        // Set the target object's prototype
-        duk_set_prototype(ctx, objIdx);
-
-        // Pop the global stash
-        duk_pop(ctx);
+        return object;
     }
 
-    void push_vec_of_string(duk_context* ctx, const std::vector<std::string>& target) {
-        // Create a new array
-        duk_idx_t arrayIdx = duk_push_array(ctx);
-
-        // Loop through the vector of strings
-        for (size_t i = 0; i < target.size(); i++) {
-            // Add the item to the array
-            duk_push_string(ctx, target[i].c_str());
-            duk_put_prop_index(ctx, arrayIdx, i);
+    bool getString(JSContext* ctx, std::string* target, JSValueConst value, bool strict) {
+        // Check if the value is a string
+        if (strict && !JS_IsString(value)) {
+            return false;
         }
+
+        // Get the C-string
+        const char* str = JS_ToCString(ctx, value);
+        if (!str) {
+            return false;
+        }
+
+        // Copy the string
+        *target = str;
+
+        // Free the string
+        JS_FreeCString(ctx, str);
+
+        return true;
     }
 
-    void push_umap_of_string_string(duk_context* ctx, const std::unordered_map<std::string, std::string>& target) {
-        duk_idx_t objectIdx = duk_push_object(ctx);
-
-        // Loop through the umap of string -> string
-        for (const auto& [key, val] : target) {
-            // Store the key-val pair in the object
-            duk_push_string(ctx, val.c_str());
-            duk_put_prop_string(ctx, objectIdx, key.c_str());
+    bool getClassID(JSContext* ctx, JSClassID* target, const std::string& className) {
+        const auto* contextData = (const ContextData*)JS_GetContextOpaque(ctx);
+        if (!contextData->classIDs.contains(className)) {
+            return false;
         }
-    }
 
-    void push_umap_of_string_int(duk_context* ctx, const std::unordered_map<std::string, int>& target) {
-        duk_idx_t objectIdx = duk_push_object(ctx);
-
-        // Loop through the umap of string -> string
-        for (const auto& [key, val] : target) {
-            // Store the key-val pair in the object
-            duk_push_number(ctx, val);
-            duk_put_prop_string(ctx, objectIdx, key.c_str());
-        }
+        *target = contextData->classIDs.at(className);
+        return true;
     }
 }

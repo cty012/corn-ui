@@ -1,103 +1,71 @@
 #include <cornui/js/js_event_args.h>
 #include "common.h"
+#include "context_data.h"
 #include "event.h"
 
 namespace cornui {
-    void create_event(duk_context* ctx, const std::string& name, corn::EventManager& eventManager, corn::EventScope& eventScope) {
-        // Add "listeners" object to the global stash
-        duk_push_global_stash(ctx);
-        duk_push_object(ctx);
-        duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("__listeners"));
-        duk_pop(ctx);
+    void create_EventManager(JSContext* ctx) {
+        // Create the EventManager class
+        auto* contextData = (ContextData*)JS_GetContextOpaque(ctx);
+        JSClassID& classID = contextData->classIDs["EventManager"];
+        JS_NewClassID(&classID);
+        JSClassDef classDef = {
+                "EventManager", nullptr, nullptr, nullptr, nullptr
+        };
+        JS_NewClass(JS_GetRuntime(ctx), classID, &classDef);
 
-        // Push the event object onto the stack
-        duk_push_global_object(ctx);
-        duk_idx_t eventIdx = duk_push_object(ctx);
+        // Create prototype
+        JSValue proto = JS_NewObject(ctx);
 
-        // Add the event manager pointer as hidden property
-        duk_push_pointer(ctx, &eventManager);
-        duk_put_prop_string(ctx, eventIdx, DUK_HIDDEN_SYMBOL("__manager"));
+        // Attach "emit" function
+        JS_SetPropertyStr(
+                ctx, proto, "emit",
+                JS_NewCFunction(ctx, js_event_emit, "emit", 1));
 
-        // Add the event scope pointer as hidden property
-        duk_push_pointer(ctx, &eventScope);
-        duk_put_prop_string(ctx, eventIdx, DUK_HIDDEN_SYMBOL("__scope"));
-
-        // Add "emit" function to the event object
-        duk_push_c_function(ctx, event_emit, DUK_VARARGS);
-        duk_put_prop_string(ctx, eventIdx, "emit");
-
-        // Add "listen" function to the event object
-        duk_push_c_function(ctx, event_listen, 2);
-        duk_put_prop_string(ctx, eventIdx, "listen");
-
-        // Add event object to the global object
-        duk_put_global_string(ctx, name.c_str());
-
-        // Pop the global object
-        duk_pop(ctx);
+        // Save prototype
+        JS_SetClassProto(ctx, classID, proto);
     }
 
-    duk_ret_t event_emit(duk_context* ctx) {
-        duk_idx_t nargs = duk_get_top(ctx);
-        auto* eventManager = getPtr<corn::EventManager>(ctx, "__manager");
+    JSValue js_event(JSContext* ctx, corn::EventManager& eventManager) {
+        // Get the class ID
+        JSClassID classID;
+        if (!getClassID(ctx, &classID, "EventManager")) {
+            return JS_ThrowInternalError(ctx, "EventManager class is not registered");
+        }
 
-        if ((nargs == 1 || nargs == 2) && eventManager) {
-            const char* type = duk_get_string(ctx, 0);
-            const char* payload = (nargs == 1) ? "" : duk_get_string(ctx, 1);
+        // Create the object
+        JSValue obj = JS_NewObjectClass(ctx, (int)classID);
+        if (JS_IsException(obj)) {
+            JS_FreeValue(ctx, obj);
+            return JS_ThrowInternalError(ctx, "Failed to create DOMNode object");
+        }
+        JS_SetOpaque(obj, &eventManager);
+        return obj;
+    }
 
-            if (type && payload) {
-                eventManager->emit(EventArgsJS("js::" + std::string(type), payload));
+    JSValue js_event_emit(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+        auto* eventManager = getOpaque<corn::EventManager>(ctx, this_val, "EventManager");
+
+        // Check the arguments
+        if (argc != 1 && argc != 2) {
+            return JS_ThrowTypeError(ctx, "EventManager.emit() expects 1 or 2 arguments");
+        }
+        if (!JS_IsString(argv[0])) {
+            return JS_ThrowTypeError(ctx, "EventManager.emit() expects the first argument to be a string");
+        }
+
+        // Get the event type and payload
+        std::string type, payload;
+        getString(ctx, &type, argv[0]);
+        if (argc == 2) {
+            if (!getString(ctx, &payload, argv[1])) {
+                return JS_ThrowTypeError(ctx, "EventManager.emit() expects the second argument to be convertible to string");
             }
         }
 
-        return 0;
-    }
+        // Emit the event
+        eventManager->emit(EventArgsJS("js::" + type, payload));
 
-    duk_ret_t event_listen(duk_context* ctx) {
-        static size_t key = 0;
-
-        auto* eventManager = getPtr<corn::EventManager>(ctx, "__manager");
-        auto* eventScope = getPtr<corn::EventScope>(ctx, "__scope");
-
-        if (eventManager && eventScope) {
-            const char* type = duk_get_string(ctx, 0);
-
-            if (type && duk_is_function(ctx, 1)) {
-                // Retrieve the listener
-                duk_push_global_stash(ctx);
-                duk_get_prop_string(ctx, -1, DUK_HIDDEN_SYMBOL("__listeners"));
-
-                // Store the key-function pair in the listeners object
-                duk_dup(ctx, 1);  // Duplicate the function
-                std::string keyStr = std::to_string(key);
-                duk_put_prop_string(ctx, -2, keyStr.c_str());
-
-                // Add the listener to the event manager
-                eventScope->addListener(
-                        *eventManager,
-                        "js::" + std::string(type),
-                        [ctx, keyStr](const corn::EventArgs& args) {
-                            const auto& args_ = dynamic_cast<const EventArgsJS&>(args);
-
-                            // Retrieve the listener
-                            duk_push_global_stash(ctx);
-                            duk_get_prop_string(ctx, -1, DUK_HIDDEN_SYMBOL("__listeners"));
-                            duk_get_prop_string(ctx, -1, keyStr.c_str());
-
-                            // Call the listener
-                            duk_push_string(ctx, args_.payload.c_str());
-                            duk_call(ctx, 1);
-
-                            // Clean up (return value, listeners object, global stash)
-                            duk_pop_3(ctx);
-                        });
-
-                // Increment the key & clean up
-                key++;
-                duk_pop_2(ctx);
-            }
-        }
-
-        return 0;
+        return JS_UNDEFINED;
     }
 }
