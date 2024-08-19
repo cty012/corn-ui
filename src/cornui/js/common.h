@@ -3,28 +3,24 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <duktape.h>
+#include <nlohmann/json.hpp>
+#include <quickjs/quickjs.h>
 
 namespace cornui {
-    void push_prototype(duk_context* ctx, const char* name);
+    JSValue from_njson(JSContext* ctx, const nlohmann::json& target);
 
-    void push_vec_of_string(duk_context* ctx, const std::vector<std::string>& target);
-    void push_umap_of_string_string(duk_context* ctx, const std::unordered_map<std::string, std::string>& target);
-    void push_umap_of_string_int(duk_context* ctx, const std::unordered_map<std::string, int>& target);
+    nlohmann::json to_njson(JSContext* ctx, JSValueConst value);
 
-    template<typename T>
-    T* getPtr(duk_context* ctx, const std::string& ptrName = "__ptr") {
-        // Push "this" and the pointer onto the stack
-        duk_push_this(ctx);
-        std::string hidden = "\xFF" + ptrName;
-        duk_get_prop_string(ctx, -1, hidden.c_str());
+    bool getString(JSContext* ctx, std::string* target, JSValueConst value, bool strict = false);
 
-        // Retrieve the pointer
-        T* ptr = static_cast<T*>(duk_to_pointer(ctx, -1));
+    bool getClassID(JSContext* ctx, JSClassID* target, const std::string& className);
 
-        // Pop "this" and the pointer
-        duk_pop_2(ctx);
-
-        return ptr;
+    template <typename T>
+    T* getOpaque(JSContext* ctx, JSValueConst this_val, const std::string& className) {
+        JSClassID classID;
+        if (!getClassID(ctx, &classID, className)) {
+            return nullptr;
+        }
+        return static_cast<T*>(JS_GetOpaque(this_val, classID));
     }
 }

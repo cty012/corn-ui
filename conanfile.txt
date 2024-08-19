@@ -1,0 +1,14 @@
+[requires]
+nlohmann_json/3.11.3
+libxml2/2.12.7
+quickjs/2024-01-13
+
+[test_requires]
+gtest/1.15.0
+
+[options]
+*:shared=False
+
+[generators]
+CMakeDeps
+CMakeToolchain

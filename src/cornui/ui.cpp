@@ -2,24 +2,24 @@
 #include <cornui/ui.h>
 
 namespace cornui {
-    UI::UI() : dom_(nullptr), animation_(nullptr), jsRuntime_(nullptr) {}
+    UI::UI() : dom_(nullptr), animation_(nullptr), jsEngine_(nullptr) {}
 
     UI::~UI() {
         delete this->dom_;
-        delete this->jsRuntime_;
+        delete this->jsEngine_;
     }
 
     void UI::init(std::filesystem::path file, corn::UIManager& uiManager) {
         // Reset
         this->file_ = std::move(file);
-        delete this->jsRuntime_;
+        delete this->jsEngine_;
         if (this->animation_) {
             this->animation_->getScene().removeSystem(this->animation_);
             this->animation_ = nullptr;
         }
         delete this->dom_;
         this->dom_ = new DOM(this);
-        this->jsRuntime_ = new JSRuntime();
+        this->jsEngine_ = new JSEngine();
 
         // Add animation system
         this->animation_ = uiManager.getScene().addSystem<SAnimation>(this);
@@ -30,9 +30,9 @@ namespace cornui {
         this->dom_->bind(uiManager);
 
         // Load JS from file
-        this->jsRuntime_->bind(*this->dom_);
+        this->jsEngine_->bind(*this->dom_, this->request_);
         for (const std::filesystem::path& jsFile : toLoad) {
-            this->jsRuntime_->addFile(jsFile);
+            this->jsEngine_->addFile(jsFile);
         }
 
         // Invoke the "onload" properties of all nodes
@@ -53,11 +53,19 @@ namespace cornui {
         return this->dom_;
     }
 
-    JSRuntime* UI::getJSRuntime() noexcept {
-        return this->jsRuntime_;
+    Request& UI::getRequest() noexcept {
+        return this->request_;
     }
 
-    const JSRuntime* UI::getJSRuntime() const noexcept {
-        return this->jsRuntime_;
+    const Request& UI::getRequest() const noexcept {
+        return this->request_;
+    }
+
+    JSEngine* UI::getJSEngine() noexcept {
+        return this->jsEngine_;
+    }
+
+    const JSEngine* UI::getJSEngine() const noexcept {
+        return this->jsEngine_;
     }
 }

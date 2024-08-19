@@ -6,7 +6,6 @@ option(BUILD_TESTS "Build the test cases in the `test/` folder." OFF)
 
 if (BUILD_TESTS)
     enable_testing()
-    set(VCPKG_MANIFEST_FEATURES "${VCPKG_MANIFEST_FEATURES};tests")
 endif ()
 
 # Project settings
@@ -15,6 +14,12 @@ project(corn-ui VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 20)
 set(DEPS_PATH "${CMAKE_SOURCE_DIR}/deps")
 list(APPEND CMAKE_PREFIX_PATH "${DEPS_PATH}")
+
+if (APPLE)
+    set(CMAKE_INSTALL_RPATH "@loader_path;@loader_path/../lib;@loader_path/../lib/external;@loader_path/../Frameworks")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(CMAKE_INSTALL_RPATH "$ORIGIN;$ORIGIN/../lib;$ORIGIN/../lib/external;$ORIGIN/../Frameworks")
+endif ()
 
 # Output directories
 set(CORNUI_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib")
@@ -47,9 +52,12 @@ else()
 endif()
 
 # Compiler flags
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
 if (MSVC)
     add_compile_options(/utf-8 /W4 /WX)
-    add_compile_options("$<$<CONFIG:Release>:/O2>")
+    add_compile_options("$<$<CONFIG:Release>:/Ox>")
     add_compile_options("$<$<CONFIG:Debug>:/Zi>")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -84,14 +92,17 @@ target_include_directories(cornui PRIVATE "${CMAKE_SOURCE_DIR}/include")
 find_package(Corn REQUIRED)
 target_link_libraries(cornui PRIVATE Corn::Corn)
 
+# Link with nlohmann json
+find_package(nlohmann_json REQUIRED)
+target_link_libraries(cornui PUBLIC nlohmann_json::nlohmann_json)
+
 # Link with libxml2
-find_package(LibXml2 REQUIRED)
+find_package(libxml2 REQUIRED)
 target_link_libraries(cornui PRIVATE LibXml2::LibXml2)
 
-# Link with duktape
-find_package(Duktape CONFIG REQUIRED)
-target_include_directories(cornui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${DUKTAPE_INCLUDE_DIRS})
-target_link_libraries(cornui PRIVATE ${DUKTAPE_LIBRARY})
+# Link with quickjs
+find_package(quickjs REQUIRED)
+target_link_libraries(cornui PRIVATE quickjs::quickjs)
 
 # Build examples
 if (BUILD_EXAMPLES)
@@ -111,6 +122,14 @@ install(TARGETS cornui
         ARCHIVE DESTINATION "lib"
 )
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/cornui" DESTINATION "include")
+install(DIRECTORY "${nlohmann_json_INCLUDE_DIR}/nlohmann" DESTINATION "include")
+
+install(PROGRAMS "${Corn_DYNAMIC_LIBRARY}" DESTINATION "lib/external")
+foreach (external_lib IN LISTS Corn_EXTERNAL_LIBRARIES)
+    install(PROGRAMS "${external_lib}" DESTINATION "lib/external")
+endforeach ()
 
 configure_file(cornui-config.cmake.in cornui-config.cmake @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cornui-config.cmake" DESTINATION "cmake")
+
+install(FILES "${CMAKE_SOURCE_DIR}/LICENSE" DESTINATION ".")
