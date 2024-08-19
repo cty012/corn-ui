@@ -5,6 +5,7 @@
 #include <cornui/css/animation.h>
 #include <cornui/xml/dom.h>
 #include <cornui/js/engine.h>
+#include <cornui/js/request.h>
 
 namespace cornui {
     class UI {
@@ -25,6 +26,8 @@ namespace cornui {
         [[nodiscard]] const std::filesystem::path& getFile() const noexcept;
         [[nodiscard]] DOM* getDOM() noexcept;
         [[nodiscard]] const DOM* getDOM() const noexcept;
+        [[nodiscard]] Request& getRequest() noexcept;
+        [[nodiscard]] const Request& getRequest() const noexcept;
         [[nodiscard]] JSEngine* getJSEngine() noexcept;
         [[nodiscard]] const JSEngine* getJSEngine() const noexcept;
 
@@ -32,6 +35,7 @@ namespace cornui {
         std::filesystem::path file_;
         DOM* dom_;
         SAnimation* animation_;
+        Request request_;
         JSEngine* jsEngine_;
     };
 };

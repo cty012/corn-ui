@@ -30,7 +30,7 @@ namespace cornui {
         this->dom_->bind(uiManager);
 
         // Load JS from file
-        this->jsEngine_->bind(*this->dom_);
+        this->jsEngine_->bind(*this->dom_, this->request_);
         for (const std::filesystem::path& jsFile : toLoad) {
             this->jsEngine_->addFile(jsFile);
         }
@@ -51,6 +51,14 @@ namespace cornui {
 
     const DOM* UI::getDOM() const noexcept {
         return this->dom_;
+    }
+
+    Request& UI::getRequest() noexcept {
+        return this->request_;
+    }
+
+    const Request& UI::getRequest() const noexcept {
+        return this->request_;
     }
 
     JSEngine* UI::getJSEngine() noexcept {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <cornui/js/request.h>
 
 namespace cornui {
     class DOM;
@@ -26,7 +27,7 @@ namespace cornui {
         JSEngine(const JSEngine& dom) = delete;
         JSEngine& operator=(const JSEngine& jsRuntime) = delete;
 
-        void bind(DOM& dom);
+        void bind(DOM& dom, Request& request);
 
         JSEngineImpl* impl_;
     };

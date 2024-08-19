@@ -7,11 +7,9 @@
 #include <quickjs/quickjs.h>
 
 namespace cornui {
-//    JSValue from_vec_of_string(JSContext* ctx, const std::vector<std::string>& target);
-//    JSValue from_umap_of_string_string(JSContext* ctx, const std::unordered_map<std::string, std::string>& target);
-//    JSValue from_umap_of_string_int(JSContext* ctx, const std::unordered_map<std::string, int>& target);
-//    JSValue from_umap_of_string_float(JSContext* ctx, const std::unordered_map<std::string, float>& target);
     JSValue from_njson(JSContext* ctx, const nlohmann::json& target);
+
+    nlohmann::json to_njson(JSContext* ctx, JSValueConst value);
 
     bool getString(JSContext* ctx, std::string* target, JSValueConst value, bool strict = false);
 

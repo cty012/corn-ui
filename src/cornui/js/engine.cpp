@@ -13,10 +13,10 @@
 #include "dom_node.h"
 #include "event.h"
 #include "engine_impl.h"
-#include "request.h"
+#include "js_request.h"
 
 namespace cornui {
-    JSEngineImpl::JSEngineImpl(DOM& dom) {
+    JSEngineImpl::JSEngineImpl(DOM& dom, Request& request) {
         this->runtime_ = JS_NewRuntime();
         this->ctx_ = JS_NewContext(this->runtime_);
         JS_SetContextOpaque(this->ctx_, new ContextData(&dom));
@@ -46,7 +46,9 @@ namespace cornui {
         JS_SetPropertyStr(this->ctx_, global, "GlobalEvent", globalEvent);
 
         // Initialize the "request" object
-//        create_request(this->ctx_);
+        create_Request(this->ctx_);
+        JSValue req = js_request(this->ctx_, &request);
+        JS_SetPropertyStr(this->ctx_, global, "Request", req);
 
         // Free the global object
         JS_FreeValue(this->ctx_, global);
@@ -65,8 +67,8 @@ namespace cornui {
         delete impl_;
     }
 
-    void JSEngine::bind(cornui::DOM& dom) {
-        this->impl_ = new JSEngineImpl(dom);
+    void JSEngine::bind(DOM& dom, Request& request) {
+        this->impl_ = new JSEngineImpl(dom, request);
     }
 
     void JSEngine::addFile(const std::filesystem::path& file) {

@@ -15,6 +15,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(DEPS_PATH "${CMAKE_SOURCE_DIR}/deps")
 list(APPEND CMAKE_PREFIX_PATH "${DEPS_PATH}")
 
+if (APPLE)
+    set(CMAKE_INSTALL_RPATH "@loader_path;@loader_path/../lib;@loader_path/../lib/external;@loader_path/../Frameworks")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(CMAKE_INSTALL_RPATH "$ORIGIN;$ORIGIN/../lib;$ORIGIN/../lib/external;$ORIGIN/../Frameworks")
+endif ()
+
 # Output directories
 set(CORNUI_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib")
 set(EXAMPLES_OUTPUT_DIR "${CMAKE_BINARY_DIR}/examples")
@@ -118,5 +124,12 @@ install(TARGETS cornui
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/cornui" DESTINATION "include")
 install(DIRECTORY "${nlohmann_json_INCLUDE_DIR}/nlohmann" DESTINATION "include")
 
+install(PROGRAMS "${Corn_DYNAMIC_LIBRARY}" DESTINATION "lib/external")
+foreach (external_lib IN LISTS Corn_EXTERNAL_LIBRARIES)
+    install(PROGRAMS "${external_lib}" DESTINATION "lib/external")
+endforeach ()
+
 configure_file(cornui-config.cmake.in cornui-config.cmake @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cornui-config.cmake" DESTINATION "cmake")
+
+install(FILES "${CMAKE_SOURCE_DIR}/LICENSE" DESTINATION ".")

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <quickjs/quickjs.h>
+#include <cornui/js/request.h>
 
 namespace cornui {
     /**
@@ -11,7 +12,7 @@ namespace cornui {
         JSRuntime* runtime_;
         JSContext* ctx_;
 
-        explicit JSEngineImpl(DOM& dom);
+        JSEngineImpl(DOM& dom, Request& request);
         ~JSEngineImpl();
     };
 }

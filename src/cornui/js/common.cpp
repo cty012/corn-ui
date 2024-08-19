@@ -45,6 +45,60 @@ namespace cornui {
         return object;
     }
 
+    nlohmann::json to_njson(JSContext* ctx, JSValueConst value) {
+        nlohmann::json result;
+
+        if (JS_IsNull(value)) {
+            result = nullptr;
+        } else if (JS_IsBool(value)) {
+            result = JS_ToBool(ctx, value) > 0;
+        } else if (JS_IsNumber(value)) {
+            int32_t intVal;
+            if (JS_ToInt32(ctx, &intVal, value) == 0) {
+                // If the conversion to int32 is successful, it's an integer
+                result = intVal;
+            } else {
+                // Otherwise, treat it as a double
+                double doubleVal;
+                JS_ToFloat64(ctx, &doubleVal, value);
+                result = doubleVal;
+            }
+        } else if (JS_IsString(value)) {
+            std::string str;
+            getString(ctx, &str, value);
+            result = str;
+        } else if (JS_IsArray(ctx, value)) {
+            uint32_t length;
+            JSValue length_val = JS_GetPropertyStr(ctx, value, "length");
+            JS_ToUint32(ctx, &length, length_val);
+            JS_FreeValue(ctx, length_val);
+
+            result = nlohmann::json::array();
+            for (uint32_t i = 0; i < length; ++i) {
+                JSValue elem = JS_GetPropertyUint32(ctx, value, i);
+                result.push_back(to_njson(ctx, elem));
+                JS_FreeValue(ctx, elem);
+            }
+        } else if (JS_IsObject(value)) {
+            result = nlohmann::json::object();
+            JSPropertyEnum *tab;
+            uint32_t len;
+            if (JS_GetOwnPropertyNames(ctx, &tab, &len, value, JS_GPN_STRING_MASK | JS_GPN_ENUM_ONLY) == 0) {
+                for (uint32_t i = 0; i < len; ++i) {
+                    JSValue propValue = JS_GetProperty(ctx, value, tab[i].atom);
+                    const char *key = JS_AtomToCString(ctx, tab[i].atom);
+                    result[key] = to_njson(ctx, propValue);
+                    JS_FreeCString(ctx, key);
+                    JS_FreeValue(ctx, propValue);
+                    JS_FreeAtom(ctx, tab[i].atom);
+                }
+                js_free(ctx, tab);
+            }
+        }
+
+        return result;
+    }
+
     bool getString(JSContext* ctx, std::string* target, JSValueConst value, bool strict) {
         // Check if the value is a string
         if (strict && !JS_IsString(value)) {
