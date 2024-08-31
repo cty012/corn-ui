@@ -93,17 +93,6 @@ namespace cornui {
         return this->getNodesBySelector(parseSelectorFromString(selector), parent);
     }
 
-    DOMNode* DOM::getFocusedNode() const {
-        if (!this->uiManager_) {
-            return nullptr;
-        }
-
-        corn::UIWidget* focusedWidget = this->uiManager_->getFocusedWidget();
-        return this->getNodeThat([focusedWidget](const DOMNode* node){
-            return node->getWidget() == focusedWidget;
-        });
-    }
-
     const UI& DOM::getUI() const noexcept {
         return *this->ui_;
     }

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <quickjs/quickjs.h>
+#include <duktape.h>
 
 namespace cornui {
-    void create_console(JSContext* ctx);
+    void create_console(duk_context* ctx);
 
-    JSValue js_console_log(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
-    JSValue js_console_error(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
+    duk_ret_t console_log(duk_context* ctx);
+    duk_ret_t console_error(duk_context* ctx);
 }

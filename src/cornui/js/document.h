@@ -1,13 +1,15 @@
 #pragma once
 
 #include <string>
-#include <quickjs/quickjs.h>
+#include <duktape.h>
 
 namespace cornui {
-    void create_document(JSContext* ctx);
+    class DOM;
 
-    JSValue js_document_root_get(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
-    JSValue js_document_getNodeBySelector(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
-    JSValue js_document_getNodesBySelector(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
-    JSValue js_document_focusedNode_get(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
+    void create_document(duk_context* ctx, DOM* dom);
+
+    duk_ret_t document_root_get(duk_context* ctx);
+    duk_ret_t document_getNodeBySelector(duk_context* ctx);
+    duk_ret_t document_getNodesBySelector(duk_context* ctx);
+    duk_ret_t document_focusedNode_get(duk_context* ctx);
 }

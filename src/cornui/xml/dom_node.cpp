@@ -1,18 +1,17 @@
 #include <format>
-#include <quickjs/quickjs.h>
+#include <duktape.h>
 #include <corn/core/scene.h>
 #include <corn/media/image.h>
 #include <corn/util/rich_text.h>
 #include <cornui/css/animation.h>
 #include <cornui/css/cssom.h>
-#include <cornui/js/engine.h>
+#include <cornui/js/runtime.h>
 #include <cornui/ui.h>
 #include <cornui/util/key.h>
 #include <cornui/xml/dom.h>
 #include <cornui/xml/dom_node.h>
 #include "../css/event_animation.h"
-#include "../js/engine_impl.h"
-#include "../js/common.h"
+#include "../js/runtime_impl.h"
 #include "../js/dom_node.h"
 #include "../util/style_name.h"
 
@@ -147,13 +146,6 @@ namespace cornui {
         bool success = std::erase(this->classList_, className);
         if (success) this->computeStyle();
         return success;
-    }
-
-    void DOMNode::focus() noexcept {
-        corn::UIWidget* widget = this->getWidget();
-        if (widget != nullptr) {
-            this->getDOM()->getUIManager()->setFocusedWidget(widget);
-        }
     }
 
     void DOMNode::sync() {
@@ -462,36 +454,30 @@ namespace cornui {
 
     void DOMNode::runScriptInAttr(const std::string& attr) {
         if (!this->attributes_.contains(attr)) return;
-        JSContext* ctx = this->dom_->getUI().getJSEngine()->getImpl()->ctx_;
+        duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
 
         // Compile and run the function stored in the attribute
-        // "this" is the current node
         const std::string& jsCode = this->attributes_.at(attr);
-        JSValue node = js_domNode(ctx, this);
-        JSValue result = JS_EvalThis(ctx, node, jsCode.c_str(), jsCode.size(), attr.c_str(), JS_EVAL_TYPE_GLOBAL);
-        if (JS_IsException(result)) {
-            JSValue exception = JS_GetException(ctx);
-            std::string exceptionStr;
-            getString(ctx, &exceptionStr, exception);
-            JS_FreeValue(ctx, exception);
-            fprintf(stderr, "Error executing JS code: '%s'\n%s\n", jsCode.c_str(), exceptionStr.c_str());
+        if (duk_pcompile_string(ctx, 0, jsCode.c_str()) != 0) {
+            fprintf(stderr, "Error compiling JS script: %s\n%s\n", jsCode.c_str(), duk_safe_to_string(ctx, -1));
+        } else {
+            // Push the "this" value onto the stack
+            push_domNode(ctx, this);
+            // Call the function
+            duk_pcall_method(ctx, 0);
         }
 
-        // Cleanup
-        JS_FreeValue(ctx, result);
-        JS_FreeValue(ctx, node);
+        // Pop the result or error
+        duk_pop(ctx);
     }
 
     void DOMNode::runScriptInAttr(const std::string& attr, float value) {
         if (!this->attributes_.contains(attr)) return;
-        JSContext* ctx = this->dom_->getUI().getJSEngine()->getImpl()->ctx_;
+        duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
 
         // Set the value
-        JSValue global = JS_GetGlobalObject(ctx);
-        JS_SetPropertyStr(
-                ctx, global, "__value",
-                JS_NewFloat64(ctx, value));
-        JS_FreeValue(ctx, global);
+        duk_push_number(ctx, value);
+        duk_put_global_string(ctx, "__value");
 
         // Run the script
         this->runScriptInAttr(attr);
@@ -499,14 +485,12 @@ namespace cornui {
 
     void DOMNode::runScriptInAttr(const std::string& attr, const corn::Key& key) {
         if (!this->attributes_.contains(attr)) return;
-        JSContext* ctx = this->dom_->getUI().getJSEngine()->getImpl()->ctx_;
+        duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
 
         // Set the key
-        JSValue global = JS_GetGlobalObject(ctx);
-        JS_SetPropertyStr(
-                ctx, global, "__key",
-                JS_NewString(ctx, toString(key).c_str()));
-        JS_FreeValue(ctx, global);
+        std::string keyStr = toString(key);
+        duk_push_string(ctx, keyStr.c_str());
+        duk_put_global_string(ctx, "__key");
 
         // Run the script
         this->runScriptInAttr(attr);
@@ -514,14 +498,11 @@ namespace cornui {
 
     void DOMNode::runScriptInAttr(const std::string& attr, const std::u8string& text) {
         if (!this->attributes_.contains(attr)) return;
-        JSContext* ctx = this->dom_->getUI().getJSEngine()->getImpl()->ctx_;
+        duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
 
         // Set the text
-        JSValue global = JS_GetGlobalObject(ctx);
-        JS_SetPropertyStr(
-                ctx, global, "__text",
-                JS_NewString(ctx, (const char*)text.c_str()));
-        JS_FreeValue(ctx, global);
+        duk_push_string(ctx, (const char*)text.c_str());
+        duk_put_global_string(ctx, "__text");
 
         // Run the script
         this->runScriptInAttr(attr);

@@ -4,695 +4,554 @@
 #include <cornui/xml/dom_node.h>
 #include "class_list.h"
 #include "common.h"
-#include "context_data.h"
 #include "dom_node.h"
 
 namespace cornui {
-    void create_DOMNode(JSContext* ctx) {
-        // Create the DOMNode class
-        auto* contextData = (ContextData*)JS_GetContextOpaque(ctx);
-        JSClassID& classID = contextData->classIDs["DOMNode"];
-        JS_NewClassID(&classID);
-        JSClassDef classDef = {
-            "DOMNode", nullptr, nullptr, nullptr, nullptr
-        };
-        JS_NewClass(JS_GetRuntime(ctx), classID, &classDef);
+    void create_domNode_prototype(duk_context* ctx) {
+        // Push the global stash and the prototype object onto the stack
+        duk_push_global_stash(ctx);
+        duk_idx_t nodeIdx = duk_push_object(ctx);
 
-        // Create prototype
-        JSValue proto = JS_NewObject(ctx);
-        JSAtom atom;
+        // Attach "innerXML" property to the prototype
+        duk_push_string(ctx, "innerXML");
+        duk_push_c_function(ctx, domNode_innerXML_get, 0);
+        duk_push_c_function(ctx, domNode_innerXML_set, 1);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_HAVE_SETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "innerXML" property
-        atom = JS_NewAtom(ctx, "innerXML");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_innerXML_get, "get", 0),
-                JS_NewCFunction(ctx, js_domNode_innerXML_set, "set", 1),
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "outerXML" property to the prototype
+        duk_push_string(ctx, "outerXML");
+        duk_push_c_function(ctx, domNode_outerXML_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "outerXML" property
-        atom = JS_NewAtom(ctx, "outerXML");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_outerXML_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "toString" function to the prototype
+        duk_push_c_function(ctx, domNode_outerXML_get, 0);
+        duk_put_prop_string(ctx, nodeIdx, "toString");
 
-        // Attach "toString" function
-        JS_SetPropertyStr(
-                ctx, proto, "toString",
-                JS_NewCFunction(ctx, js_domNode_outerXML_get, "toString", 0));
+        // Attach "tag" property to the prototype
+        duk_push_string(ctx, "tag");
+        duk_push_c_function(ctx, domNode_tag_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "tag" property
-        atom = JS_NewAtom(ctx, "tag");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_tag_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "name" property to the prototype
+        duk_push_string(ctx, "name");
+        duk_push_c_function(ctx, domNode_name_get, 0);
+        duk_push_c_function(ctx, domNode_name_set, 1);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_HAVE_SETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "name" property
-        atom = JS_NewAtom(ctx, "name");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_name_get, "get", 0),
-                JS_NewCFunction(ctx, js_domNode_name_set, "set", 1),
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "text" property to the prototype
+        duk_push_string(ctx, "text");
+        duk_push_c_function(ctx, domNode_text_get, 0);
+        duk_push_c_function(ctx, domNode_text_set, 1);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_HAVE_SETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "text" property
-        atom = JS_NewAtom(ctx, "text");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_text_get, "get", 0),
-                JS_NewCFunction(ctx, js_domNode_text_set, "set", 1),
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "classList" property to the prototype
+        duk_push_string(ctx, "classList");
+        duk_push_c_function(ctx, domNode_classList_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "classList" property
-        atom = JS_NewAtom(ctx, "classList");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_classList_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "style" property to the prototype
+        duk_push_string(ctx, "style");
+        duk_push_c_function(ctx, domNode_style_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "style" property
-        atom = JS_NewAtom(ctx, "style");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_style_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "computedStyle" property to the prototype
+        duk_push_string(ctx, "computedStyle");
+        duk_push_c_function(ctx, domNode_computedStyle_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "computedStyle" property
-        atom = JS_NewAtom(ctx, "computedStyle");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_computedStyle_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "computedGeometry" property to the prototype
+        duk_push_string(ctx, "computedGeometry");
+        duk_push_c_function(ctx, domNode_computedGeometry_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "computedGeometry" property
-        atom = JS_NewAtom(ctx, "computedGeometry");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_computedGeometry_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "naturalSize" property to the prototype
+        duk_push_string(ctx, "naturalSize");
+        duk_push_c_function(ctx, domNode_naturalSize_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "naturalSize" property
-        atom = JS_NewAtom(ctx, "naturalSize");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_naturalSize_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "setStyle" function to the prototype
+        duk_push_c_function(ctx, domNode_setStyle, 2);
+        duk_put_prop_string(ctx, nodeIdx, "setStyle");
 
-        // Attach "setStyle" function
-        JS_SetPropertyStr(
-                ctx, proto, "setStyle",
-                JS_NewCFunction(ctx, js_domNode_setStyle, "setStyle", 2));
+        // Attach "animate" function to the prototype
+        duk_push_c_function(ctx, domNode_animate, 4);
+        duk_put_prop_string(ctx, nodeIdx, "animate");
 
-        // Attach "animate" function
-        JS_SetPropertyStr(
-                ctx, proto, "animate",
-                JS_NewCFunction(ctx, js_domNode_animate, "animate", 4));
+        // Attach "attributes" property to the prototype
+        duk_push_string(ctx, "attributes");
+        duk_push_c_function(ctx, domNode_attributes_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "attributes" property
-        atom = JS_NewAtom(ctx, "attributes");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_attributes_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "hasAttribute" function to the prototype
+        duk_push_c_function(ctx, domNode_hasAttribute, 1);
+        duk_put_prop_string(ctx, nodeIdx, "hasAttribute");
 
-        // Attach "hasAttribute" function
-        JS_SetPropertyStr(
-                ctx, proto, "hasAttribute",
-                JS_NewCFunction(ctx, js_domNode_hasAttribute, "hasAttribute", 1));
+        // Attach "getAttribute" function to the prototype
+        duk_push_c_function(ctx, domNode_getAttribute, 1);
+        duk_put_prop_string(ctx, nodeIdx, "getAttribute");
 
-        // Attach "getAttribute" function
-        JS_SetPropertyStr(
-                ctx, proto, "getAttribute",
-                JS_NewCFunction(ctx, js_domNode_getAttribute, "getAttribute", 1));
+        // Attach "setAttribute" function to the prototype
+        duk_push_c_function(ctx, domNode_setAttribute, 2);
+        duk_put_prop_string(ctx, nodeIdx, "setAttribute");
 
-        // Attach "setAttribute" function
-        JS_SetPropertyStr(
-                ctx, proto, "setAttribute",
-                JS_NewCFunction(ctx, js_domNode_setAttribute, "setAttribute", 2));
+        // Attach "removeAttribute" function to the prototype
+        duk_push_c_function(ctx, domNode_removeAttribute, 1);
+        duk_put_prop_string(ctx, nodeIdx, "removeAttribute");
 
-        // Attach "removeAttribute" function
-        JS_SetPropertyStr(
-                ctx, proto, "removeAttribute",
-                JS_NewCFunction(ctx, js_domNode_removeAttribute, "removeAttribute", 1));
+        // Attach "parent" property to the prototype
+        duk_push_string(ctx, "parent");
+        duk_push_c_function(ctx, domNode_parent_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "parent" property
-        atom = JS_NewAtom(ctx, "parent");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_parent_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "children" property to the prototype
+        duk_push_string(ctx, "children");
+        duk_push_c_function(ctx, domNode_children_get, 0);
+        duk_def_prop(ctx, nodeIdx, DUK_DEFPROP_HAVE_GETTER | DUK_DEFPROP_ENUMERABLE);
 
-        // Attach "children" property
-        atom = JS_NewAtom(ctx, "children");
-        JS_DefinePropertyGetSet(
-                ctx, proto, atom,
-                JS_NewCFunction(ctx, js_domNode_children_get, "get", 0),
-                JS_UNDEFINED,
-                JS_PROP_ENUMERABLE);
-        JS_FreeAtom(ctx, atom);
+        // Attach "getNodeBySelector" function to the prototype
+        duk_push_c_function(ctx, domNode_getNodeBySelector, 1);
+        duk_put_prop_string(ctx, nodeIdx, "getNodeBySelector");
 
-        // Attach "getNodeBySelector" function
-        JS_SetPropertyStr(
-                ctx, proto, "getNodeBySelector",
-                JS_NewCFunction(ctx, js_domNode_getNodeBySelector, "getNodeBySelector", 1));
+        // Attach "getNodesBySelector" function to the prototype
+        duk_push_c_function(ctx, domNode_getNodesBySelector, 1);
+        duk_put_prop_string(ctx, nodeIdx, "getNodesBySelector");
 
-        // Attach "getNodesBySelector" function
-        JS_SetPropertyStr(
-                ctx, proto, "getNodesBySelector",
-                JS_NewCFunction(ctx, js_domNode_getNodesBySelector, "getNodesBySelector", 1));
+        // Attach "focus" function to the prototype
+        duk_push_c_function(ctx, domNode_focus, 0);
+        duk_put_prop_string(ctx, nodeIdx, "focus");
 
-        // Attach "focus" function
-        JS_SetPropertyStr(
-                ctx, proto, "focus",
-                JS_NewCFunction(ctx, js_domNode_focus, "focus", 0));
+        // Store the prototype in the stash
+        duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("DOMNode_prototype"));
 
-        // Save prototype
-        JS_SetClassProto(ctx, classID, proto);
+        // Pop the global stash
+        duk_pop(ctx);
     }
 
-    JSValue js_domNode(JSContext* ctx, DOMNode* node) {
-        // Get the class ID
-        JSClassID classID;
-        if (!getClassID(ctx, &classID, "DOMNode")) {
-            return JS_ThrowInternalError(ctx, "DOMNode class is not registered");
-        }
+    void push_domNode(duk_context* ctx, DOMNode* node) {
+        // Push a DOMNode prototype onto the stack
+        push_prototype(ctx, DUK_HIDDEN_SYMBOL("DOMNode_prototype"));
 
-        // Create the object
-        JSValue obj = JS_NewObjectClass(ctx, (int)classID);
-        if (JS_IsException(obj)) {
-            JS_FreeValue(ctx, obj);
-            return JS_ThrowInternalError(ctx, "Failed to create DOMNode object");
-        }
-        JS_SetOpaque(obj, node);
-        return obj;
+        // Add the DOMNode pointer as property
+        duk_push_pointer(ctx, node);
+        duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("__ptr"));
     }
 
-    JSValue js_domNodeArray(JSContext* ctx, std::vector<DOMNode*> nodes) {
+    void push_domNodeArray(duk_context* ctx, std::vector<DOMNode*> nodes) {
         // Create a new array
-        JSValue array = JS_NewArray(ctx);
+        duk_idx_t arrayIdx = duk_push_array(ctx);
 
-        // Add each DOMNode pointer to the array
+        // Loop through the vector of DOMNode pointers
         for (size_t i = 0; i < nodes.size(); i++) {
-            JS_SetPropertyUint32(ctx, array, i, js_domNode(ctx, nodes[i]));
-        }
+            // Push the DOMNode object onto the stack
+            push_domNode(ctx, nodes[i]);
 
-        return array;
+            // Store the object in the array
+            duk_put_prop_index(ctx, arrayIdx, i);
+        }
     }
 
-    JSValue js_domNode_innerXML_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
+    duk_ret_t domNode_innerXML_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the inner XML to the stack
+        if (node) {
+            duk_push_string(ctx, node->getInnerXML().c_str());
+        } else {
+            duk_push_undefined(ctx);
         }
 
-        // Get the inner XML
-        return JS_NewString(ctx, node->getInnerXML().c_str());
+        return 1;
     }
 
-    JSValue js_domNode_innerXML_set(JSContext* ctx, JSValueConst this_val, int, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
+    duk_ret_t domNode_innerXML_set(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
 
-        // Check the arguments
-        if (!JS_IsString(argv[0])) {
-            return JS_ThrowTypeError(ctx, "DOMNode.innerXML can only be set to a string");
-        }
-
-        // Set the inner XML
-        std::string innerXML;
-        getString(ctx, &innerXML, argv[0]);
-        node->setInnerXML(innerXML);
-        node->sync();
-
-        return JS_UNDEFINED;
-    }
-
-    JSValue js_domNode_outerXML_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the outer XML
-        return JS_NewString(ctx, node->getOuterXML().c_str());
-    }
-
-    JSValue js_domNode_tag_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the tag
-        return JS_NewString(ctx, node->getTag().c_str());
-    }
-
-    JSValue js_domNode_name_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the name
-        return JS_NewString(ctx, node->getName().c_str());
-    }
-
-    JSValue js_domNode_name_set(JSContext* ctx, JSValueConst this_val, int, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check the arguments
-        if (!JS_IsString(argv[0])) {
-            return JS_ThrowTypeError(ctx, "DOMNode.name can only be set to a string");
-        }
-
-        // Set the name
-        std::string name;
-        getString(ctx, &name, argv[0]);
-        node->setName(name);
-        node->sync();
-
-        return JS_UNDEFINED;
-    }
-
-    JSValue js_domNode_text_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the text
-        return JS_NewString(ctx, (const char*)node->getText().c_str());
-    }
-
-    JSValue js_domNode_text_set(JSContext* ctx, JSValueConst this_val, int, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check the arguments
-        if (!JS_IsString(argv[0])) {
-            return JS_ThrowTypeError(ctx, "DOMNode.text can only be set to a string");
-        }
-
-        // Set the text
-        std::string text;
-        getString(ctx, &text, argv[0]);
-        node->setText((const char8_t*)text.c_str());
-        node->sync();
-
-        return JS_UNDEFINED;
-    }
-
-    JSValue js_domNode_classList_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the class list
-        return js_classList(ctx, node);
-    }
-
-    JSValue js_domNode_style_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the style
-        return from_njson(ctx, node->getStyle());
-    }
-
-    JSValue js_domNode_computedStyle_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the computed style
-        return from_njson(ctx, node->getComputedStyle());
-    }
-
-    JSValue js_domNode_computedGeometry_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check that the node is linked to a widget
-        if (!node->getWidget()) {
-            return JS_UNDEFINED;
-        }
-        corn::UIWidget* widget = node->getWidget();
-
-        // Get the cached geometry
-        auto [x, y, w, h] = widget->getUIManager().getCachedGeometry(widget);  // NOLINT
-        return from_njson(ctx, nlohmann::json::object({
-            { "x", x }, { "y", y }, { "w", w }, { "h", h },
-        }));
-    }
-
-    JSValue js_domNode_naturalSize_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check that the node is linked to a widget
-        if (!node->getWidget()) {
-            return JS_UNDEFINED;
-        }
-        corn::UIWidget* widget = node->getWidget();
-
-        // Get the natural size
-        auto [w, h] = widget->getNaturalSize();  // NOLINT
-        return from_njson(ctx, nlohmann::json::object({
-            { "w", w }, { "h", h },
-        }));
-    }
-
-    JSValue js_domNode_setStyle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check the arguments
-        if (argc != 2) {
-            return JS_ThrowTypeError(ctx, "DOMNode.setStyle() expects 2 arguments");
-        }
-        for (int i = 0; i < argc; i++) {
-            if (!JS_IsString(argv[i])) {
-                return JS_ThrowTypeError(ctx, "DOMNode.setStyle() expects string arguments");
+        // Push the inner XML to the stack
+        if (node) {
+            const char* innerXML = duk_get_string(ctx, 0);
+            if (innerXML) {
+                node->setInnerXML(innerXML);
+                node->sync();
             }
         }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_outerXML_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the outer XML to the stack
+        if (node) {
+            duk_push_string(ctx, node->getOuterXML().c_str());
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_tag_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the tag to the stack
+        if (node) {
+            duk_push_string(ctx, node->getTag().c_str());
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_name_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            duk_push_string(ctx, node->getName().c_str());
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_name_set(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Update the name
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            if (name) {
+                node->setName(name);
+                node->sync();
+            }
+        }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_text_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the text to the stack
+        if (node) {
+            duk_push_string(ctx, (const char*)node->getText().c_str());
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_text_set(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Update the text
+        if (node) {
+            const auto* text = (const char8_t*)duk_get_string(ctx, 0);
+            if (text) {
+                node->setText(text);
+                node->sync();
+            }
+        }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_classList_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the classList to the stack
+        if (node) {
+            push_classList(ctx, node);
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_style_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            push_umap_of_string_string(ctx, node->getStyle());
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_computedStyle_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            push_umap_of_string_string(ctx, node->getComputedStyle());
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_computedGeometry_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the cached geometry to the stack
+        if (node && node->getWidget()) {
+            corn::UIWidget* widget = node->getWidget();
+            auto [x, y, w, h] = widget->getUIManager().getCachedGeometry(widget);  // NOLINT
+            push_umap_of_string_int(ctx, {{ "x", x }, { "y", y }, { "w", w }, { "h", h }});
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_naturalSize_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the cached geometry to the stack
+        if (node && node->getWidget()) {
+            corn::UIWidget* widget = node->getWidget();
+            auto [w, h] = widget->getNaturalSize();  // NOLINT
+            push_umap_of_string_int(ctx, {{ "w", w }, { "h", h }});
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_setStyle(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
 
         // Update the style
-        std::string name, value;
-        getString(ctx, &name, argv[0]);
-        getString(ctx, &value, argv[1]);
-        node->setStyle(name, value);
-        node->sync();
-
-        return JS_UNDEFINED;
-    }
-
-    JSValue js_domNode_animate(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check the arguments
-        if (argc != 4) {
-            return JS_ThrowTypeError(ctx, "DOMNode.animate() expects 4 arguments");
-        }
-        for (int i = 0; i < 3; i++) {
-            if (!JS_IsString(argv[i])) {
-                return JS_ThrowTypeError(ctx, "DOMNode.animate() expects three string arguments and a number argument");
-            }
-        }
-        if (!JS_IsNumber(argv[3])) {
-            return JS_ThrowTypeError(ctx, "DOMNode.animate() expects three string arguments and a number argument");
-        }
-
-        // Animate the style
-        std::string name, value, type;
-        double duration;
-        getString(ctx, &name, argv[0]);
-        getString(ctx, &value, argv[1]);
-        getString(ctx, &type, argv[2]);
-        JS_ToFloat64(ctx, &duration, argv[3]);
-
-        // If zero or negative duration, set the style immediately
-        if (duration <= 0) {
-            node->setStyle(name, value);
-            node->sync();
-            return JS_UNDEFINED;
-        }
-
-        // Otherwise, determine the easing function
-        std::unique_ptr<EasingFunction> ease;
-        if (type == "linear") {
-            ease = std::make_unique<EasingLinear>();
-        } else if (type == "step-start") {
-            ease = std::make_unique<EasingStepStart>();
-        } else if (type == "step-end") {
-            ease = std::make_unique<EasingStepEnd>();
-        } else if (type == "ease") {
-            ease = std::make_unique<EasingEase>();
-        } else if (type == "ease-in") {
-            ease = std::make_unique<EasingEaseIn>();
-        } else if (type == "ease-out") {
-            ease = std::make_unique<EasingEaseOut>();
-        } else if (type == "ease-in-out") {
-            ease = std::make_unique<EasingEaseInOut>();
-        } else {
-            ease = std::make_unique<EasingEase>();
-        }
-
-        // Animate the style
-        node->animate(name, value, std::move(ease), (float)duration);
-
-        return JS_UNDEFINED;
-    }
-
-    JSValue js_domNode_attributes_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the attributes
-        return from_njson(ctx, node->getAttributes());
-    }
-
-    JSValue js_domNode_hasAttribute(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check the arguments
-        if (argc != 1) {
-            return JS_ThrowTypeError(ctx, "DOMNode.hasAttribute() expects 1 argument");
-        }
-        if (!JS_IsString(argv[0])) {
-            return JS_ThrowTypeError(ctx, "DOMNode.hasAttribute() expects a string argument");
-        }
-
-        // Check if the attribute exists
-        std::string name;
-        getString(ctx, &name, argv[0]);
-        return JS_NewBool(ctx, node->getAttributes().contains(name));
-    }
-
-    JSValue js_domNode_getAttribute(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check the arguments
-        if (argc != 1) {
-            return JS_ThrowTypeError(ctx, "DOMNode.getAttribute() expects 1 argument");
-        }
-        if (!JS_IsString(argv[0])) {
-            return JS_ThrowTypeError(ctx, "DOMNode.getAttribute() expects a string argument");
-        }
-
-        // Get the attribute value
-        std::string name;
-        getString(ctx, &name, argv[0]);
-        const std::unordered_map<std::string, std::string>& attrs = node->getAttributes();
-        if (attrs.contains(name)) {
-            return JS_NewString(ctx, attrs.at(name).c_str());
-        } else {
-            return JS_UNDEFINED;
-        }
-    }
-
-    JSValue js_domNode_setAttribute(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check the arguments
-        if (argc != 2) {
-            return JS_ThrowTypeError(ctx, "DOMNode.setAttribute() expects 2 arguments");
-        }
-        for (int i = 0; i < argc; i++) {
-            if (!JS_IsString(argv[i])) {
-                return JS_ThrowTypeError(ctx, "DOMNode.setAttribute() expects string arguments");
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            const char* value = duk_get_string(ctx, 1);
+            if (name && value) {
+                node->setStyle(name, value);
+                node->sync();
             }
         }
 
-        // Set the attribute
-        std::string name, value;
-        getString(ctx, &name, argv[0]);
-        getString(ctx, &value, argv[1]);
-        node->setAttribute(name, value);
-        node->sync();
-
-        return JS_UNDEFINED;
+        return 0;
     }
 
-    JSValue js_domNode_removeAttribute(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
+    duk_ret_t domNode_animate(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
 
-        // Check the arguments
-        if (argc != 1) {
-            return JS_ThrowTypeError(ctx, "DOMNode.removeAttribute() expects 1 argument");
-        }
-        if (!JS_IsString(argv[0])) {
-            return JS_ThrowTypeError(ctx, "DOMNode.removeAttribute() expects a string argument");
-        }
+        // Animate the style
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            const char* value = duk_get_string(ctx, 1);
+            const char* typeStr = duk_get_string(ctx, 2);
+            auto duration = (float)duk_get_number(ctx, 3);
 
-        // Remove the attribute
-        std::string name;
-        getString(ctx, &name, argv[0]);
-        node->removeAttribute(name);
-        node->sync();
+            // Validate input
+            if (!name || !value || !typeStr) {
+                return 0;
+            }
 
-        return JS_UNDEFINED;
-    }
+            if (duration <= 0) {
+                node->setStyle(name, value);
+                node->sync();
+                return 0;
+            }
 
-    JSValue js_domNode_parent_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the parent node
-        DOMNode* parent = node->getParent();
-        if (parent) {
-            return js_domNode(ctx, parent);
-        } else {
-            return JS_UNDEFINED;
-        }
-    }
-
-    JSValue js_domNode_children_get(JSContext* ctx, JSValueConst this_val, int, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Get the children nodes
-        return js_domNodeArray(ctx, node->getChildren());
-    }
-
-    JSValue js_domNode_getNodeBySelector(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
-        }
-
-        // Check that the node is linked to a DOM
-        if (!node->getDOM()) {
-            return JS_UNDEFINED;
-        }
-        DOM* dom = node->getDOM();
-
-        // Check the arguments
-        if (argc != 1) {
-            return JS_ThrowTypeError(ctx, "DOMNode.getNodeBySelector() expects 1 argument");
-        }
-        if (!JS_IsString(argv[0])) {
-            return JS_ThrowTypeError(ctx, "DOMNode.getNodeBySelector() expects a string argument");
-        }
-
-        // Get the node by selector
-        std::string selector;
-        getString(ctx, &selector, argv[0]);
-        try {
-            DOMNode* child = dom->getNodeBySelector(selector, node);
-            if (child) {
-                return js_domNode(ctx, child);
+            std::unique_ptr<EasingFunction> ease;
+            if (strcmp(typeStr, "linear") == 0) {
+                ease = std::make_unique<EasingLinear>();
+            } else if (strcmp(typeStr, "step-start") == 0) {
+                ease = std::make_unique<EasingStepStart>();
+            } else if (strcmp(typeStr, "step-end") == 0) {
+                ease = std::make_unique<EasingStepEnd>();
+            } else if (strcmp(typeStr, "ease") == 0) {
+                ease = std::make_unique<EasingEase>();
+            } else if (strcmp(typeStr, "ease-in") == 0) {
+                ease = std::make_unique<EasingEaseIn>();
+            } else if (strcmp(typeStr, "ease-out") == 0) {
+                ease = std::make_unique<EasingEaseOut>();
+            } else if (strcmp(typeStr, "ease-in-out") == 0) {
+                ease = std::make_unique<EasingEaseInOut>();
             } else {
-                return JS_NULL;
+                ease = std::make_unique<EasingEase>();
             }
-        } catch (const CSSSelectorSyntaxError& e) {
-            return JS_NULL;
+
+            node->animate(name, value, std::move(ease), duration);
         }
+
+        return 0;
     }
 
-    JSValue js_domNode_getNodesBySelector(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
+    duk_ret_t domNode_attributes_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            push_umap_of_string_string(ctx, node->getAttributes());
+        } else {
+            duk_push_undefined(ctx);
         }
 
-        // Check that the node is linked to a DOM
-        if (!node->getDOM()) {
-            return JS_NULL;
-        }
-        DOM* dom = node->getDOM();
-
-        // Check the arguments
-        if (argc != 1) {
-            return JS_ThrowTypeError(ctx, "DOMNode.getNodesBySelector() expects 1 argument");
-        }
-        if (!JS_IsString(argv[0])) {
-            return JS_ThrowTypeError(ctx, "DOMNode.getNodesBySelector() expects a string argument");
-        }
-
-        // Get the nodes by selector
-        std::string selector;
-        getString(ctx, &selector, argv[0]);
-        try {
-            return js_domNodeArray(ctx, dom->getNodesBySelector(selector, node));
-        } catch (const CSSSelectorSyntaxError& e) {
-            return JS_NULL;
-        }
+        return 1;
     }
 
-    JSValue js_domNode_focus(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "DOMNode");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "DOMNode object is not linked to a DOMNode");
+    duk_ret_t domNode_hasAttribute(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            const std::unordered_map<std::string, std::string>& attrs = node->getAttributes();
+            const char* name = duk_get_string(ctx, 0);
+            if (name) {
+                duk_push_boolean(ctx, attrs.contains(name));
+            } else {
+                duk_push_undefined(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
         }
 
-        if (argc != 0) {
-            return JS_ThrowTypeError(ctx, "DOMNode.focus() expects 0 arguments");
+        return 1;
+    }
+
+    duk_ret_t domNode_getAttribute(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            const std::unordered_map<std::string, std::string>& attrs = node->getAttributes();
+            const char* name = duk_get_string(ctx, 0);
+            if (name && attrs.contains(name)) {
+                duk_push_string(ctx, attrs.at(name).c_str());
+            } else {
+                duk_push_undefined(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
         }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_setAttribute(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            const char* value = duk_get_string(ctx, 1);
+            if (name && value) {
+                node->setAttribute(name, value);
+                node->sync();
+            }
+        }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_removeAttribute(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the name to the stack
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            const char* value = duk_get_string(ctx, 1);
+            if (name && value) {
+                node->removeAttribute(name);
+                node->sync();
+            }
+        }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_parent_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the parent nodes to the stack
+        if (node) {
+            DOMNode* parent = node->getParent();
+            if (parent) {
+                push_domNode(ctx, parent);
+            } else {
+                duk_push_undefined(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_children_get(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the child nodes to the stack
+        if (node) {
+            std::vector<DOMNode*> children = node->getChildren();
+            push_domNodeArray(ctx, children);
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_getNodeBySelector(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the node to stack
+        if (node) {
+            try {
+                std::string selector = duk_get_string(ctx, 0);
+                push_domNode(ctx, node->getDOM()->getNodeBySelector(selector, node));
+            } catch (const CSSSelectorSyntaxError& e) {
+                duk_push_null(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t domNode_getNodesBySelector(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the node to stack
+        if (node) {
+            try {
+                std::string selector = duk_get_string(ctx, 0);
+                push_domNodeArray(ctx, node->getDOM()->getNodesBySelector(selector, node));
+            } catch (const CSSSelectorSyntaxError& e) {
+                duk_push_array(ctx);
+            }
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    // todo: Create API in DOMNode to focus on the node
+    duk_ret_t domNode_focus(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
 
         // Focus on the node
-        node->focus();
+        if (node && node->getWidget()) {
+            corn::UIWidget* widget = node->getWidget();
+            widget->getUIManager().setFocusedWidget(widget);
+        }
 
-        return JS_UNDEFINED;
+        return 0;
     }
 }

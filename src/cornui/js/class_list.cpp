@@ -1,316 +1,211 @@
 #include <sstream>
 #include <cornui/xml/dom_node.h>
 #include "class_list.h"
-#include "context_data.h"
 #include "common.h"
 
 namespace cornui {
-    void create_ClassList(JSContext* ctx) {
-        // Create the ClassList class
-        auto* contextData = (ContextData*)JS_GetContextOpaque(ctx);
-        JSClassID& classID = contextData->classIDs["ClassList"];
-        JS_NewClassID(&classID);
-        JSClassDef classDef = {
-            "ClassList", nullptr, nullptr, nullptr, nullptr
-        };
-        JS_NewClass(JS_GetRuntime(ctx), classID, &classDef);
+    void create_classList_prototype(duk_context* ctx) {
+        // Push the global stash and the prototype object onto the stack
+        duk_push_global_stash(ctx);
+        duk_idx_t nodeIdx = duk_push_object(ctx);
 
-        // Create prototype
-        JSValue proto = JS_NewObject(ctx);
+        // Attach "toArray" function to the prototype
+        duk_push_c_function(ctx, classList_toArray, 0);
+        duk_put_prop_string(ctx, nodeIdx, "toArray");
 
-        // Attach "toArray" function
-        JS_SetPropertyStr(
-                ctx, proto, "toArray",
-                JS_NewCFunction(ctx, js_classList_toArray, "toArray", 0));
+        // Attach "toString" function to the prototype
+        duk_push_c_function(ctx, classList_toString, 0);
+        duk_put_prop_string(ctx, nodeIdx, "toString");
 
-        // Attach "toString" function
-        JS_SetPropertyStr(
-                ctx, proto, "toString",
-                JS_NewCFunction(ctx, js_classList_toString, "toString", 0));
+        // Attach "contains" function to the prototype
+        duk_push_c_function(ctx, classList_contains, 1);
+        duk_put_prop_string(ctx, nodeIdx, "contains");
 
-        // Attach "contains" function
-        JS_SetPropertyStr(
-                ctx, proto, "contains",
-                JS_NewCFunction(ctx, js_classList_contains, "contains", 1));
+        // Attach "item" function to the prototype
+        duk_push_c_function(ctx, classList_item, 1);
+        duk_put_prop_string(ctx, nodeIdx, "item");
 
-        // Attach "item" function
-        JS_SetPropertyStr(
-                ctx, proto, "item",
-                JS_NewCFunction(ctx, js_classList_item, "item", 1));
+        // Attach "add" function to the prototype
+        duk_push_c_function(ctx, classList_add, DUK_VARARGS);
+        duk_put_prop_string(ctx, nodeIdx, "add");
 
-        // Attach "add" function
-        JS_SetPropertyStr(
-                ctx, proto, "add",
-                JS_NewCFunction(ctx, js_classList_add, "add", 1));
+        // Attach "remove" function to the prototype
+        duk_push_c_function(ctx, classList_remove, DUK_VARARGS);
+        duk_put_prop_string(ctx, nodeIdx, "remove");
 
-        // Attach "remove" function
-        JS_SetPropertyStr(
-                ctx, proto, "remove",
-                JS_NewCFunction(ctx, js_classList_remove, "remove", 1));
+        // Attach "toggle" function to the prototype
+        duk_push_c_function(ctx, classList_toggle, 1);
+        duk_put_prop_string(ctx, nodeIdx, "toggle");
 
-        // Attach "toggle" function
-        JS_SetPropertyStr(
-                ctx, proto, "toggle",
-                JS_NewCFunction(ctx, js_classList_toggle, "toggle", 1));
+        // Attach "replace" function to the prototype
+        duk_push_c_function(ctx, classList_replace, 2);
+        duk_put_prop_string(ctx, nodeIdx, "replace");
 
-        // Attach "replace" function
-        JS_SetPropertyStr(
-                ctx, proto, "replace",
-                JS_NewCFunction(ctx, js_classList_replace, "replace", 2));
+        // Store the prototype in the stash
+        duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("classList_prototype"));
 
-        // Save prototype
-        JS_SetClassProto(ctx, classID, proto);
+        // Pop the global stash
+        duk_pop(ctx);
     }
 
-    JSValue js_classList(JSContext* ctx, DOMNode* node) {
-        // Get the class ID
-        JSClassID classID;
-        if (!getClassID(ctx, &classID, "ClassList")) {
-            return JS_ThrowInternalError(ctx, "ClassList class is not registered");
-        }
+    void push_classList(duk_context* ctx, DOMNode* node) {
+        // Push a DOMNode prototype onto the stack
+        push_prototype(ctx, DUK_HIDDEN_SYMBOL("classList_prototype"));
 
-        // Create the object
-        JSValue obj = JS_NewObjectClass(ctx, (int)classID);
-        if (JS_IsException(obj)) {
-            JS_FreeValue(ctx, obj);
-            return JS_ThrowInternalError(ctx, "Failed to create CLassList object");
-        }
-        JS_SetOpaque(obj, node);
-        return obj;
+        // Add the DOMNode pointer as property
+        duk_push_pointer(ctx, node);
+        duk_put_prop_string(ctx, -2, DUK_HIDDEN_SYMBOL("__ptr"));
     }
 
-    JSValue js_classList_toArray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "ClassList");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "ClassList object is not linked to a DOMNode");
-        }
+    duk_ret_t classList_toArray(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
 
-        if (argc != 0) {
-            return JS_ThrowTypeError(ctx, "ClassList.toArray() expects no arguments");
-        }
-
-        return from_njson(ctx, node->getClassList());
-    }
-
-    JSValue js_classList_toString(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "ClassList");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "ClassList object is not linked to a DOMNode");
-        }
-
-        if (argc != 0) {
-            return JS_ThrowTypeError(ctx, "ClassList.toString() expects no arguments");
-        }
-
-        const std::vector<std::string>& classList = node->getClassList();
-        std::stringstream classNames;
-        for (size_t i = 0; i < classList.size(); i++) {
-            if (i) classNames << " ";
-            classNames << classList[i];
-        }
-        return JS_NewString(ctx, classNames.str().c_str());
-    }
-
-    JSValue js_classList_contains(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "ClassList");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "ClassList object is not linked to a DOMNode");
-        }
-
-        if (argc == 0) {
-            return JS_ThrowTypeError(ctx, "ClassList.contains() expects at least 1 argument");
-        }
-
-        bool contains = true;
-        for (int i = 0; i < argc; i++) {
-            // Check that argument is a string
-            if (!JS_IsString(argv[i])) {
-                return JS_ThrowTypeError(ctx, "ClassList.contains() expects string arguments");
-            }
-
-            // Get the class name
-            std::string className;
-            getString(ctx, &className, argv[i]);
-
-            // Check if the class is in the class list
-            if (!node->hasClass(className)) {
-                contains = false;
-            }
-        }
-
-        if (contains) {
-            return JS_TRUE;
+        // Push the outer XML to the stack
+        if (node) {
+            push_vec_of_string(ctx, node->getClassList());
         } else {
-            return JS_FALSE;
+            duk_push_undefined(ctx);
         }
+
+        return 1;
     }
 
-    JSValue js_classList_item(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "ClassList");
+    duk_ret_t classList_toString(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Push the outer XML to the stack
+        if (node) {
+            const std::vector<std::string>& classList = node->getClassList();
+            std::stringstream classNames;
+            for (size_t i = 0; i < classList.size(); i++) {
+                if (i) classNames << " ";
+                classNames << classList[i];
+            }
+            duk_push_string(ctx, classNames.str().c_str());
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t classList_contains(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+        const char* className = duk_get_string(ctx, 0);
+
+        if (node && className) {
+            duk_push_boolean(ctx, node->hasClass(className));
+        } else {
+            duk_push_undefined(ctx);
+        }
+
+        return 1;
+    }
+
+    duk_ret_t classList_item(duk_context* ctx) {
+        // Check that node is valid
+        auto* node = getPtr<DOMNode>(ctx);
         if (!node) {
-            return JS_ThrowInternalError(ctx, "ClassList object is not linked to a DOMNode");
+            duk_push_undefined(ctx);
+            return 1;
         }
 
-        if (argc != 1) {
-            return JS_ThrowTypeError(ctx, "ClassList.item() expects at least 1 argument");
+        // Check that arguments are valid
+        if (!duk_is_number(ctx, 0)) {
+            duk_push_undefined(ctx);
+            return 1;
         }
-
-        // Check that the argument is a number
-        if (!JS_IsNumber(argv[0])) {
-            return JS_ThrowTypeError(ctx, "ClassList.item() expects a non-negative integer argument");
-        }
-
-        // Check that the argument is a non-negative integer
-        int64_t index = 0;
-        double dIndex = 0;
-        if (JS_ToInt64(ctx, &index, argv[0])) {
-            return JS_ThrowTypeError(ctx, "ClassList.item() expects a non-negative integer argument");
-        }
-        JS_ToFloat64(ctx, &dIndex, argv[0]);
-        if (dIndex != (double)index) {
-            return JS_ThrowTypeError(ctx, "ClassList.item() expects a non-negative integer argument");
+        double num = duk_get_number(ctx, 0);
+        int index = duk_get_int(ctx, 0);
+        if ((double)index == num) {
+            duk_push_undefined(ctx);
+            return 1;
         }
 
         // Check that index is in range
         const std::vector<std::string>& classList = node->getClassList();
         if (index < 0 || (size_t)index >= classList.size()) {
-            return JS_UNDEFINED;
+            duk_push_undefined(ctx);
+            return 1;
         }
 
-        return JS_NewString(ctx, classList[index].c_str());
+        duk_push_string(ctx, classList[index].c_str());
+        return 1;
     }
 
-    JSValue js_classList_add(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "ClassList");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "ClassList object is not linked to a DOMNode");
-        }
-
-        if (argc == 0) {
-            return JS_ThrowTypeError(ctx, "ClassList.add() expects at least 1 argument");
-        }
-
-        // Validate arguments
-        for (int i = 0; i < argc; i++) {
-            if (!JS_IsString(argv[i])) {
-                return JS_ThrowTypeError(ctx, "ClassList.add() expects string arguments");
-            }
-        }
+    duk_ret_t classList_add(duk_context* ctx) {
+        duk_idx_t nargs = duk_get_top(ctx);
+        auto* node = getPtr<DOMNode>(ctx);
 
         // Add each class
-        bool altered = false;
-        for (int i = 0; i < argc; i++) {
-            std::string className;
-            getString(ctx, &className, argv[i]);
-
-            if (node->addClass(className)) {
-                altered = true;
+        if (node) {
+            bool altered = false;
+            for (int i = 0; i < nargs; i++) {
+                const char* className = duk_get_string(ctx, i);
+                if (className) {
+                    node->addClass(className);
+                    altered = true;
+                }
             }
+            if (altered) node->sync();
         }
 
-        // Sync the DOM node
-        if (altered) node->sync();
-
-        return JS_UNDEFINED;
+        return 0;
     }
 
-    JSValue js_classList_remove(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "ClassList");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "ClassList object is not linked to a DOMNode");
-        }
-
-        if (argc == 0) {
-            return JS_ThrowTypeError(ctx, "ClassList.remove() expects at least 1 argument");
-        }
-
-        // Validate arguments
-        for (int i = 0; i < argc; i++) {
-            if (!JS_IsString(argv[i])) {
-                return JS_ThrowTypeError(ctx, "ClassList.remove() expects string arguments");
-            }
-        }
+    duk_ret_t classList_remove(duk_context* ctx) {
+        duk_idx_t nargs = duk_get_top(ctx);
+        auto* node = getPtr<DOMNode>(ctx);
 
         // Remove each class
-        bool altered = false;
-        for (int i = 0; i < argc; i++) {
-            std::string className;
-            getString(ctx, &className, argv[i]);
-
-            if (node->removeClass(className)) {
-                altered = true;
+        if (node) {
+            bool altered = false;
+            for (int i = 0; i < nargs; i++) {
+                const char* className = duk_get_string(ctx, i);
+                if (className) {
+                    node->removeClass(className);
+                    altered = true;
+                }
             }
+            if (altered) node->sync();
         }
 
-        // Sync the DOM node
-        if (altered) node->sync();
-
-        return JS_UNDEFINED;
+        return 0;
     }
 
-    JSValue js_classList_toggle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "ClassList");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "ClassList object is not linked to a DOMNode");
-        }
-
-        if (argc == 0) {
-            return JS_ThrowTypeError(ctx, "ClassList.toggle() expects at least 1 argument");
-        }
-
-        // Validate arguments
-        for (int i = 0; i < argc; i++) {
-            if (!JS_IsString(argv[i])) {
-                return JS_ThrowTypeError(ctx, "ClassList.toggle() expects string arguments");
-            }
-        }
+    duk_ret_t classList_toggle(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
 
         // Toggle each class
-        for (int i = 0; i < argc; i++) {
-            std::string className;
-            getString(ctx, &className, argv[i]);
-
-            if (node->hasClass(className)) {
-                node->removeClass(className);
-            } else {
-                node->addClass(className);
+        if (node) {
+            const char* className = duk_get_string(ctx, 0);
+            if (className) {
+                if (node->hasClass(className)) {
+                    node->addClass(className);
+                } else {
+                    node->removeClass(className);
+                }
+                node->sync();
             }
         }
 
-        // Sync the DOM node
-        node->sync();
-
-        return JS_UNDEFINED;
+        return 0;
     }
 
-    JSValue js_classList_replace(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* node = getOpaque<DOMNode>(ctx, this_val, "ClassList");
-        if (!node) {
-            return JS_ThrowInternalError(ctx, "ClassList object is not linked to a DOMNode");
-        }
+    duk_ret_t classList_replace(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
 
-        if (argc != 2) {
-            return JS_ThrowTypeError(ctx, "ClassList.replace() expects 2 arguments");
-        }
-
-        // Validate arguments
-        for (int i = 0; i < argc; i++) {
-            if (!JS_IsString(argv[i])) {
-                return JS_ThrowTypeError(ctx, "ClassList.replace() expects string arguments");
+        // Toggle each class
+        if (node) {
+            const char* oldClassName = duk_get_string(ctx, 0);
+            const char* newClassName = duk_get_string(ctx, 1);
+            if (oldClassName && newClassName && node->hasClass(oldClassName)) {
+                node->removeClass(oldClassName);
+                node->addClass(newClassName);
+                node->sync();
             }
         }
 
-        // Replace the class
-        std::string oldClassName, newClassName;
-        getString(ctx, &oldClassName, argv[0]);
-        getString(ctx, &newClassName, argv[1]);
-
-        if (node->hasClass(oldClassName)) {
-            node->removeClass(oldClassName);
-            node->addClass(newClassName);
-            node->sync();
-        }
-
-        return JS_UNDEFINED;
+        return 0;
     }
 }

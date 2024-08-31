@@ -95,9 +95,6 @@ namespace cornui {
         [[nodiscard]] std::vector<DOMNode*> getNodesBySelector(
                 const std::string& selector, const DOMNode* parent = nullptr) const;
 
-        /// @return The node that is currently focused.
-        [[nodiscard]] DOMNode* getFocusedNode() const;
-
         [[nodiscard]] const UI& getUI() const noexcept;
         [[nodiscard]] UI& getUI() noexcept;
         [[nodiscard]] const std::filesystem::path& getFile() const noexcept;
