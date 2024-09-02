@@ -3,6 +3,7 @@
   "version-string": "1.0.0",
   "license": "MIT",
   "dependencies": [
+    "nlohmann-json",
     "libxml2",
     "duktape"
   ],

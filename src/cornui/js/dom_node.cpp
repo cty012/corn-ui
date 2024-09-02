@@ -10,7 +10,7 @@ namespace cornui {
     void create_domNode_prototype(duk_context* ctx) {
         // Push the global stash and the prototype object onto the stack
         duk_push_global_stash(ctx);
-        duk_idx_t nodeIdx = duk_push_object(ctx);
+        const duk_idx_t nodeIdx = duk_push_object(ctx);
 
         // Attach "innerXML" property to the prototype
         duk_push_string(ctx, "innerXML");
@@ -138,7 +138,7 @@ namespace cornui {
 
     void push_domNodeArray(duk_context* ctx, std::vector<DOMNode*> nodes) {
         // Create a new array
-        duk_idx_t arrayIdx = duk_push_array(ctx);
+        const duk_idx_t arrayIdx = duk_push_array(ctx);
 
         // Loop through the vector of DOMNode pointers
         for (size_t i = 0; i < nodes.size(); i++) {
@@ -146,7 +146,7 @@ namespace cornui {
             push_domNode(ctx, nodes[i]);
 
             // Store the object in the array
-            duk_put_prop_index(ctx, arrayIdx, i);
+            duk_put_prop_index(ctx, arrayIdx, static_cast<duk_uarridx_t>(i));
         }
     }
 
@@ -278,7 +278,7 @@ namespace cornui {
 
         // Push the name to the stack
         if (node) {
-            push_umap_of_string_string(ctx, node->getStyle());
+            push_njson(ctx, node->getStyle());
         } else {
             duk_push_undefined(ctx);
         }
@@ -291,7 +291,7 @@ namespace cornui {
 
         // Push the name to the stack
         if (node) {
-            push_umap_of_string_string(ctx, node->getComputedStyle());
+            push_njson(ctx, node->getComputedStyle());
         } else {
             duk_push_undefined(ctx);
         }
@@ -306,7 +306,7 @@ namespace cornui {
         if (node && node->getWidget()) {
             corn::UIWidget* widget = node->getWidget();
             auto [x, y, w, h] = widget->getUIManager().getCachedGeometry(widget);  // NOLINT
-            push_umap_of_string_int(ctx, {{ "x", x }, { "y", y }, { "w", w }, { "h", h }});
+            push_njson(ctx, {{ "x", x }, { "y", y }, { "w", w }, { "h", h }});
         } else {
             duk_push_undefined(ctx);
         }
@@ -315,13 +315,13 @@ namespace cornui {
     }
 
     duk_ret_t domNode_naturalSize_get(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the cached geometry to the stack
         if (node && node->getWidget()) {
-            corn::UIWidget* widget = node->getWidget();
+            const corn::UIWidget* widget = node->getWidget();
             auto [w, h] = widget->getNaturalSize();  // NOLINT
-            push_umap_of_string_int(ctx, {{ "w", w }, { "h", h }});
+            push_njson(ctx, {{ "w", w }, { "h", h }});
         } else {
             duk_push_undefined(ctx);
         }
@@ -353,7 +353,7 @@ namespace cornui {
             const char* name = duk_get_string(ctx, 0);
             const char* value = duk_get_string(ctx, 1);
             const char* typeStr = duk_get_string(ctx, 2);
-            auto duration = (float)duk_get_number(ctx, 3);
+            const auto duration = static_cast<float>(duk_get_number(ctx, 3));
 
             // Validate input
             if (!name || !value || !typeStr) {
@@ -392,11 +392,11 @@ namespace cornui {
     }
 
     duk_ret_t domNode_attributes_get(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the name to the stack
         if (node) {
-            push_umap_of_string_string(ctx, node->getAttributes());
+            push_njson(ctx, node->getAttributes());
         } else {
             duk_push_undefined(ctx);
         }
@@ -405,7 +405,7 @@ namespace cornui {
     }
 
     duk_ret_t domNode_hasAttribute(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the name to the stack
         if (node) {
@@ -424,7 +424,7 @@ namespace cornui {
     }
 
     duk_ret_t domNode_getAttribute(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the name to the stack
         if (node) {
@@ -475,7 +475,7 @@ namespace cornui {
     }
 
     duk_ret_t domNode_parent_get(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the parent nodes to the stack
         if (node) {
@@ -493,11 +493,11 @@ namespace cornui {
     }
 
     duk_ret_t domNode_children_get(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the child nodes to the stack
         if (node) {
-            std::vector<DOMNode*> children = node->getChildren();
+            const std::vector<DOMNode*> children = node->getChildren();
             push_domNodeArray(ctx, children);
         } else {
             duk_push_undefined(ctx);
@@ -507,14 +507,14 @@ namespace cornui {
     }
 
     duk_ret_t domNode_getNodeBySelector(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the node to stack
         if (node) {
             try {
-                std::string selector = duk_get_string(ctx, 0);
+                const char* selector = duk_get_string(ctx, 0);
                 push_domNode(ctx, node->getDOM()->getNodeBySelector(selector, node));
-            } catch (const CSSSelectorSyntaxError& e) {
+            } catch (const CSSSelectorSyntaxError&) {
                 duk_push_null(ctx);
             }
         } else {
@@ -525,14 +525,14 @@ namespace cornui {
     }
 
     duk_ret_t domNode_getNodesBySelector(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the node to stack
         if (node) {
             try {
-                std::string selector = duk_get_string(ctx, 0);
+                const char* selector = duk_get_string(ctx, 0);
                 push_domNodeArray(ctx, node->getDOM()->getNodesBySelector(selector, node));
-            } catch (const CSSSelectorSyntaxError& e) {
+            } catch (const CSSSelectorSyntaxError&) {
                 duk_push_array(ctx);
             }
         } else {
@@ -544,7 +544,7 @@ namespace cornui {
 
     // todo: Create API in DOMNode to focus on the node
     duk_ret_t domNode_focus(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Focus on the node
         if (node && node->getWidget()) {

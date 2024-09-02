@@ -53,14 +53,14 @@ namespace cornui {
         if (!this->impl_) return;
 
         // Read the file
-        std::ifstream filestr(file);
+        const std::ifstream filestr(file);
         std::stringstream codeStream;
         codeStream << filestr.rdbuf();
-        std::string code = codeStream.str();
+        const std::string code = codeStream.str();
 
         // Compile and run the file content
         if (duk_pcompile_string(this->impl_->ctx_, 0, code.c_str()) != 0) {
-            fprintf(stderr, "Error compiling JS file: '%s'\n%s\n", file.c_str(), duk_safe_to_string(this->impl_->ctx_, -1));
+            fprintf(stderr, "Error compiling JS file: '%ls'\n%s\n", file.c_str(), duk_safe_to_string(this->impl_->ctx_, -1));
         } else {
             // Call the function
             duk_pcall(this->impl_->ctx_, 0);

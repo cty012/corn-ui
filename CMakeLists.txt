@@ -6,6 +6,7 @@ option(BUILD_TESTS "Build the test cases in the `test/` folder." OFF)
 
 if (BUILD_TESTS)
     enable_testing()
+    set(VCPKG_MANIFEST_FEATURES "${VCPKG_MANIFEST_FEATURES};tests")
 endif ()
 
 # Project settings
@@ -52,9 +53,9 @@ else()
 endif()
 
 # Compiler flags
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
+#if(CMAKE_BUILD_TYPE STREQUAL "Release")
+#    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+#endif()
 if (MSVC)
     add_compile_options(/utf-8 /W4 /WX)
     add_compile_options("$<$<CONFIG:Release>:/Ox>")
@@ -92,13 +93,17 @@ target_include_directories(cornui PRIVATE "${CMAKE_SOURCE_DIR}/include")
 find_package(Corn REQUIRED)
 target_link_libraries(cornui PRIVATE Corn::Corn)
 
+# Link with nlohmann_json
+find_package(nlohmann_json REQUIRED)
+target_link_libraries(cornui PUBLIC nlohmann_json::nlohmann_json)
+
 # Link with libxml2
 find_package(libxml2 REQUIRED)
 target_link_libraries(cornui PRIVATE LibXml2::LibXml2)
 
 # Link with duktape
-find_package(Duktape CONFIG REQUIRED)
-target_include_directories(cornui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${DUKTAPE_INCLUDE_DIRS})
+find_package(duktape CONFIG REQUIRED)
+target_include_directories(cornui PRIVATE ${DUKTAPE_INCLUDE_DIRS})
 target_link_libraries(cornui PRIVATE ${DUKTAPE_LIBRARY})
 
 # Build examples
@@ -119,6 +124,9 @@ install(TARGETS cornui
         ARCHIVE DESTINATION "lib"
 )
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/cornui" DESTINATION "include")
+get_target_property(nlohmann_json_INCLUDE_DIRS nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+list(GET nlohmann_json_INCLUDE_DIRS 0 nlohmann_json_INCLUDE_DIR)
+install(DIRECTORY "${nlohmann_json_INCLUDE_DIR}/nlohmann" DESTINATION "include")
 
 install(PROGRAMS "${Corn_DYNAMIC_LIBRARY}" DESTINATION "lib/external")
 foreach (external_lib IN LISTS Corn_EXTERNAL_LIBRARIES)

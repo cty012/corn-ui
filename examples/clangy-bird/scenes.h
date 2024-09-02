@@ -1,8 +1,9 @@
 #pragma once
 
-#include <corn/core.h>
-#include <corn/ecs.h>
-#include <corn/event.h>
+#include <corn/core/scene.h>
+#include <corn/ecs/component.h>
+#include <corn/ecs/entity.h>
+#include <corn/event/event_scope.h>
 #include <cornui/ui.h>
 #include "constants.h"
 

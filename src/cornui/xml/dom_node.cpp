@@ -2,8 +2,8 @@
 #include <duktape.h>
 #include <corn/core/scene.h>
 #include <corn/media/image.h>
+#include <corn/ui/ui_image.h>
 #include <corn/util/rich_text.h>
-#include <cornui/css/animation.h>
 #include <cornui/css/cssom.h>
 #include <cornui/js/runtime.h>
 #include <cornui/ui.h>

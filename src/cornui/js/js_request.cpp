@@ -1,67 +1,43 @@
 #include "common.h"
-#include "context_data.h"
 #include "js_request.h"
 
 namespace cornui {
-    void create_Request(JSContext* ctx) {
-        // Create the RequestManager class
-        auto* contextData = (ContextData*)JS_GetContextOpaque(ctx);
-        JSClassID& classID = contextData->classIDs["RequestManager"];
-        JS_NewClassID(&classID);
-        JSClassDef classDef = {
-                "RequestManager", nullptr, nullptr, nullptr, nullptr
-        };
-        JS_NewClass(JS_GetRuntime(ctx), classID, &classDef);
+    void create_Request(duk_context* ctx, const std::string& name, Request* request) {
+        // Push the global object and the request object onto the stack
+        duk_push_global_object(ctx);
+        const duk_idx_t requestIdx = duk_push_object(ctx);
 
-        // Create prototype
-        JSValue proto = JS_NewObject(ctx);
+        // Add the Request pointer as hidden property
+        duk_push_pointer(ctx, request);
+        duk_put_prop_string(ctx, requestIdx, DUK_HIDDEN_SYMBOL("__ptr"));
 
-        // Attach "get" function
-        JS_SetPropertyStr(
-                ctx, proto, "get",
-                JS_NewCFunction(ctx, js_request_get, "get", 0));
+        // Add function "get" to the request object
+        duk_push_c_function(ctx, request_get, 2);
+        duk_put_prop_string(ctx, requestIdx, "get");
 
-        // Save prototype
-        JS_SetClassProto(ctx, classID, proto);
+        // Add the request object to the global object
+        duk_put_prop_string(ctx, -2, name.c_str());
+
+        // Pop the global object
+        duk_pop(ctx);
     }
 
-    JSValue js_request(JSContext* ctx, Request* request) {
-        // Get the class ID
-        JSClassID classID;
-        if (!getClassID(ctx, &classID, "RequestManager")) {
-            return JS_ThrowInternalError(ctx, "RequestManager class is not registered");
-        }
-
-        // Create the object
-        JSValue obj = JS_NewObjectClass(ctx, (int)classID);
-        if (JS_IsException(obj)) {
-            JS_FreeValue(ctx, obj);
-            return JS_ThrowInternalError(ctx, "Failed to create RequestManager object");
-        }
-        JS_SetOpaque(obj, request);
-        return obj;
-    }
-
-    JSValue js_request_get(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-        auto* request = getOpaque<Request>(ctx, this_val, "RequestManager");
+    duk_ret_t request_get(duk_context* ctx) {
+        auto* request = getPtr<Request>(ctx);
 
         // Check the arguments
-        if (argc != 2) {
-            return JS_ThrowTypeError(ctx, "RequestManager.get() expects 2 arguments");
-        }
-        if (!JS_IsString(argv[0])) {
-            return JS_ThrowTypeError(ctx, "RequestManager.get() expects the first argument to be a string");
+        if (!duk_is_string(ctx, 0)) {
+            return 0;
         }
 
         // Get the identifier and data
-        std::string identifier;
-        getString(ctx, &identifier, argv[0]);
-        nlohmann::json data = to_njson(ctx, argv[1]);
+        const char* identifier = duk_to_string(ctx, 0);
+        nlohmann::json data = get_njson(ctx, 1);
 
         // Get the response
-        nlohmann::json response = request->get(identifier, std::move(data));
+        const nlohmann::json response = request->get(identifier, std::move(data));
+        push_njson(ctx, response);
 
-        // Return the response
-        return from_njson(ctx, response);
+        return 0;
     }
 }

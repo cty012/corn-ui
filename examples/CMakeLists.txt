@@ -24,7 +24,7 @@ function (build_example EXAMPLE_NAME)
 
     # Copy cornui & corn DLL (only on Windows, due to lack of rpath)
     if (WIN32)
-        add_custom_target(${EXAMPLE_NAME}_dll ALL
+        add_custom_target(${EXAMPLE_NAME}_dll
                 COMMAND ${CMAKE_COMMAND} -E echo "Copying DLL..."
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                     "${CORNUI_OUTPUT_PATH}"
@@ -38,7 +38,7 @@ function (build_example EXAMPLE_NAME)
 
     # Copy resources folder
     file(GLOB_RECURSE RESOURCES "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}/resources/*")
-    add_custom_target(${EXAMPLE_NAME}_resources ALL
+    add_custom_target(${EXAMPLE_NAME}_resources
             COMMAND ${CMAKE_COMMAND} -E echo "Copying resources..."
             COMMAND ${CMAKE_COMMAND} -E make_directory
                 "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}"

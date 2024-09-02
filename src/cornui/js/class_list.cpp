@@ -58,11 +58,11 @@ namespace cornui {
     }
 
     duk_ret_t classList_toArray(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the outer XML to the stack
         if (node) {
-            push_vec_of_string(ctx, node->getClassList());
+            push_njson(ctx, node->getClassList());
         } else {
             duk_push_undefined(ctx);
         }
@@ -71,7 +71,7 @@ namespace cornui {
     }
 
     duk_ret_t classList_toString(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
 
         // Push the outer XML to the stack
         if (node) {
@@ -90,7 +90,7 @@ namespace cornui {
     }
 
     duk_ret_t classList_contains(duk_context* ctx) {
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
         const char* className = duk_get_string(ctx, 0);
 
         if (node && className) {
@@ -104,7 +104,7 @@ namespace cornui {
 
     duk_ret_t classList_item(duk_context* ctx) {
         // Check that node is valid
-        auto* node = getPtr<DOMNode>(ctx);
+        const auto* node = getPtr<DOMNode>(ctx);
         if (!node) {
             duk_push_undefined(ctx);
             return 1;
@@ -115,16 +115,16 @@ namespace cornui {
             duk_push_undefined(ctx);
             return 1;
         }
-        double num = duk_get_number(ctx, 0);
-        int index = duk_get_int(ctx, 0);
-        if ((double)index == num) {
+        const double num = duk_get_number(ctx, 0);
+        const int index = duk_get_int(ctx, 0);
+        if (static_cast<const double>(index) == num) {
             duk_push_undefined(ctx);
             return 1;
         }
 
         // Check that index is in range
         const std::vector<std::string>& classList = node->getClassList();
-        if (index < 0 || (size_t)index >= classList.size()) {
+        if (index < 0 || static_cast<size_t>(index) >= classList.size()) {
             duk_push_undefined(ctx);
             return 1;
         }
@@ -134,7 +134,7 @@ namespace cornui {
     }
 
     duk_ret_t classList_add(duk_context* ctx) {
-        duk_idx_t nargs = duk_get_top(ctx);
+        const duk_idx_t nargs = duk_get_top(ctx);
         auto* node = getPtr<DOMNode>(ctx);
 
         // Add each class
@@ -154,7 +154,7 @@ namespace cornui {
     }
 
     duk_ret_t classList_remove(duk_context* ctx) {
-        duk_idx_t nargs = duk_get_top(ctx);
+        const duk_idx_t nargs = duk_get_top(ctx);
         auto* node = getPtr<DOMNode>(ctx);
 
         // Remove each class

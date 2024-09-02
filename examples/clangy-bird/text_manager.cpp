@@ -113,7 +113,7 @@ corn::RichText TextManager::getRichText(const std::string& key) const {
     for (const auto& item: data) {
         std::string textLiteral = item["text"];
         const corn::Font* font = corn::FontManager::instance().get(item["font"][0]);
-        int size = item["font"][1];
+        float size = item["font"][1];
         corn::Color color = corn::Color::parse(item.value("color", "#ffffff"));
         corn::FontVariant variant = corn::FontVariant::REGULAR;
         std::string variantString = item.value("variant", "regular");
@@ -138,7 +138,7 @@ void TextManager::changeSettings(std::string key, nlohmann::json val) noexcept {
     this->settings[std::move(key)] = std::move(val);
 }
 
-void TextManager::saveSettings() noexcept {
+void TextManager::saveSettings() const noexcept {
     std::ofstream settingsFile(this->settingsPath);
     settingsFile << this->settings.dump(4);
 }

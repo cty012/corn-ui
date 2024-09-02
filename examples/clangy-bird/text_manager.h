@@ -1,8 +1,7 @@
 #pragma once
 
 #include <string>
-#include <corn/media.h>
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 class TextManager {
 public:
@@ -14,7 +13,7 @@ public:
 
     const nlohmann::json& getSettings(const std::string& key) const;
     void changeSettings(std::string key, nlohmann::json val) noexcept;
-    void saveSettings() noexcept;
+    void saveSettings() const noexcept;
 
 private:
     TextManager();

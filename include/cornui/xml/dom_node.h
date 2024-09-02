@@ -1,10 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <corn/event/input.h>
-#include <corn/ui/ui_image.h>
 #include <corn/ui/ui_label.h>
 #include <corn/ui/ui_widget.h>
 #include <cornui/xml/easing_function.h>
@@ -47,19 +47,14 @@ namespace cornui {
         DOMNode(const DOMNode& other) noexcept;
         DOMNode& operator=(const DOMNode& other) noexcept;
 
-        /**
-         * @param node The target node.
-         * @return The inner XML as a string.
-         */
+        /// @return The inner XML as a string.
         [[nodiscard]] std::string getInnerXML() const noexcept;
 
-        /**
-         * @param node The target node.
-         * @return The inner XML as a string.
-         */
+        /// @return The inner XML as a string.
         [[nodiscard]] std::string getOuterXML() const noexcept;
 
         /**
+         * @brief Set the inner XML of the node.
          * @param content The content to parse as inner XML.
          */
         void setInnerXML(const std::string& content);

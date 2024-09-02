@@ -1,9 +1,8 @@
 #pragma once
 
-#include <corn/core.h>
-#include <corn/ecs.h>
-#include <corn/event.h>
-#include "entities.h"
+#include <corn/core/scene.h>
+#include <corn/event/event_manager.h>
+#include <corn/event/event_args.h>
 
 /// A system for managing wall creation and deletion
 class WallManager : public corn::System {

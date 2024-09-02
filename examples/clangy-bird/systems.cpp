@@ -1,5 +1,6 @@
 #include "components.h"
 #include "constants.h"
+#include "entities.h"
 #include "scenes.h"
 #include "systems.h"
 

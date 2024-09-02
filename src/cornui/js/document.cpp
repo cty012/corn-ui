@@ -61,9 +61,9 @@ namespace cornui {
         // Push result to stack
         if (dom) {
             try {
-                std::string selector = duk_get_string(ctx, 0);
+                const char* selector = duk_get_string(ctx, 0);
                 push_domNode(ctx, dom->getNodeBySelector(selector));
-            } catch (const CSSSelectorSyntaxError& e) {
+            } catch (const CSSSelectorSyntaxError&) {
                 duk_push_null(ctx);
             }
         } else {
@@ -75,14 +75,14 @@ namespace cornui {
 
     duk_ret_t document_getNodesBySelector(duk_context* ctx) {
         // Get the DOM pointer
-        auto* dom = getPtr<DOM>(ctx);
+        const auto* dom = getPtr<DOM>(ctx);
 
         // Push result to stack
         if (dom) {
             try {
-                std::string selector = duk_get_string(ctx, 0);
+                const char* selector = duk_get_string(ctx, 0);
                 push_domNodeArray(ctx, dom->getNodesBySelector(selector));
-            } catch (const CSSSelectorSyntaxError& e) {
+            } catch (const CSSSelectorSyntaxError&) {
                 duk_push_array(ctx);
             }
         } else {
@@ -94,7 +94,7 @@ namespace cornui {
 
     duk_ret_t document_focusedNode_get(duk_context* ctx) {
         // Get the DOM pointer
-        auto* dom = getPtr<DOM>(ctx);
+        const auto* dom = getPtr<DOM>(ctx);
 
         // Push result to stack
         if (dom && dom->getUIManager()) {

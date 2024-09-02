@@ -1,6 +1,7 @@
 #include <corn/geometry/vec4.h>
 #include <corn/media/image.h>
 #include <corn/ui/ui_manager.h>
+#include <corn/ui/ui_image.h>
 #include <corn/util/rich_text.h>
 #include <corn/util/string_utils.h>
 #include <cornui/util/reserved.h>

@@ -8,7 +8,7 @@ function exitButton(button) {
     button.classList.remove("underline");
 }
 
-document.getNodesBySelector(".button").forEach((button) => {
+document.getNodesBySelector(".button").forEach(function (button) {
     button.setAttribute("onenter", "enterButton(this)");
     button.setAttribute("onexit", "exitButton(this)");
 });
