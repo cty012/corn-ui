@@ -16,7 +16,11 @@ function (build_example EXAMPLE_NAME)
         )
     endif ()
 
-    set_target_properties(${EXAMPLE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}")
+    set_target_properties(${EXAMPLE_NAME} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}"
+            RUNTIME_OUTPUT_DIRECTORY_DEBUG "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}"
+            RUNTIME_OUTPUT_DIRECTORY_RELEASE "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}"
+    )
     target_include_directories(${EXAMPLE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include")
     target_link_libraries(${EXAMPLE_NAME} cornui)
     target_link_libraries(${EXAMPLE_NAME} Corn::Corn)
@@ -26,6 +30,8 @@ function (build_example EXAMPLE_NAME)
     if (WIN32)
         add_custom_target(${EXAMPLE_NAME}_dll
                 COMMAND ${CMAKE_COMMAND} -E echo "Copying DLL..."
+                COMMAND ${CMAKE_COMMAND} -E make_directory
+                    "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}"
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                     "${CORNUI_OUTPUT_PATH}"
                     "${EXAMPLES_OUTPUT_DIR}/${EXAMPLE_NAME}"
