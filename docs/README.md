@@ -63,7 +63,7 @@ cd docs && doxygen
 ```
 
 ## Acknowledgments
-- [CMake](https://cmake.org/) - Licensed under [3-Clause BSD License](https://cmake.org/licensing/)
+- [CMake](https://cmake.org/) - Licensed under [BSD 3-Clause License](https://cmake.org/licensing/)
 - [Conan](https://conan.io/) - Licensed under [MIT License](https://github.com/conan-io/conan/blob/develop2/LICENSE.md)
 - [JSON for Modern C++](https://json.nlohmann.me/) - Licensed under [MIT License](https://json.nlohmann.me/home/license/)
 - [libxml2](https://gitlab.gnome.org/GNOME/libxml2) - Licensed under [MIT License](https://gitlab.gnome.org/GNOME/libxml2/-/blob/master/Copyright)
