@@ -114,7 +114,7 @@ namespace cornui {
         void setRichText(const corn::RichText& richText);
         [[nodiscard]] const std::vector<std::string>& getClassList() const noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getStyle() const noexcept;
-        void setStyle(const std::string& name, const std::string& value) noexcept;
+        void setStyle(const std::string& name, const std::string& value, bool resetAnimation = true) noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getComputedStyle() const noexcept;
         [[nodiscard]] corn::Vec4 getComputedGeometry() const noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getAttributes() const noexcept;

@@ -32,10 +32,10 @@ namespace cornui {
                 animation.currentTime += millis;
                 if (animation.currentTime >= animation.totalTime) {
                     animation.currentTime = animation.totalTime;
-                    node->setStyle(name, animation.endValue);
+                    node->setStyle(name, animation.endValue, false);
                     toRemove.insert(name);
                 } else {
-                    node->setStyle(name, animation.getCurrentValue());
+                    node->setStyle(name, animation.getCurrentValue(), false);
                 }
             }
 
