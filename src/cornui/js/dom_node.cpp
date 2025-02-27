@@ -464,8 +464,7 @@ namespace cornui {
         // Push the name to the stack
         if (node) {
             const char* name = duk_get_string(ctx, 0);
-            const char* value = duk_get_string(ctx, 1);
-            if (name && value) {
+            if (name) {
                 node->removeAttribute(name);
                 node->sync();
             }
