@@ -81,12 +81,15 @@ namespace cornui {
         this->attributes_.clear();
         this->parent_ = nullptr;
         this->children_.clear();
+        corn::UIWidget* current = this->getWidget();
+        if (current) {
+            current->destroy();
+        }
         this->widgetID_ = 0;
     }
 
     void DOMNode::clearChildren() noexcept {
         for (DOMNode* child : this->children_) {
-            child->clear();
             delete child;
         }
         this->children_.clear();
