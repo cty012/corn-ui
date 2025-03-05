@@ -369,7 +369,7 @@ namespace cornui {
                 { "overflow", "display" },
                 { "background", "#ffffff00" },
                 { "opacity", "255" },
-                { "font-family", "noto-sans" },
+                { "font-family", "" },
                 { "font-size", "16" },
                 { "font-color", "#000000" },
                 { "font-variant", "regular" }
@@ -404,7 +404,7 @@ namespace cornui {
     void DOMNode::computeTextStyle() {
         // Only compute font-related styles
         this->computedStyle_ = {
-                { "font-family", "noto-sans" },
+                { "font-family", "" },
                 { "font-size", "16" },
                 { "font-color", "#000000" },
                 { "font-variant", "regular" }

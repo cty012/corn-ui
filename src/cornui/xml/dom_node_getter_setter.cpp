@@ -66,10 +66,15 @@ namespace cornui {
 
         if (isLeaf) {
             // Leaf nodes
-            const corn::Font* font = corn::FontManager::instance().get(this->computedStyle_.at("font-family"));
+            const std::string& fontFamily = this->computedStyle_.at("font-family");
+            const corn::Font* font = corn::FontManager::instance().get(fontFamily);
             if (!font) {
-                // todo: Use default font
-                throw std::logic_error("Font not found: " + this->computedStyle_.at("font-family"));
+                // Use default font
+                font = corn::FontManager::instance().getDefault();
+            }
+            if (!font) {
+                // If default font doesn't exist, throw an error
+                throw std::logic_error("Font not found: " + fontFamily);
             }
             float fontSize = std::stof(this->computedStyle_.at("font-size"));
             corn::Color fontColor = corn::Color::parse(this->computedStyle_.at("font-color"));
