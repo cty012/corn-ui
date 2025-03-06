@@ -142,8 +142,17 @@ namespace cornui {
 
     void DOMNode::setStyle(const std::string& name, const std::string& value, bool resetAnimation) noexcept {
         this->style_[name] = value;
-        // Reset animation if it exists
         if (resetAnimation) {
+            // Reset animation if it exists
+            this->animations_.erase(name);
+        }
+        this->computeStyle();
+    }
+
+    void DOMNode::removeStyle(const std::string& name, bool resetAnimation) noexcept {
+        this->style_.erase(name);
+        if (resetAnimation) {
+            // Reset animation if it exists
             this->animations_.erase(name);
         }
         this->computeStyle();

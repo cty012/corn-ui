@@ -73,6 +73,10 @@ namespace cornui {
         duk_push_c_function(ctx, domNode_setStyle, 2);
         duk_put_prop_string(ctx, nodeIdx, "setStyle");
 
+        // Attach "removeStyle" function to the prototype
+        duk_push_c_function(ctx, domNode_removeStyle, 1);
+        duk_put_prop_string(ctx, nodeIdx, "removeStyle");
+
         // Attach "animate" function to the prototype
         duk_push_c_function(ctx, domNode_animate, 4);
         duk_put_prop_string(ctx, nodeIdx, "animate");
@@ -338,6 +342,21 @@ namespace cornui {
             const char* value = duk_get_string(ctx, 1);
             if (name && value) {
                 node->setStyle(name, value);
+                node->sync();
+            }
+        }
+
+        return 0;
+    }
+
+    duk_ret_t domNode_removeStyle(duk_context* ctx) {
+        auto* node = getPtr<DOMNode>(ctx);
+
+        // Update the style
+        if (node) {
+            const char* name = duk_get_string(ctx, 0);
+            if (name) {
+                node->removeStyle(name);
                 node->sync();
             }
         }
