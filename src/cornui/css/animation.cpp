@@ -44,7 +44,7 @@ namespace cornui {
                 animations.erase(name);
             }
 
-            node->sync();
+            node->sync(false);
             ++it;
         }
     }

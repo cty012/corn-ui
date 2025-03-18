@@ -90,8 +90,11 @@ namespace cornui {
          */
         bool removeClass(const std::string& className) noexcept;
 
-        /// @brief Sync the node with the UI.
-        void sync();
+        /**
+         * @brief Sync the node with the UI.
+         * @param propagate Whether to sync its children.
+         */
+        void sync(bool propagate = true);
 
         /**
          * @brief Transform the style smoothly with an animation.

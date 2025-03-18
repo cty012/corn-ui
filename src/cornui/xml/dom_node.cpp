@@ -151,10 +151,10 @@ namespace cornui {
         return success;
     }
 
-    void DOMNode::sync() {
+    void DOMNode::sync(bool propagate) {
         // Syncing a text node is equivalent to syncing its parent
         if (this->tag_ == "text") {
-            if (this->parent_) this->parent_->sync();
+            if (this->parent_) this->parent_->sync(propagate);
             return;
         }
 
@@ -304,7 +304,7 @@ namespace cornui {
 
                 // Apply widget type-specific styles
                 if (this->tag_ == "label") {
-                    ((corn::UILabel*) widget)->setText(this->getRichText());
+                    ((corn::UILabel*)widget)->setText(this->getRichText());
                 } else if (this->tag_ == "image") {
                     auto* image = new corn::Image(this->dom_->getFile().parent_path() / this->attributes_.at("src"));
                     ((corn::UIImage*)widget)->setImage(image);
@@ -313,7 +313,9 @@ namespace cornui {
         }
 
         // Sync children
-        this->syncChildren();
+        if (propagate) {
+            this->syncChildren();
+        }
     }
 
     bool DOMNode::animate(const std::string& name, const std::string& value, std::unique_ptr<EasingFunction> ease, float duration) noexcept {
