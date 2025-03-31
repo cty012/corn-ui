@@ -1,4 +1,4 @@
-#include <corn/geometry/vec4.h>
+#include <corn/geometry/vec.h>
 #include <corn/media/image.h>
 #include <corn/ui/ui_manager.h>
 #include <corn/ui/ui_image.h>
@@ -162,7 +162,7 @@ namespace cornui {
         return this->computedStyle_;
     }
 
-    corn::Vec4 DOMNode::getComputedGeometry() const noexcept {
+    corn::Vec4f DOMNode::getComputedGeometry() const noexcept {
         if (!this->dom_ || !this->dom_->getUIManager() || this->widgetID_ == 0) {
             return {};
         }

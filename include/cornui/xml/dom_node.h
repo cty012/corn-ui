@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <vector>
 #include <corn/event/input.h>
-#include <corn/ui/ui_label.h>
 #include <corn/ui/ui_widget.h>
+#include <corn/util/rich_text.h>
 #include <cornui/xml/easing_function.h>
 
 namespace cornui {
@@ -120,7 +120,7 @@ namespace cornui {
         void setStyle(const std::string& name, const std::string& value, bool resetAnimation = true) noexcept;
         void removeStyle(const std::string& name, bool resetAnimation = true) noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getComputedStyle() const noexcept;
-        [[nodiscard]] corn::Vec4 getComputedGeometry() const noexcept;
+        [[nodiscard]] corn::Vec4f getComputedGeometry() const noexcept;
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getAttributes() const noexcept;
         void setAttribute(const std::string& name, const std::string& value) noexcept;
         void removeAttribute(const std::string& name) noexcept;

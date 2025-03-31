@@ -309,7 +309,7 @@ namespace cornui {
         // Push the cached geometry to the stack
         if (node && node->getWidget()) {
             corn::UIWidget* widget = node->getWidget();
-            auto [x, y, w, h] = widget->getUIManager().getCachedGeometry(widget);  // NOLINT
+            const auto [x, y, w, h] = widget->getUIManager().getCachedGeometry(widget);  // NOLINT
             push_njson(ctx, {{ "x", x }, { "y", y }, { "w", w }, { "h", h }});
         } else {
             duk_push_undefined(ctx);
@@ -324,7 +324,7 @@ namespace cornui {
         // Push the cached geometry to the stack
         if (node && node->getWidget()) {
             const corn::UIWidget* widget = node->getWidget();
-            auto [w, h] = widget->getNaturalSize();  // NOLINT
+            const auto [w, h] = widget->getNaturalSize();  // NOLINT
             push_njson(ctx, {{ "w", w }, { "h", h }});
         } else {
             duk_push_undefined(ctx);
