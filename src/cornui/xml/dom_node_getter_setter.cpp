@@ -66,15 +66,15 @@ namespace cornui {
 
         if (isLeaf) {
             // Leaf nodes
-            const std::string& fontFamily = this->computedStyle_.at("font-family");
-            const corn::Font* font = corn::FontManager::instance().get(fontFamily);
-            if (!font) {
+            const std::string& fontFamilyName = this->computedStyle_.at("font-family");
+            const corn::FontFamily* fontFamily = corn::FontManager::instance().get(fontFamilyName);
+            if (!fontFamily) {
                 // Use default font
-                font = corn::FontManager::instance().getDefault();
+                fontFamily = corn::FontManager::instance().getDefault();
             }
-            if (!font) {
-                // If default font doesn't exist, throw an error
-                throw std::logic_error("Font not found: " + fontFamily);
+            if (!fontFamily) {
+                // If the default font doesn't exist, throw an error
+                throw std::logic_error("Font not found: " + fontFamilyName);
             }
             float fontSize = std::stof(this->computedStyle_.at("font-size"));
             corn::Color fontColor = corn::Color::parse(this->computedStyle_.at("font-color"));
@@ -96,8 +96,8 @@ namespace cornui {
                 position = corn::FontPosition::SUBSCRIPT;
             }
 
-            richText.addText(this->text_, corn::TextStyle(font, fontSize, fontColor, fontWeight,
-                    fontItalic, fontUnderline, position));
+            richText.addText(this->text_, corn::TextStyle(
+                    fontFamily, fontSize, fontColor, corn::FontVariant(fontWeight, fontItalic), fontUnderline, position));
         } else {
             // Non-leaf text nodes
             for (DOMNode* child: this->children_) {

@@ -1,4 +1,4 @@
-#include <corn/media/font.h>
+#include <corn/media/font_manager.h>
 #include <gtest/gtest.h>
 
 namespace cornui::test {
@@ -6,13 +6,13 @@ namespace cornui::test {
     public:
         // This method will be called once before all tests are run
         void SetUp() override {
-            corn::FontManager::instance().loadFromPath("noto-sans", "resources/fonts/noto-sans/NotoSans-Regular.ttf");
+            corn::FontManager::instance().loadFontFamilyFromPath("noto-sans", "resources/fonts/noto-sans/NotoSans-Regular.ttf");
             corn::FontManager::instance().setDefault("noto-sans");
         }
 
         // This method will be called once after all tests have finished
         void TearDown() override {
-            corn::FontManager::instance().unload("noto-sans");
+            // Nothing to do
         }
     };
 
