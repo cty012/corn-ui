@@ -11,8 +11,9 @@ int main() {
     config.width = WIDTH;
     config.height = HEIGHT;
     config.antialiasing = 4;
-    corn::FontManager::instance().load(
+    corn::FontManager::instance().loadFromPath(
             "noto-sans-zh", "resources/fonts/noto-sans-zh/static/NotoSansSC-Regular.ttf");
+    corn::FontManager::instance().setDefault("noto-sans-zh");
 
     // Events
     corn::EventScope eventScope;
@@ -54,8 +55,9 @@ int main() {
 
     // Game
     corn::Game game(new MainMenuScene(), config);
+    game.setDebugOverlay(true);
     game.run();
 
-    corn::FontManager::instance().unload("noto-sans-zh");
+    corn::FontManager::instance().unloadAll();
     return 0;
 }

@@ -254,7 +254,7 @@ namespace cornui {
 
         // Update the text
         if (node) {
-            const auto* text = (const char8_t*)duk_get_string(ctx, 0);
+            const char* text = duk_get_string(ctx, 0);
             if (text) {
                 node->setText(text);
                 node->sync();

@@ -24,16 +24,16 @@ namespace cornui {
         widget->setName(name);
     }
 
-    const std::u8string& DOMNode::getLocalText() const noexcept {
+    const std::string& DOMNode::getLocalText() const noexcept {
         return this->text_;
     }
 
-    std::u8string DOMNode::getText() const noexcept {
+    std::string DOMNode::getText() const noexcept {
         if (!this->text_.empty()) {
             return this->text_;
         }
 
-        std::u8string text;
+        std::string text;
         for (DOMNode* child: this->children_) {
             if (child->tag_ == "text") {
                 text += child->getText();
@@ -42,7 +42,7 @@ namespace cornui {
         return text;
     }
 
-    void DOMNode::setText(const std::u8string& text) noexcept {
+    void DOMNode::setText(const std::string& text) noexcept {
         this->clearChildren();
         this->text_ = text;
         this->computeStyle();
@@ -78,15 +78,26 @@ namespace cornui {
             }
             float fontSize = std::stof(this->computedStyle_.at("font-size"));
             corn::Color fontColor = corn::Color::parse(this->computedStyle_.at("font-color"));
-            corn::FontVariant fontVariant = corn::FontVariant::REGULAR;
-            if (this->computedStyle_.at("font-variant") == "bold") {
-                fontVariant = corn::FontVariant::BOLD;
-            } else if (this->computedStyle_.at("font-variant") == "italic") {
-                fontVariant = corn::FontVariant::ITALIC;
-            } else if (this->computedStyle_.at("font-variant") == "underline") {
-                fontVariant = corn::FontVariant::UNDERLINE;
+
+            // Font weight
+            float fontWeight = std::stof(this->computedStyle_.at("font-weight"));
+
+            // Font italic
+            bool fontItalic = this->computedStyle_.at("font-italic") == "true";
+
+            // Font underline
+            bool fontUnderline = this->computedStyle_.at("font-underline") == "true";
+
+            // Font position
+            corn::FontPosition position = corn::FontPosition::REGULAR;
+            if (this->computedStyle_.at("font-position") == "superscript") {
+                position = corn::FontPosition::SUPERSCRIPT;
+            } else if (this->computedStyle_.at("font-position") == "subscript") {
+                position = corn::FontPosition::SUBSCRIPT;
             }
-            richText.addText(this->text_, corn::TextStyle(font, fontSize, fontColor, fontVariant));
+
+            richText.addText(this->text_, corn::TextStyle(font, fontSize, fontColor, fontWeight,
+                    fontItalic, fontUnderline, position));
         } else {
             // Non-leaf text nodes
             for (DOMNode* child: this->children_) {
@@ -95,7 +106,7 @@ namespace cornui {
 
                 corn::RichText childRichText = child->getRichText();
                 for (const corn::RichText::Segment& segment: childRichText.segments) {
-                    richText.addText(segment.str, segment.style);
+                    richText.addText(segment.text, segment.style);
                 }
             }
         }
@@ -125,7 +136,7 @@ namespace cornui {
         for (const corn::RichText::Segment& segment: richText.segments) {
             auto* child = new DOMNode();
             child->tag_ = "text";
-            child->text_ = segment.str;
+            child->text_ = segment.text;
             child->dom_ = this->dom_;
             child->parent_ = this;
             this->children_.push_back(child);

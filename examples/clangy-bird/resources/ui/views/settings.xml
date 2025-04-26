@@ -10,10 +10,8 @@
     <widget name="body">
         <widget name="contents">
             <label name="title">Settings</label>
-            <label name="lang-label" class="num-1">
-                Language:
-                <label name="lang" class="button">English</label>
-            </label>
+            <label name="lang-label" class="num-1">Language:</label>
+            <label name="lang" class="button" onclick="Event.emit('lang-change')">English</label>
         </widget>
         <label name="save" class="back button" onclick="GlobalEvent.emit('scene::pop')">Save and exit</label>
     </widget>

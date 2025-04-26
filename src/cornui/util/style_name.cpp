@@ -16,7 +16,10 @@ namespace cornui {
                 "font-family",
                 "font-size",
                 "font-color",
-                "font-variant",
+                "font-weight",
+                "font-italic",
+                "font-underline",
+                "font-position",
         };
 
         return std::find(validStyleNames.begin(), validStyleNames.end(), name) != validStyleNames.end();
@@ -38,7 +41,10 @@ namespace cornui {
                 { "font-family",              StyleValueType::STRING },
                 { "font-size",                StyleValueType::NUMBER },
                 { "font-color",               StyleValueType::COLOR },
-                { "font-variant",             StyleValueType::ENUM }
+                { "font-weight",              StyleValueType::NUMBER },
+                { "font-italic",              StyleValueType::BOOLEAN },
+                { "font-underline",           StyleValueType::BOOLEAN },
+                { "font-position",            StyleValueType::ENUM },
         };
 
         return styleValueTypes.contains(name) ? styleValueTypes.at(name) : StyleValueType::NONE;

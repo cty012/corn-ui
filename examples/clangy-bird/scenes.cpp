@@ -39,14 +39,11 @@ SettingsScene::SettingsScene() {
     // UI
     this->ui_.init("resources/ui/views/settings.xml", this->getUIManager());
 
-    // Language change button
-    auto& lang = *(corn::UILabel*)this->getUIManager().getWidgetByName("lang");
-    lang.getEventManager().addListener(
-            "corn::ui::onclick",
-            [](const corn::EventArgs& args) {
-                if (dynamic_cast<const corn::EventArgsUIOnClick&>(args).mousebtnEvent.status != corn::ButtonEvent::UP) {
-                    return;
-                }
+    // Language change
+    this->eventScope_.addListener(
+            this->getEventManager(),
+            "js::lang-change",
+            [](const corn::EventArgs&) {
                 std::string language = (std::string)TextManager::instance().getSettings("lang");
                 TextManager::instance().changeSettings("lang", language == "eng" ? "chn" : "eng");
                 TextManager::instance().saveSettings();
@@ -174,7 +171,7 @@ void GameScene::onKeyboardEvent(const corn::EventArgsKeyboard& args) {
 }
 
 void GameScene::onMouseEvent(const corn::EventArgsMouseButton& args) {
-    if (!this->paused_ && args.mouse == corn::Mouse::LEFT && args.status == corn::ButtonEvent::DOWN) {
+    if (!this->paused_ && args.mouseButton == corn::MouseButton::LEFT && args.status == corn::ButtonEvent::DOWN) {
         this->birdMovement_->velocity.y = -700;
     }
 }

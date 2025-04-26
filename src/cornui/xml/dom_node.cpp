@@ -72,9 +72,9 @@ namespace cornui {
 
     void DOMNode::clear() noexcept {
         this->clearChildren();
-        this->tag_ = "";
-        this->name_ = "";
-        this->text_ = u8"";
+        this->tag_.clear();
+        this->name_.clear();
+        this->text_.clear();
         this->classList_.clear();
         this->style_.clear();
         this->inheritedStyle_.clear();
@@ -224,7 +224,7 @@ namespace cornui {
                     "corn::input::text",
                     [this](const corn::EventArgs& args) {
                         const auto& args_ = dynamic_cast<const corn::EventArgsTextEntered&>(args);
-                        this->runScriptInAttr("ontext", args_.character);
+                        this->runScriptInAttr("ontext", args_.input);
                     });
             current->getEventManager().addListener(
                     "corn::ui::onclick",
@@ -305,10 +305,10 @@ namespace cornui {
 
                 // Apply widget type-specific styles
                 if (this->tag_ == "label") {
-                    ((corn::UILabel*)widget)->setText(this->getRichText());
+                    dynamic_cast<corn::UILabel*>(widget)->setRichText(this->getRichText());
                 } else if (this->tag_ == "image") {
                     auto* image = new corn::Image(this->dom_->getFile().parent_path() / this->attributes_.at("src"));
-                    ((corn::UIImage*)widget)->setImage(image);
+                    dynamic_cast<corn::UIImage*>(widget)->setImage(image);
                 }
             }
         }
@@ -375,7 +375,10 @@ namespace cornui {
                 { "font-family", "" },
                 { "font-size", "16" },
                 { "font-color", "#000000" },
-                { "font-variant", "regular" }
+                { "font-weight", "400" },
+                { "font-italic", "false" },
+                { "font-underline", "false" },
+                { "font-position", "regular" },
         };
 
         // Inherit
@@ -410,7 +413,10 @@ namespace cornui {
                 { "font-family", "" },
                 { "font-size", "16" },
                 { "font-color", "#000000" },
-                { "font-variant", "regular" }
+                { "font-weight", "400" },
+                { "font-italic", "false" },
+                { "font-underline", "false" },
+                { "font-position", "regular" },
         };
 
         // Inherit
@@ -450,7 +456,11 @@ namespace cornui {
     }
 
     void DOMNode::computeStyle(const std::unordered_map<std::string, std::string>& inheritedStyles) {
-        for (const std::string& styleName : { "font-family", "font-size", "font-color", "font-variant" }) {
+        static const std::vector<std::string> inheritableStyleNames = {
+                "font-family", "font-size", "font-color", "font-weight", "font-italic", "font-underline", "font-position",
+        };
+
+        for (const std::string& styleName : inheritableStyleNames) {
             if (inheritedStyles.contains(styleName)) {
                 this->inheritedStyle_[styleName] = inheritedStyles.at(styleName);
             }
@@ -489,6 +499,22 @@ namespace cornui {
         this->runScriptInAttr(attr);
     }
 
+    void DOMNode::runScriptInAttr(const std::string& attr, const corn::Vec2f& value) {
+        if (!this->attributes_.contains(attr)) return;
+        duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
+
+        // Set the value x
+        duk_push_number(ctx, value.x);
+        duk_put_global_string(ctx, "__value_x");
+
+        // Set the value y
+        duk_push_number(ctx, value.y);
+        duk_put_global_string(ctx, "__value_y");
+
+        // Run the script
+        this->runScriptInAttr(attr);
+    }
+
     void DOMNode::runScriptInAttr(const std::string& attr, const corn::Key& key) {
         if (!this->attributes_.contains(attr)) return;
         duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
@@ -502,7 +528,7 @@ namespace cornui {
         this->runScriptInAttr(attr);
     }
 
-    void DOMNode::runScriptInAttr(const std::string& attr, const std::u8string& text) {
+    void DOMNode::runScriptInAttr(const std::string& attr, const std::string& text) {
         if (!this->attributes_.contains(attr)) return;
         duk_context* ctx = this->dom_->getUI().getJSRuntime()->getImpl()->ctx_;
 

@@ -133,7 +133,7 @@ namespace cornui {
                 this->children_.push_back(child);
                 xmlFree(outerXML);
             } else if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_TEXT) {
-                std::u8string text = (const char8_t*)xmlTextReaderConstValue(reader);
+                std::string text = (const char*)xmlTextReaderConstValue(reader);
 
                 ret = xmlTextReaderNext(reader);
                 if (nodeCount == 1 && (ret != 1 || xmlTextReaderNodeType(reader) == XML_READER_TYPE_END_ELEMENT)) {

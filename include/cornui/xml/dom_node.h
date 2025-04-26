@@ -110,9 +110,9 @@ namespace cornui {
         [[nodiscard]] const std::string& getTag() const noexcept;
         [[nodiscard]] const std::string& getName() const noexcept;
         void setName(const std::string& name) noexcept;
-        [[nodiscard]] const std::u8string& getLocalText() const noexcept;
-        [[nodiscard]] std::u8string getText() const noexcept;
-        void setText(const std::u8string& text) noexcept;
+        [[nodiscard]] const std::string& getLocalText() const noexcept;
+        [[nodiscard]] std::string getText() const noexcept;
+        void setText(const std::string& text) noexcept;
         [[nodiscard]] corn::RichText getRichText() const;
         void setRichText(const corn::RichText& richText);
         [[nodiscard]] const std::vector<std::string>& getClassList() const noexcept;
@@ -177,6 +177,15 @@ namespace cornui {
         /**
          * @brief Executes the JavaScript string specified with the given attribute.
          * @param attr Name of the attribute.
+         * @param value The 2D value to pass in.
+         *
+         * This function is automatically triggered by corresponding events.
+         */
+        void runScriptInAttr(const std::string& attr, const corn::Vec2f& value);
+
+        /**
+         * @brief Executes the JavaScript string specified with the given attribute.
+         * @param attr Name of the attribute.
          * @param key The key triggered.
          *
          * This function is automatically triggered by corresponding events.
@@ -190,11 +199,11 @@ namespace cornui {
          *
          * This function is automatically triggered by corresponding events.
          */
-        void runScriptInAttr(const std::string& attr, const std::u8string& text);
+        void runScriptInAttr(const std::string& attr, const std::string& text);
 
         std::string tag_;
         std::string name_;
-        std::u8string text_;
+        std::string text_;
         std::vector<std::string> classList_;
         std::unordered_map<std::string, std::string> style_;
         std::unordered_map<std::string, std::string> inheritedStyle_;

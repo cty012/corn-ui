@@ -58,7 +58,7 @@ namespace cornui {
     }
 
     CSSSelectorCombinator parseCombinatorFromChar(char ch) noexcept {
-        if (corn::isWhitespace(ch)) return CSSSelectorCombinator::DESCENDANT;
+        if (std::isspace(ch)) return CSSSelectorCombinator::DESCENDANT;
         switch (ch) {
             case '>':
                 return CSSSelectorCombinator::CHILD;

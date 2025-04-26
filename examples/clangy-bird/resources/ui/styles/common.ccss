@@ -15,5 +15,5 @@ label {
 }
 
 .underline {
-    font-variant: underline;
+    font-underline: true;
 }
